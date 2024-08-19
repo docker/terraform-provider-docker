@@ -17,7 +17,7 @@ provider "dockerhub" {
 # Create team
 resource "dockerhub_org_team" "terraform-team" {
   org_name         = "dockerterraform"
-  team_name        = "terraformhack"
+  team_name        = "terraformhackk"
   team_description = "Terraform Hackathon Demo - 2024"
 }
 
@@ -25,27 +25,27 @@ resource "dockerhub_org_team" "terraform-team" {
 resource "dockerhub_org_team_member_association" "example_association" {
   org_name   = "dockerterraform"
   team_name  = resource.dockerhub_org_team.terraform-team.team_name
-  user_names = ["forrestloomis371","username-placeholder"]
+  user_names = ["forrestloomis371", "username-placeholder"]
 }
 
-# Create repository
-resource "dockerhub_repository" "org_repo" {
-  namespace        = "dockerterraform"
-  name             = "docker-terraform-repo-demo"
-  description      = "This is a repo demo"
-  full_description = "Lorem ipsum"
-}
+# # Create repository
+# resource "dockerhub_repository" "org_repo" {
+#   namespace        = "dockerterraform"
+#   name             = "docker-terraform-repo-demo-"
+#   description      = "This is a repo demo"
+#   full_description = "Lorem ipsum"
+# }
 
-# Create repository team permission
-resource "dockerhub_repository_team_permission" "test" {
-  repo_id    = dockerhub_repository.org_repo.id
-  team_id    = dockerhub_org_team.terraform-team.id
-  permission = "admin"
-}
+# # Create repository team permission
+# resource "dockerhub_repository_team_permission" "test" {
+#   repo_id    = dockerhub_repository.org_repo.id
+#   team_id    = dockerhub_org_team.terraform-team.id
+#   permission = "admin"
+# }
 
 # Create access token
 resource "dockerhub_access_token" "new_token_v2" {
-  token_label = "terraform-created PAT-v2"
+  token_label = "terraform-created PAT-v2 t"
   scopes      = ["repo:read", "repo:write"]
 }
 

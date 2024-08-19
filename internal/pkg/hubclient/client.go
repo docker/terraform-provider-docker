@@ -80,6 +80,8 @@ func (c *Client) sendRequest(ctx context.Context, method string, url string, bod
 	}
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	req.Header.Set("Accept", "application/json; charset=utf-8")
+	// TODO: put correct client version, or omit completely
+	req.Header.Set("User-Agent", "terraform-provider-dockerhub/v0.1.0")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.Token))
 
 	req = req.WithContext(ctx)

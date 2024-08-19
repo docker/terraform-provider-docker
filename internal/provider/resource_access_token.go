@@ -46,9 +46,8 @@ func (r *AccessTokenResource) Configure(ctx context.Context, req resource.Config
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *hubclient.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
@@ -99,7 +98,6 @@ func (r *AccessTokenResource) Create(ctx context.Context, req resource.CreateReq
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -109,10 +107,14 @@ func (r *AccessTokenResource) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	createReq := hubclient.AccessTokenCreateParams{
 		Scopes:     scopes,
 		TokenLabel: data.TokenLabel.ValueString(),
 	}
+
+	// Log the request data
+	fmt.Printf("Creating access token with: %+v\n", createReq)
 
 	at, err := r.client.CreateAccessToken(ctx, createReq)
 	if err != nil {
@@ -181,6 +183,9 @@ func (r *AccessTokenResource) Update(ctx context.Context, req resource.UpdateReq
 		IsActive:   fromPlan.IsActive.ValueBool(),
 	}
 
+	// Log the update request data
+	fmt.Printf("Updating access token with: %+v\n", updateReq)
+
 	at, err := r.client.UpdateAccessToken(ctx, fromState.UUID.ValueString(), updateReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update access token", err.Error())
@@ -209,7 +214,7 @@ func (r *AccessTokenResource) Delete(ctx context.Context, req resource.DeleteReq
 	if isNotFound(err) {
 		return
 	} else if err != nil {
-		// resp.Diagnostics.AddError("Unable to delete access token", err.Error())
+		resp.Diagnostics.AddError("Unable to delete access token", err.Error())
 		return
 	}
 }

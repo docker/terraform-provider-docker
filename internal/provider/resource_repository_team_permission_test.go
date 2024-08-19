@@ -61,14 +61,19 @@ func TestAccRepositoryTeamPermission(t *testing.T) {
 func testAccRepositoryTeamPermissionBase(orgName, teamName, repoName string) string {
 	return fmt.Sprintf(`
 provider "dockerhub" {
-  username = "username-placeholder"
-  password = "PW"
   host = "https://hub-stage.docker.com/v2"
 }
 
 resource "dockerhub_org_team" "test" {
   org_name         = "%[1]s"
   team_name        = "%[2]s"
+}
+
+resource "dockerhub_repository" "test" {
+  namespace        = "%[1]s"
+  name             = "%[3]s"
+  description      = "Test Repository for Terraform"
+  full_description = "Full description for the test repository"
 }
 
 data "dockerhub_repository" "test" {

@@ -66,8 +66,6 @@ func TestAccOrgSettingImageAccessManagement(t *testing.T) {
 
 const testAccOrgSettingImageAccessManagementBase = `
 provider "dockerhub" {
-  username = "username-placeholder"
-  password = "PW"
   host = "https://hub-stage.docker.com/v2"
 }`
 

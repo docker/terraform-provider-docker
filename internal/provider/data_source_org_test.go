@@ -24,8 +24,6 @@ func TestOrgDataSource(t *testing.T) {
 
 const testOrgExampleDataSourceConfig = `
 provider "dockerhub" {
-  username = "username-placeholder"
-  password = "PW"
   host = "https://hub-stage.docker.com/v2"
 }
 data "dockerhub_org" "test" {

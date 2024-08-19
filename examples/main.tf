@@ -31,7 +31,7 @@ resource "dockerhub_org_team_member_association" "example_association" {
 # Create repository
 resource "dockerhub_repository" "org_repo" {
   namespace        = "dockerterraform"
-  name             = "docker-terraform-repo-demo-"
+  name             = "docker-terraform-repo-demo"
   description      = "This is a repo demo"
   full_description = "Lorem ipsum"
 }
@@ -45,7 +45,7 @@ resource "dockerhub_repository_team_permission" "test" {
 
 # Create access token
 resource "dockerhub_access_token" "new_token_v2" {
-  token_label = "terraform-created PAT-v2 t"
+  token_label = "terraform-created PAT-v2"
   scopes      = ["repo:read", "repo:write"]
 }
 

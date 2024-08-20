@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/docker/terraform-provider-dockerhub/internal/pkg/hubclient"
+	"github.com/docker/terraform-provider-docker/internal/pkg/hubclient"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"

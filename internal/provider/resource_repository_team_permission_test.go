@@ -12,7 +12,7 @@ import (
 func TestAccRepositoryTeamPermission(t *testing.T) {
 	orgName := "dockerterraform"
 	teamName := "test" + randString(10)
-	repoName := "timstest"
+	repoName := "test" + randString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -21,7 +21,7 @@ func TestAccRepositoryTeamPermission(t *testing.T) {
 				// create
 				Config: testAccRepositoryTeamPermission(orgName, teamName, repoName, hubclient.TeamRepoPermissionLevelRead),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "repo_id", "data.dockerhub_repository.test", "id"),
+					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "repo_id", "dockerhub_repository.test", "id"),
 					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "team_id", "dockerhub_org_team.test", "id"),
 					resource.TestCheckResourceAttr("dockerhub_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelRead),
 				),
@@ -36,7 +36,7 @@ func TestAccRepositoryTeamPermission(t *testing.T) {
 				},
 				ResourceName: "dockerhub_repository_team_permission.test",
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "repo_id", "data.dockerhub_repository.test", "id"),
+					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "repo_id", "dockerhub_repository.test", "id"),
 					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "team_id", "dockerhub_org_team.test", "id"),
 					resource.TestCheckResourceAttr("dockerhub_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelRead),
 				),
@@ -45,7 +45,7 @@ func TestAccRepositoryTeamPermission(t *testing.T) {
 				// update permission
 				Config: testAccRepositoryTeamPermission(orgName, teamName, repoName, hubclient.TeamRepoPermissionLevelAdmin),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "repo_id", "data.dockerhub_repository.test", "id"),
+					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "repo_id", "dockerhub_repository.test", "id"),
 					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "team_id", "dockerhub_org_team.test", "id"),
 					resource.TestCheckResourceAttr("dockerhub_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelAdmin),
 				),
@@ -70,13 +70,6 @@ resource "dockerhub_org_team" "test" {
 }
 
 resource "dockerhub_repository" "test" {
-  namespace        = "%[1]s"
-  name             = "%[3]s"
-  description      = "Test Repository for Terraform"
-  full_description = "Full description for the test repository"
-}
-
-data "dockerhub_repository" "test" {
   namespace = "%[1]s"
   name      = "%[3]s"
 }`, orgName, teamName, repoName)
@@ -87,7 +80,7 @@ func testAccRepositoryTeamPermission(orgName, teamName, repoName string, permiss
 %[1]s
 
 resource "dockerhub_repository_team_permission" "test" {
-  repo_id    = data.dockerhub_repository.test.id
+  repo_id    = dockerhub_repository.test.id
   team_id    = dockerhub_org_team.test.id
   permission = "%[2]s"
 }

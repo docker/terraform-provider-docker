@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 )
 
 type AccessToken struct {
@@ -42,11 +41,6 @@ type AccessTokenPage struct {
 	Results []AccessToken `json:"results"`
 }
 
-type AccessTokenDeleteResponse struct {
-	Detail  string `json:"detail"`
-	Message string `json:"message"`
-}
-
 func (c *Client) GetAccessToken(ctx context.Context, accessTokenID string) (AccessToken, error) {
 	if !isValidUUID(accessTokenID) {
 		return AccessToken{}, fmt.Errorf("accessTokenID is required")
@@ -77,21 +71,12 @@ func (c *Client) UpdateAccessToken(ctx context.Context, accessTokenID string, ac
 	return accessTokenUpdated, err
 }
 
-func (c *Client) DeleteAccessToken(ctx context.Context, accessTokenID string) (AccessTokenDeleteResponse, error) {
+func (c *Client) DeleteAccessToken(ctx context.Context, accessTokenID string) error {
 	if !isValidUUID(accessTokenID) {
-		return AccessTokenDeleteResponse{}, fmt.Errorf("accessTokenID is required")
+		return fmt.Errorf("accessTokenID is required")
 	}
 
-	accessTokenDeleteResponse := AccessTokenDeleteResponse{}
-	err := c.sendRequest(ctx, "DELETE", fmt.Sprintf("/access-tokens/%s", accessTokenID), nil, &accessTokenDeleteResponse)
-	if err != nil {
-		// TODO: deleting access token returns a EOF, this is temporary to allow for tests to pass
-		if err == io.EOF {
-			fmt.Printf("Received EOF while deleting access token with ID: %s - Treating as successful deletion\n", accessTokenID)
-			return accessTokenDeleteResponse, nil
-		}
-	}
-	return accessTokenDeleteResponse, err
+	return c.sendRequest(ctx, "DELETE", fmt.Sprintf("/access-tokens/%s", accessTokenID), nil, nil)
 }
 
 func (c *Client) CreateAccessToken(ctx context.Context, accessToken AccessTokenCreateParams) (AccessToken, error) {

@@ -5,7 +5,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/docker/terraform-provider-dockerhub/internal/provider"
+	"github.com/docker/terraform-provider-docker/internal/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )
 

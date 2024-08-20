@@ -3,11 +3,11 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
 	"log"
+	"strings"
 
-	"github.com/docker/terraform-provider-dockerhub/internal/pkg/hubclient"
-	"github.com/docker/terraform-provider-dockerhub/internal/pkg/repositoryutils"
+	"github.com/docker/terraform-provider-docker/internal/pkg/hubclient"
+	"github.com/docker/terraform-provider-docker/internal/pkg/repositoryutils"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"

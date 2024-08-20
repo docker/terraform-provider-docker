@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/docker/terraform-provider-dockerhub/internal/pkg/hubclient"
-	"github.com/docker/terraform-provider-dockerhub/internal/pkg/repositoryutils"
+	"github.com/docker/terraform-provider-docker/internal/pkg/hubclient"
+	"github.com/docker/terraform-provider-docker/internal/pkg/repositoryutils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"

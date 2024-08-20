@@ -104,18 +104,12 @@ func (r *RepositoryResource) Create(ctx context.Context, req resource.CreateRequ
 func (r *RepositoryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state RepositoryResourceModel
 
-	// Log before getting the state
-	log.Println("Fetching the state for deletion")
-
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		log.Println("Error occurred while fetching the state")
 		return
 	}
-
-	// Log before attempting to delete the repository
-	log.Printf("Attempting to delete repository with ID: %s", state.ID.ValueString())
 
 	err := r.client.DeleteRepository(ctx, state.ID.ValueString())
 	if err != nil {
@@ -124,8 +118,6 @@ func (r *RepositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	// Log successful deletion
-	log.Printf("Successfully deleted repository with ID: %s", state.ID.ValueString())
 }
 
 // Metadata implements resource.Resource.

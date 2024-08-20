@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
+	"log"
 
 	"github.com/docker/terraform-provider-dockerhub/internal/pkg/hubclient"
 	"github.com/docker/terraform-provider-dockerhub/internal/pkg/repositoryutils"
@@ -77,14 +79,15 @@ func (r *RepositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	createResp, err := r.client.CreateRepository(ctx, plan.Namespace.ValueString(), createReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Docker Hub API error creating repository", "Could not create repository, unexpected error: "+err.Error())
+		return
 	}
 
 	id := repositoryutils.NewID(createResp.Namespace, createResp.Name)
 	plan.ID = types.StringValue(id)
 	plan.Name = types.StringValue(createResp.Name)
 	plan.Namespace = types.StringValue(createResp.Namespace)
-	plan.Description = types.StringValue(createResp.Description)
-	plan.FullDescription = types.StringValue(createResp.FullDescription)
+	plan.Description = stringNullIfEmpty(createResp.Description)
+	plan.FullDescription = stringNullIfEmpty(createResp.FullDescription)
 	plan.Private = types.BoolValue(createResp.IsPrivate)
 	plan.PullCount = types.Int64Value(createResp.PullCount)
 
@@ -95,18 +98,20 @@ func (r *RepositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 }
 
-// Delete implements resource.Resource.
 func (r *RepositoryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state RepositoryResourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
+		log.Println("Error occurred while fetching the state")
 		return
 	}
 
 	err := r.client.DeleteRepository(ctx, state.ID.ValueString())
 	if err != nil {
+		log.Printf("Failed to delete repository with ID: %s, error: %v", state.ID.ValueString(), err)
 		resp.Diagnostics.AddError("Docker Hub API error deleting repository", "Could not delete repository, unexpected error: "+err.Error())
+		return
 	}
 }
 
@@ -136,8 +141,8 @@ func (r *RepositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 	state.ID = types.StringValue(repositoryutils.NewID(getResp.Namespace, getResp.Name))
 	state.Name = types.StringValue(getResp.Name)
 	state.Namespace = types.StringValue(getResp.Namespace)
-	state.Description = types.StringValue(getResp.Description)
-	state.FullDescription = types.StringValue(getResp.FullDescription)
+	state.Description = stringNullIfEmpty(getResp.Description)
+	state.FullDescription = stringNullIfEmpty(getResp.FullDescription)
 	state.Private = types.BoolValue(getResp.IsPrivate)
 	state.PullCount = types.Int64Value(getResp.PullCount)
 
@@ -179,7 +184,7 @@ func (r *RepositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Optional:            true,
 			},
 			"full_description": schema.StringAttribute{
-				MarkdownDescription: "Repository name",
+				MarkdownDescription: "Repository full description",
 				Required:            false,
 				Optional:            true,
 			},
@@ -223,7 +228,7 @@ func (r *RepositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	updateResp, err := r.client.UpdateRepository(ctx, plan.ID.ValueString(), updateReq)
 	if err != nil {
-		resp.Diagnostics.AddError("Docker Hub API error creating repository", "Could not create repository, unexpected error: "+err.Error())
+		resp.Diagnostics.AddError("Docker Hub API error updating repository", "Could not update repository, unexpected error: "+err.Error())
 		return
 	}
 
@@ -235,12 +240,41 @@ func (r *RepositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 		}
 	}
 
-	plan.Description = types.StringValue(updateResp.Description)
-	plan.FullDescription = types.StringValue(updateResp.FullDescription)
+	plan.Description = stringNullIfEmpty(updateResp.Description)
+	plan.FullDescription = stringNullIfEmpty(updateResp.FullDescription)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+func stringNullIfEmpty(s string) types.String {
+	if s == "" {
+		return types.StringNull()
+	}
+	return types.StringValue(s)
+}
+
+func (r *RepositoryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// The ID passed during the import operation is expected to be in the form of "namespace/name"
+	idParts := strings.Split(req.ID, "/")
+	if len(idParts) != 2 {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format 'namespace/name', got: %s", req.ID),
+		)
+		return
+	}
+
+	namespace := idParts[0]
+	name := idParts[1]
+
+	// Set the ID, namespace, and name in the state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &RepositoryResourceModel{
+		ID:        types.StringValue(req.ID),
+		Namespace: types.StringValue(namespace),
+		Name:      types.StringValue(name),
+	})...)
 }

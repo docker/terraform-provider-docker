@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -13,21 +14,24 @@ func TestAccRepositoriesDataSource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: testReposExampleDataSourceConfig,
+				Config: testReposExampleDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.dockerhub_repositories.test", "id", "ryanhristovski/repositories"),
+					resource.TestCheckResourceAttr("data.dockerhub_repositories.test", "id", os.Getenv("DOCKERHUB_USERNAME")+"/repositories"),
 				),
 			},
 		},
 	})
 }
 
-const testReposExampleDataSourceConfig = `
+func testReposExampleDataSourceConfig() string {
+	return `
 provider "dockerhub" {
   host = "https://hub-stage.docker.com/v2"
 }
+
 data "dockerhub_repositories" "test" {
-  namespace = "ryanhristovski"
+  namespace         = "` + os.Getenv("DOCKERHUB_USERNAME") + `"
   max_number_results = 10
 }
 `
+}

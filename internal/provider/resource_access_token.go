@@ -113,9 +113,6 @@ func (r *AccessTokenResource) Create(ctx context.Context, req resource.CreateReq
 		TokenLabel: data.TokenLabel.ValueString(),
 	}
 
-	// Log the request data
-	fmt.Printf("Creating access token with: %+v\n", createReq)
-
 	at, err := r.client.CreateAccessToken(ctx, createReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to create access token", err.Error())
@@ -183,9 +180,6 @@ func (r *AccessTokenResource) Update(ctx context.Context, req resource.UpdateReq
 		IsActive:   fromPlan.IsActive.ValueBool(),
 	}
 
-	// Log the update request data
-	fmt.Printf("Updating access token with: %+v\n", updateReq)
-
 	at, err := r.client.UpdateAccessToken(ctx, fromState.UUID.ValueString(), updateReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update access token", err.Error())
@@ -210,7 +204,7 @@ func (r *AccessTokenResource) Delete(ctx context.Context, req resource.DeleteReq
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
-	_, err := r.client.DeleteAccessToken(ctx, data.UUID.ValueString())
+	err := r.client.DeleteAccessToken(ctx, data.UUID.ValueString())
 	if isNotFound(err) {
 		return
 	} else if err != nil {

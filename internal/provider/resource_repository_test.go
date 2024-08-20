@@ -28,7 +28,7 @@ func TestRepositoryResource(t *testing.T) {
 				Config: testRepositoryResourceConfigUpdated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("dockerhub_repository.test", "description", "Updated example repository"),
-					resource.TestCheckResourceAttr("dockerhub_repository.test", "full_description", "Test configuration"),
+					resource.TestCheckResourceAttr("dockerhub_repository.test", "full_description", "Full description update"),
 					resource.TestCheckResourceAttr("dockerhub_repository.test", "private", "true"),
 				),
 			},
@@ -62,7 +62,7 @@ resource "dockerhub_repository" "test" {
   name            = "example-repo"
   namespace       = "` + os.Getenv("DOCKERHUB_USERNAME") + `"
   description     = "Updated example repository"
-  full_description = "Test configuration"
+  full_description = "Full description update"
   private         = true
 }
 `

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"log"
 
 	"github.com/docker/terraform-provider-dockerhub/internal/pkg/hubclient"
 	"github.com/docker/terraform-provider-dockerhub/internal/pkg/repositoryutils"

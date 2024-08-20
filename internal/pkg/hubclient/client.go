@@ -25,19 +25,33 @@ type Client struct {
 	BaseURL    string
 	auth       Auth
 	HTTPClient *http.Client
+	userAgent  string
+}
+
+type Config struct {
+	Host             string
+	Username         string
+	Password         string
+	UserAgentVersion string
 }
 
 // Create the API client, providing the authentication.
-func NewClient(host string, username string, password string) *Client {
+func NewClient(config Config) *Client {
+	version := config.UserAgentVersion
+	if version == "" {
+		version = "dev"
+	}
+
 	return &Client{
-		BaseURL: host,
+		BaseURL: config.Host,
 		auth: Auth{
-			Username: username,
-			Password: password,
+			Username: config.Username,
+			Password: config.Password,
 		},
 		HTTPClient: &http.Client{
 			Timeout: time.Minute,
 		},
+		userAgent: fmt.Sprintf("terraform-provider-docker/%s", version),
 	}
 }
 
@@ -80,8 +94,7 @@ func (c *Client) sendRequest(ctx context.Context, method string, url string, bod
 	}
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	req.Header.Set("Accept", "application/json; charset=utf-8")
-	// TODO: put correct client version, or omit completely
-	req.Header.Set("User-Agent", "terraform-provider-dockerhub/v0.1.0")
+	req.Header.Set("User-Agent", c.userAgent)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.Token))
 
 	req = req.WithContext(ctx)

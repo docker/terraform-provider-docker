@@ -1,4 +1,4 @@
-module github.com/docker/terraform-provider-dockerhub
+module github.com/docker/terraform-provider-docker
 
 go 1.22
 

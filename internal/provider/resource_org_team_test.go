@@ -79,8 +79,6 @@ func TestAccOrgTeamResource(t *testing.T) {
 
 const testAccOrgTeamResourceBase = `
 provider "dockerhub" {
-  username = "username-placeholder"
-  password = "PW"
   host = "https://hub-stage.docker.com/v2"
 }
 `

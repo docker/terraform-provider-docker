@@ -109,8 +109,6 @@ func TestAccOrgSettingRegistryAccessManagement(t *testing.T) {
 
 const testAccOrgSettingRegistryAccessManagementBase = `
 provider "dockerhub" {
-  username = "username-placeholder"
-  password = "PW"
   host = "https://hub-stage.docker.com/v2"
 }`
 

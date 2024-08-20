@@ -17,7 +17,7 @@ provider "dockerhub" {
 # Create team
 resource "dockerhub_org_team" "terraform-team" {
   org_name         = "dockerterraform"
-  team_name        = "terraformhack"
+  team_name        = "terraformhackk"
   team_description = "Terraform Hackathon Demo - 2024"
 }
 
@@ -25,7 +25,7 @@ resource "dockerhub_org_team" "terraform-team" {
 resource "dockerhub_org_team_member_association" "example_association" {
   org_name   = "dockerterraform"
   team_name  = resource.dockerhub_org_team.terraform-team.team_name
-  user_names = ["forrestloomis371","username-placeholder"]
+  user_names = ["forrestloomis371", "username-placeholder"]
 }
 
 # Create repository

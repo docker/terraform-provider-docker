@@ -6,30 +6,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccRepositoryDataSource(t *testing.T) {
+func TestAccRepositoriesDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: testAccExampleDataSourceConfig,
+				Config: testReposExampleDataSourceConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.dockerhub_repository.test", "id", "username-placeholder/data-source-example"),
+					resource.TestCheckResourceAttr("data.dockerhub_repositories.test", "id", "ryanhristovski/repositories"),
 				),
 			},
 		},
 	})
 }
 
-const testAccExampleDataSourceConfig = `
+const testReposExampleDataSourceConfig = `
 provider "dockerhub" {
-  username = "username-placeholder"
-  password = "PW"
   host = "https://hub-stage.docker.com/v2"
 }
-data "dockerhub_repository" "test" {
-  namespace = "username-placeholder"
-  name = "data-source-example"
+data "dockerhub_repositories" "test" {
+  namespace = "ryanhristovski"
+  max_number_results = 10
 }
 `

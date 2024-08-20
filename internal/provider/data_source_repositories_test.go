@@ -34,3 +34,4 @@ data "dockerhub_repositories" "test" {
   max_number_results = 10
 }
 `
+}

@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/docker/terraform-provider-dockerhub/internal/pkg/hubclient"
@@ -86,11 +85,8 @@ func (r *RepositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	plan.ID = types.StringValue(id)
 	plan.Name = types.StringValue(createResp.Name)
 	plan.Namespace = types.StringValue(createResp.Namespace)
-	plan.Description = types.StringValue(createResp.Description)
-	plan.FullDescription = types.StringValue(createResp.FullDescription)
-	if plan.FullDescription.IsNull() {
-		plan.FullDescription = types.StringValue("")
-	}
+	plan.Description = stringNullIfEmpty(createResp.Description)
+	plan.FullDescription = stringNullIfEmpty(createResp.FullDescription)
 	plan.Private = types.BoolValue(createResp.IsPrivate)
 	plan.PullCount = types.Int64Value(createResp.PullCount)
 
@@ -103,7 +99,6 @@ func (r *RepositoryResource) Create(ctx context.Context, req resource.CreateRequ
 
 func (r *RepositoryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state RepositoryResourceModel
-
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -117,7 +112,6 @@ func (r *RepositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 		resp.Diagnostics.AddError("Docker Hub API error deleting repository", "Could not delete repository, unexpected error: "+err.Error())
 		return
 	}
-
 }
 
 // Metadata implements resource.Resource.
@@ -148,9 +142,6 @@ func (r *RepositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 	state.Namespace = types.StringValue(getResp.Namespace)
 	state.Description = stringNullIfEmpty(getResp.Description)
 	state.FullDescription = stringNullIfEmpty(getResp.FullDescription)
-	if state.FullDescription.IsNull() {
-		state.FullDescription = types.StringValue("")
-	}
 	state.Private = types.BoolValue(getResp.IsPrivate)
 	state.PullCount = types.Int64Value(getResp.PullCount)
 
@@ -248,17 +239,21 @@ func (r *RepositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 		}
 	}
 
-	plan.Description = types.StringValue(updateResp.Description)
-	plan.FullDescription = types.StringValue(updateResp.FullDescription)
-	if plan.FullDescription.IsNull() {
-		plan.FullDescription = types.StringValue("")
-	}
+	plan.Description = stringNullIfEmpty(updateResp.Description)
+	plan.FullDescription = stringNullIfEmpty(updateResp.FullDescription)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+}
+
+func stringNullIfEmpty(s string) types.String {
+	if s == "" {
+		return types.StringNull()
+	}
+	return types.StringValue(s)
 }
 
 func (r *RepositoryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -281,11 +276,4 @@ func (r *RepositoryResource) ImportState(ctx context.Context, req resource.Impor
 		Namespace: types.StringValue(namespace),
 		Name:      types.StringValue(name),
 	})...)
-}
-
-func stringNullIfEmpty(s string) types.String {
-	if s == "" {
-		return types.StringNull()
-	}
-	return types.StringValue(s)
 }

@@ -166,7 +166,12 @@ func (p *DockerHubProvider) Configure(ctx context.Context, req provider.Configur
 
 	tflog.Debug(ctx, "Creating Docker Hub client")
 
-	client := hubclient.NewClient(host, username, password)
+	client := hubclient.NewClient(hubclient.Config{
+		Host:             host,
+		Username:         username,
+		Password:         password,
+		UserAgentVersion: p.version,
+	})
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }

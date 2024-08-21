@@ -21,9 +21,9 @@ func TestAccRepositoryTeamPermission(t *testing.T) {
 				// create
 				Config: testAccRepositoryTeamPermission(orgName, teamName, repoName, hubclient.TeamRepoPermissionLevelRead),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "repo_id", "dockerhub_repository.test", "id"),
-					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "team_id", "dockerhub_org_team.test", "id"),
-					resource.TestCheckResourceAttr("dockerhub_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelRead),
+					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "repo_id", "docker_repository.test", "id"),
+					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "team_id", "docker_org_team.test", "id"),
+					resource.TestCheckResourceAttr("docker_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelRead),
 				),
 			},
 			{
@@ -31,23 +31,23 @@ func TestAccRepositoryTeamPermission(t *testing.T) {
 				Config:      testAccRepositoryTeamPermission(orgName, teamName, repoName, hubclient.TeamRepoPermissionLevelRead),
 				ImportState: true,
 				ImportStateIdFunc: func(state *terraform.State) (string, error) {
-					teamID := state.RootModule().Resources["dockerhub_org_team.test"].Primary.Attributes["id"]
+					teamID := state.RootModule().Resources["docker_org_team.test"].Primary.Attributes["id"]
 					return orgName + "/" + repoName + "/" + teamID, nil
 				},
-				ResourceName: "dockerhub_repository_team_permission.test",
+				ResourceName: "docker_repository_team_permission.test",
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "repo_id", "dockerhub_repository.test", "id"),
-					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "team_id", "dockerhub_org_team.test", "id"),
-					resource.TestCheckResourceAttr("dockerhub_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelRead),
+					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "repo_id", "docker_repository.test", "id"),
+					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "team_id", "docker_org_team.test", "id"),
+					resource.TestCheckResourceAttr("docker_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelRead),
 				),
 			},
 			{
 				// update permission
 				Config: testAccRepositoryTeamPermission(orgName, teamName, repoName, hubclient.TeamRepoPermissionLevelAdmin),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "repo_id", "dockerhub_repository.test", "id"),
-					resource.TestCheckResourceAttrPair("dockerhub_repository_team_permission.test", "team_id", "dockerhub_org_team.test", "id"),
-					resource.TestCheckResourceAttr("dockerhub_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelAdmin),
+					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "repo_id", "docker_repository.test", "id"),
+					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "team_id", "docker_org_team.test", "id"),
+					resource.TestCheckResourceAttr("docker_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelAdmin),
 				),
 			},
 			{
@@ -60,16 +60,16 @@ func TestAccRepositoryTeamPermission(t *testing.T) {
 
 func testAccRepositoryTeamPermissionBase(orgName, teamName, repoName string) string {
 	return fmt.Sprintf(`
-provider "dockerhub" {
+provider "docker" {
   host = "https://hub-stage.docker.com/v2"
 }
 
-resource "dockerhub_org_team" "test" {
+resource "docker_org_team" "test" {
   org_name         = "%[1]s"
   team_name        = "%[2]s"
 }
 
-resource "dockerhub_repository" "test" {
+resource "docker_repository" "test" {
   namespace = "%[1]s"
   name      = "%[3]s"
 }`, orgName, teamName, repoName)
@@ -79,9 +79,9 @@ func testAccRepositoryTeamPermission(orgName, teamName, repoName string, permiss
 	return fmt.Sprintf(`
 %[1]s
 
-resource "dockerhub_repository_team_permission" "test" {
-  repo_id    = dockerhub_repository.test.id
-  team_id    = dockerhub_org_team.test.id
+resource "docker_repository_team_permission" "test" {
+  repo_id    = docker_repository.test.id
+  team_id    = docker_org_team.test.id
   permission = "%[2]s"
 }
 `, testAccRepositoryTeamPermissionBase(orgName, teamName, repoName), permission)

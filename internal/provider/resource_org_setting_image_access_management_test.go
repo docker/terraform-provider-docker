@@ -17,10 +17,10 @@ func TestAccOrgSettingImageAccessManagement(t *testing.T) {
 				// create
 				Config: testAccOrgSettingImageAccessManagement(orgName, true, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "allow_official_images", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "allow_verified_publishers", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "allow_official_images", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "allow_verified_publishers", "false"),
 				),
 			},
 			{
@@ -28,32 +28,32 @@ func TestAccOrgSettingImageAccessManagement(t *testing.T) {
 				Config:        testAccOrgSettingImageAccessManagement(orgName, true, false, false),
 				ImportState:   true,
 				ImportStateId: orgName,
-				ResourceName:  "dockerhub_org_setting_image_access_management.test",
+				ResourceName:  "docker_org_setting_image_access_management.test",
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "allow_official_images", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "allow_verified_publishers", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "allow_official_images", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "allow_verified_publishers", "false"),
 				),
 			},
 			{
 				// update setting
 				Config: testAccOrgSettingImageAccessManagement(orgName, true, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "allow_official_images", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "allow_verified_publishers", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "allow_official_images", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "allow_verified_publishers", "true"),
 				),
 			},
 			{
 				// disable iam
 				Config: testAccOrgSettingImageAccessManagement(orgName, false, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "enabled", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "allow_official_images", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_image_access_management.test", "allow_verified_publishers", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "enabled", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "allow_official_images", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_image_access_management.test", "allow_verified_publishers", "true"),
 				),
 			},
 			{
@@ -65,7 +65,7 @@ func TestAccOrgSettingImageAccessManagement(t *testing.T) {
 }
 
 const testAccOrgSettingImageAccessManagementBase = `
-provider "dockerhub" {
+provider "docker" {
   host = "https://hub-stage.docker.com/v2"
 }`
 
@@ -73,7 +73,7 @@ func testAccOrgSettingImageAccessManagement(orgName string, enabled, allowOffici
 	return fmt.Sprintf(`
 %[1]s
 
-resource "dockerhub_org_setting_image_access_management" "test" {
+resource "docker_org_setting_image_access_management" "test" {
   org_name                  = "%[2]s"
   enabled                   = %[3]t
   allow_official_images     = %[4]t

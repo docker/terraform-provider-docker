@@ -59,7 +59,7 @@ You will need to create a `.terraformrc` in your `$HOME` directory
 provider_installation {
   dev_overrides {
     # replace this path with your $(go env GOBIN) path
-    "registry.terraform.io/docker/dockerhub" = "<enter your $(go env GOBIN) path here>"
+    "registry.terraform.io/docker/docker" = "<enter your $(go env GOBIN) path here>"
   }
 
   direct {}

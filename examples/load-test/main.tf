@@ -1,7 +1,7 @@
 terraform {
   required_providers {
-    dockerhub = {
-      source  = "docker/dockerhub"
+    docker = {
+      source  = "docker/docker"
       version = "~>1.0"
     }
   }
@@ -9,7 +9,7 @@ terraform {
   required_version = "~>1.9"
 }
 
-provider "dockerhub" {
+provider "docker" {
   host = "https://hub-stage.docker.com/v2"
 }
 
@@ -35,23 +35,23 @@ variable "token_labels" {
 }
 
 # Create 200 teams with variations
-resource "dockerhub_org_team" "terraform_team" {
-  count           = 200
-  org_name        = "dockerterraform"
-  team_name        = format("tfteam%03d", count.index + 1)  # Ensures the team name is within limits
+resource "docker_org_team" "terraform_team" {
+  count            = 200
+  org_name         = "dockerterraform"
+  team_name        = format("tfteam%03d", count.index + 1) # Ensures the team name is within limits
   team_description = format("Terraform Hackathon Demo - 2024 - Variation %03d", count.index + 1)
 }
 
 # Team associations with variations
-resource "dockerhub_org_team_member_association" "example_association" {
+resource "docker_org_team_member_association" "example_association" {
   count      = 200
   org_name   = "dockerterraform"
-  team_name  = dockerhub_org_team.terraform_team[count.index].team_name
+  team_name  = docker_org_team.terraform_team[count.index].team_name
   user_names = var.user_names
 }
 
 # Create 200 repositories with variations
-resource "dockerhub_repository" "org_repo" {
+resource "docker_repository" "org_repo" {
   count            = 200
   namespace        = "dockerterraform"
   name             = format("%s-%03d", element(var.repo_names, 0), count.index + 1)
@@ -60,15 +60,15 @@ resource "dockerhub_repository" "org_repo" {
 }
 
 # Repository team permissions with variations
-resource "dockerhub_repository_team_permission" "test" {
+resource "docker_repository_team_permission" "test" {
   count      = 200
-  repo_id    = dockerhub_repository.org_repo[count.index].id
-  team_id    = dockerhub_org_team.terraform_team[count.index].id
+  repo_id    = docker_repository.org_repo[count.index].id
+  team_id    = docker_org_team.terraform_team[count.index].id
   permission = "admin"
 }
 
 # Create 200 access tokens with variations
-resource "dockerhub_access_token" "new_token_v2" {
+resource "docker_access_token" "new_token_v2" {
   count       = 200
   token_label = format("%s-%03d", element(var.token_labels, 0), count.index + 1)
   scopes      = ["repo:read", "repo:write"]

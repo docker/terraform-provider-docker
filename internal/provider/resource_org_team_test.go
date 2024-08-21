@@ -20,10 +20,10 @@ func TestAccOrgTeamResource(t *testing.T) {
 				// create
 				Config: testAccOrgTeamResource(orgName, teamName, "test description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("dockerhub_org_team.testing", "id"),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "team_name", teamName),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "team_description", "test description"),
+					resource.TestCheckResourceAttrSet("docker_org_team.testing", "id"),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "team_name", teamName),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "team_description", "test description"),
 				),
 			},
 			{
@@ -31,32 +31,32 @@ func TestAccOrgTeamResource(t *testing.T) {
 				Config:        testAccOrgTeamResource(orgName, teamName, "test description"),
 				ImportState:   true,
 				ImportStateId: orgName + "/" + teamName,
-				ResourceName:  "dockerhub_org_team.testing",
+				ResourceName:  "docker_org_team.testing",
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("dockerhub_org_team.testing", "id"),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "team_name", teamName),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "team_description", "test description"),
+					resource.TestCheckResourceAttrSet("docker_org_team.testing", "id"),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "team_name", teamName),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "team_description", "test description"),
 				),
 			},
 			{
 				// update description
 				Config: testAccOrgTeamResource(orgName, teamName, "updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("dockerhub_org_team.testing", "id"),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "team_name", teamName),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "team_description", "updated description"),
+					resource.TestCheckResourceAttrSet("docker_org_team.testing", "id"),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "team_name", teamName),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "team_description", "updated description"),
 				),
 			},
 			{
 				// update team name
 				Config: testAccOrgTeamResource(orgName, updatedName, "updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("dockerhub_org_team.testing", "id"),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "team_name", updatedName),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "team_description", "updated description"),
+					resource.TestCheckResourceAttrSet("docker_org_team.testing", "id"),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "team_name", updatedName),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "team_description", "updated description"),
 				),
 			},
 			{
@@ -67,10 +67,10 @@ func TestAccOrgTeamResource(t *testing.T) {
 				// create no description
 				Config: testAccOrgTeamResourceNoDescription(orgName, teamName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("dockerhub_org_team.testing", "id"),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_team.testing", "team_name", teamName),
-					resource.TestCheckNoResourceAttr("dockerhub_org_team.testing", "team_description"),
+					resource.TestCheckResourceAttrSet("docker_org_team.testing", "id"),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_team.testing", "team_name", teamName),
+					resource.TestCheckNoResourceAttr("docker_org_team.testing", "team_description"),
 				),
 			},
 		},
@@ -78,7 +78,7 @@ func TestAccOrgTeamResource(t *testing.T) {
 }
 
 const testAccOrgTeamResourceBase = `
-provider "dockerhub" {
+provider "docker" {
   host = "https://hub-stage.docker.com/v2"
 }
 `
@@ -86,7 +86,7 @@ provider "dockerhub" {
 func testAccOrgTeamResource(orgName, teamName, teamDesc string) string {
 	return fmt.Sprintf(`
 %s
-resource "dockerhub_org_team" "testing" {
+resource "docker_org_team" "testing" {
   org_name         = "%s"
   team_name        = "%s"
   team_description = "%s"
@@ -97,7 +97,7 @@ resource "dockerhub_org_team" "testing" {
 func testAccOrgTeamResourceNoDescription(orgName, teamName string) string {
 	return fmt.Sprintf(`
 %s
-resource "dockerhub_org_team" "testing" {
+resource "docker_org_team" "testing" {
   org_name         = "%s"
   team_name        = "%s"
 }

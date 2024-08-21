@@ -28,13 +28,13 @@ func TestAccOrgSettingRegistryAccessManagement(t *testing.T) {
 				// create
 				Config: testAccOrgSettingRegistryAccessManagementCustomRegistry(orgName, true, true, customRegistry),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "true"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.#", "1"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.address", "https://example.com"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.friendly_name", "My personal registry"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.allowed", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.#", "1"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.address", "https://example.com"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.friendly_name", "My personal registry"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.allowed", "true"),
 				),
 			},
 			{
@@ -42,61 +42,61 @@ func TestAccOrgSettingRegistryAccessManagement(t *testing.T) {
 				Config:        testAccOrgSettingRegistryAccessManagementCustomRegistry(orgName, true, true, customRegistry),
 				ImportState:   true,
 				ImportStateId: orgName,
-				ResourceName:  "dockerhub_org_setting_registry_access_management.test",
+				ResourceName:  "docker_org_setting_registry_access_management.test",
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "true"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.#", "1"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.address", "https://example.com"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.friendly_name", "My personal registry"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.allowed", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.#", "1"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.address", "https://example.com"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.friendly_name", "My personal registry"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.allowed", "true"),
 				),
 			},
 			{
 				// disable hub
 				Config: testAccOrgSettingRegistryAccessManagementCustomRegistry(orgName, true, false, customRegistry),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.#", "1"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.address", "https://example.com"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.friendly_name", "My personal registry"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.allowed", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.#", "1"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.address", "https://example.com"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.friendly_name", "My personal registry"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.allowed", "true"),
 				),
 			},
 			{
 				// disable ReAM
 				Config: testAccOrgSettingRegistryAccessManagementCustomRegistry(orgName, false, false, customRegistry),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "enabled", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.#", "1"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.address", "https://example.com"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.friendly_name", "My personal registry"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.0.allowed", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "enabled", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.#", "1"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.address", "https://example.com"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.friendly_name", "My personal registry"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.0.allowed", "true"),
 				),
 			},
 			{
 				// add custom registry
 				Config: testAccOrgSettingRegistryAccessManagementMultipleCustomRegistries(orgName, false, false, customRegistry, altRegistry),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "enabled", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.#", "2"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "enabled", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.#", "2"),
 				),
 			},
 			{
 				// remove custom registries
 				Config: testAccOrgSettingRegistryAccessManagementNoCustomRegistry(orgName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "org_name", orgName),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "enabled", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "false"),
-					resource.TestCheckResourceAttr("dockerhub_org_setting_registry_access_management.test", "custom_registries.#", "0"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "enabled", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "standard_registry_docker_hub.allowed", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "custom_registries.#", "0"),
 				),
 			},
 			{
@@ -108,15 +108,15 @@ func TestAccOrgSettingRegistryAccessManagement(t *testing.T) {
 }
 
 const testAccOrgSettingRegistryAccessManagementBase = `
-provider "dockerhub" {
+provider "docker" {
   host = "https://hub-stage.docker.com/v2"
 }`
 
-func testAccOrgSettingRegistryAccessManagementCustomRegistry(orgName string, enabled, allowDockerHub bool, custom hubclient.RegistryAccessManagementCustomRegistry) string {
+func testAccOrgSettingRegistryAccessManagementCustomRegistry(orgName string, enabled, allowDocker bool, custom hubclient.RegistryAccessManagementCustomRegistry) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "dockerhub_org_setting_registry_access_management" "test" {
+resource "docker_org_setting_registry_access_management" "test" {
   org_name                     = "%[2]s"
   enabled                      = %[3]t
   standard_registry_docker_hub = {
@@ -133,18 +133,18 @@ resource "dockerhub_org_setting_registry_access_management" "test" {
 `, testAccOrgSettingRegistryAccessManagementBase,
 		orgName,
 		enabled,
-		allowDockerHub,
+		allowDocker,
 		custom.Address,
 		custom.FriendlyName,
 		custom.Allowed,
 	)
 }
 
-func testAccOrgSettingRegistryAccessManagementMultipleCustomRegistries(orgName string, enabled, allowDockerHub bool, custom1 hubclient.RegistryAccessManagementCustomRegistry, custom2 hubclient.RegistryAccessManagementCustomRegistry) string {
+func testAccOrgSettingRegistryAccessManagementMultipleCustomRegistries(orgName string, enabled, allowDocker bool, custom1 hubclient.RegistryAccessManagementCustomRegistry, custom2 hubclient.RegistryAccessManagementCustomRegistry) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "dockerhub_org_setting_registry_access_management" "test" {
+resource "docker_org_setting_registry_access_management" "test" {
   org_name                     = "%[2]s"
   enabled                      = %[3]t
   standard_registry_docker_hub = {
@@ -167,7 +167,7 @@ resource "dockerhub_org_setting_registry_access_management" "test" {
 		testAccOrgSettingRegistryAccessManagementBase,
 		orgName,
 		enabled,
-		allowDockerHub,
+		allowDocker,
 		custom1.Address,
 		custom1.FriendlyName,
 		custom1.Allowed,
@@ -177,11 +177,11 @@ resource "dockerhub_org_setting_registry_access_management" "test" {
 	)
 }
 
-func testAccOrgSettingRegistryAccessManagementNoCustomRegistry(orgName string, enabled, allowDockerHub bool) string {
+func testAccOrgSettingRegistryAccessManagementNoCustomRegistry(orgName string, enabled, allowDocker bool) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "dockerhub_org_setting_registry_access_management" "test" {
+resource "docker_org_setting_registry_access_management" "test" {
   org_name                     = "%[2]s"
   enabled                      = %[3]t
   standard_registry_docker_hub = {
@@ -189,5 +189,5 @@ resource "dockerhub_org_setting_registry_access_management" "test" {
   }
   custom_registries = []
 }
-`, testAccOrgSettingRegistryAccessManagementBase, orgName, enabled, allowDockerHub)
+`, testAccOrgSettingRegistryAccessManagementBase, orgName, enabled, allowDocker)
 }

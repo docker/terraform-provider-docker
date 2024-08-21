@@ -31,10 +31,10 @@ type OrgSettingRegistryAccessManagementResource struct {
 }
 
 type OrgSettingRegistryAccessManagementResourceModel struct {
-	OrgName                   types.String `tfsdk:"org_name"`
-	Enabled                   types.Bool   `tfsdk:"enabled"`
-	StandardRegistryDockerHub types.Object `tfsdk:"standard_registry_docker_hub"`
-	CustomRegistries          types.Set    `tfsdk:"custom_registries"`
+	OrgName                types.String `tfsdk:"org_name"`
+	Enabled                types.Bool   `tfsdk:"enabled"`
+	StandardRegistryDocker types.Object `tfsdk:"standard_registry_docker_hub"`
+	CustomRegistries       types.Set    `tfsdk:"custom_registries"`
 }
 
 type StandardRegistryModel struct {
@@ -158,7 +158,7 @@ func (r *OrgSettingRegistryAccessManagementResource) Create(ctx context.Context,
 	}
 
 	data.Enabled = model.Enabled
-	data.StandardRegistryDockerHub = model.StandardRegistryDockerHub
+	data.StandardRegistryDocker = model.StandardRegistryDocker
 	data.CustomRegistries = model.CustomRegistries
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -181,7 +181,7 @@ func (r *OrgSettingRegistryAccessManagementResource) Read(ctx context.Context, r
 	}
 
 	data.Enabled = model.Enabled
-	data.StandardRegistryDockerHub = model.StandardRegistryDockerHub
+	data.StandardRegistryDocker = model.StandardRegistryDocker
 	data.CustomRegistries = model.CustomRegistries
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -212,7 +212,7 @@ func (r *OrgSettingRegistryAccessManagementResource) Update(ctx context.Context,
 	}
 
 	data.Enabled = model.Enabled
-	data.StandardRegistryDockerHub = model.StandardRegistryDockerHub
+	data.StandardRegistryDocker = model.StandardRegistryDocker
 	data.CustomRegistries = model.CustomRegistries
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -228,7 +228,7 @@ func (r *OrgSettingRegistryAccessManagementResource) Delete(ctx context.Context,
 		Enabled: false,
 		StandardRegistries: []hubclient.RegistryAccessManagementStandardRegistry{
 			{
-				ID:      hubclient.StandardRegistryDockerHub,
+				ID:      hubclient.StandardRegistryDocker,
 				Allowed: true,
 			},
 		},
@@ -249,7 +249,7 @@ func (r *OrgSettingRegistryAccessManagementResource) ImportState(ctx context.Con
 func getOrgSettingRegistryAccessManagementRequest(ctx context.Context, data OrgSettingRegistryAccessManagementResourceModel, d diag.Diagnostics) *hubclient.OrgSettingRegistryAccessManagement {
 	var standardRegistryHub StandardRegistryModel
 
-	d.Append(data.StandardRegistryDockerHub.As(ctx, &standardRegistryHub, basetypes.ObjectAsOptions{})...)
+	d.Append(data.StandardRegistryDocker.As(ctx, &standardRegistryHub, basetypes.ObjectAsOptions{})...)
 	if d.HasError() {
 		return nil
 	}
@@ -258,7 +258,7 @@ func getOrgSettingRegistryAccessManagementRequest(ctx context.Context, data OrgS
 		Enabled: data.Enabled.ValueBool(),
 		StandardRegistries: []hubclient.RegistryAccessManagementStandardRegistry{
 			{
-				ID:      hubclient.StandardRegistryDockerHub,
+				ID:      hubclient.StandardRegistryDocker,
 				Allowed: standardRegistryHub.Allowed.ValueBool(),
 			},
 		},
@@ -288,8 +288,8 @@ func getOrgSettingRegistryAccessManagementModel(ctx context.Context, reamResp hu
 
 	var diags diag.Diagnostics
 	for _, v := range reamResp.StandardRegistries {
-		if v.ID == hubclient.StandardRegistryDockerHub {
-			data.StandardRegistryDockerHub, diags = types.ObjectValue(StandardRegistryObjectType.AttrTypes, map[string]attr.Value{
+		if v.ID == hubclient.StandardRegistryDocker {
+			data.StandardRegistryDocker, diags = types.ObjectValue(StandardRegistryObjectType.AttrTypes, map[string]attr.Value{
 				"allowed": types.BoolValue(v.Allowed),
 			})
 			d.Append(diags...)

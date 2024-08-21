@@ -15,7 +15,7 @@ func TestOrgDataSource(t *testing.T) {
 			{
 				Config: testOrgExampleDataSourceConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.dockerhub_org.test", "id", "dockerhackathon"),
+					resource.TestCheckResourceAttr("data.docker_org.test", "id", "dockerhackathon"),
 				),
 			},
 		},
@@ -23,10 +23,10 @@ func TestOrgDataSource(t *testing.T) {
 }
 
 const testOrgExampleDataSourceConfig = `
-provider "dockerhub" {
+provider "docker" {
   host = "https://hub-stage.docker.com/v2"
 }
-data "dockerhub_org" "test" {
+data "docker_org" "test" {
   org_name = "dockerhackathon"
 }
 `

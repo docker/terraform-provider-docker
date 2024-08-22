@@ -15,10 +15,7 @@ Thank you for considering contributing to the Docker Terraform Provider! We welc
 6. Make sure to test your changes
 7. When updating documentation, please see our guidance for documentation contributions (TODO)
 
-## Getting Help
-If you have any questions or need assistance, please reach out to us through in the DTP Slack Channel (TODO)
-
-# Local Development Setup
+## Local Development Setup
 ### Prerequisites:
 - `make`, `git`, `bash`
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.1
@@ -70,7 +67,8 @@ export TF_LOG_PATH="/PATH/TO/YOUR/LOG_FILE.log"
 ...
 ```
 
-
+## Getting Help
+If you have any questions or need assistance, please reach out to us through in the DTP Slack Channel (TODO)
 
 # Thanks for Contributing! 
 Your contributions help make the Docker Terraform Provider better for everyone. We appreciate your support and effort!

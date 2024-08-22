@@ -40,7 +40,7 @@ jobs:
           terraform_wrapper: false
 
       - run: |
-          make testaccc
+          make testacc
         env:
           TF_ACC: "1"
           DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}

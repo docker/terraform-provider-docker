@@ -26,6 +26,7 @@ jobs:
 
   acctest:
     needs: build
+    if: ${{ github.event_name == 'pull_request' }}
     name: Acceptance Tests
     uses: ./.github/workflows/acctest.yaml
     with:

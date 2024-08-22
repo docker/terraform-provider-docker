@@ -58,7 +58,7 @@ func (r *RepositoryTeamPermissionResource) Configure(ctx context.Context, req re
 }
 
 func (r *RepositoryTeamPermissionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_repository_team_permission"
+	resp.TypeName = req.ProviderTypeName + "_hub_repository_team_permission"
 }
 
 func (r *RepositoryTeamPermissionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

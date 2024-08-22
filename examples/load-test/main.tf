@@ -51,7 +51,7 @@ resource "docker_org_team_member_association" "example_association" {
 }
 
 # Create 200 repositories with variations
-resource "docker_repository" "org_repo" {
+resource "docker_hub_repository" "org_hub_repo" {
   count            = 200
   namespace        = "dockerterraform"
   name             = format("%s-%03d", element(var.repo_names, 0), count.index + 1)
@@ -60,9 +60,9 @@ resource "docker_repository" "org_repo" {
 }
 
 # Repository team permissions with variations
-resource "docker_repository_team_permission" "test" {
+resource "docker_hub_repository_team_permission" "test" {
   count      = 200
-  repo_id    = docker_repository.org_repo[count.index].id
+  repo_id    = docker_hub_repository.org_hub_repo[count.index].id
   team_id    = docker_org_team.terraform_team[count.index].id
   permission = "admin"
 }

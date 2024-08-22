@@ -120,7 +120,7 @@ func (r *RepositoryResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 // Metadata implements resource.Resource.
 func (r *RepositoryResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_repository"
+	resp.TypeName = req.ProviderTypeName + "_hub_repository"
 }
 
 // Read implements resource.Resource.

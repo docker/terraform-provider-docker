@@ -16,7 +16,7 @@ func TestAccRepositoriesDataSource(t *testing.T) {
 			{
 				Config: testReposExampleDataSourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.docker_repositories.test", "id", os.Getenv("DOCKER_USERNAME")+"/repositories"),
+					resource.TestCheckResourceAttr("data.docker_hub_repositories.test", "id", os.Getenv("DOCKER_USERNAME")+"/repositories"),
 				),
 			},
 		},
@@ -29,7 +29,7 @@ provider "docker" {
   host = "https://hub-stage.docker.com/v2"
 }
 
-data "docker_repositories" "test" {
+data "docker_hub_repositories" "test" {
   namespace         = "` + os.Getenv("DOCKER_USERNAME") + `"
   max_number_results = 10
 }

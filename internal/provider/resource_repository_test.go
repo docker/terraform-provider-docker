@@ -16,29 +16,29 @@ func TestRepositoryResource(t *testing.T) {
 			{
 				Config: testRepositoryResourceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("docker_repository.test", "id"),
-					resource.TestCheckResourceAttr("docker_repository.test", "name", "example-repo"),
-					resource.TestCheckResourceAttr("docker_repository.test", "namespace", os.Getenv("DOCKER_USERNAME")),
-					resource.TestCheckResourceAttr("docker_repository.test", "description", "Example repository"),
-					resource.TestCheckNoResourceAttr("docker_repository.test", "full_description"),
-					resource.TestCheckResourceAttr("docker_repository.test", "private", "false"),
+					resource.TestCheckResourceAttrSet("docker_hub_repository.test", "id"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "name", "example-repo"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "namespace", os.Getenv("DOCKER_USERNAME")),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "description", "Example repository"),
+					resource.TestCheckNoResourceAttr("docker_hub_repository.test", "full_description"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "private", "false"),
 				),
 			},
 			{
 				Config: testRepositoryResourceConfigUpdated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("docker_repository.test", "description", "Updated example repository"),
-					resource.TestCheckResourceAttr("docker_repository.test", "full_description", "Full description update"),
-					resource.TestCheckResourceAttr("docker_repository.test", "private", "true"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "description", "Updated example repository"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "full_description", "Full description update"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "private", "true"),
 				),
 			},
 			{
-				ResourceName:                         "docker_repository.test",
+				ResourceName:                         "docker_hub_repository.test",
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "id",
 				ImportStateIdFunc: func(state *terraform.State) (string, error) {
-					return state.RootModule().Resources["docker_repository.test"].Primary.Attributes["id"], nil
+					return state.RootModule().Resources["docker_hub_repository.test"].Primary.Attributes["id"], nil
 				},
 			},
 		},
@@ -47,7 +47,7 @@ func TestRepositoryResource(t *testing.T) {
 
 func testRepositoryResourceConfig() string {
 	return `
-resource "docker_repository" "test" {
+resource "docker_hub_repository" "test" {
   name            = "example-repo"
   namespace       = "` + os.Getenv("DOCKER_USERNAME") + `"
   description     = "Example repository"
@@ -58,7 +58,7 @@ resource "docker_repository" "test" {
 
 func testRepositoryResourceConfigUpdated() string {
 	return `
-resource "docker_repository" "test" {
+resource "docker_hub_repository" "test" {
   name            = "example-repo"
   namespace       = "` + os.Getenv("DOCKER_USERNAME") + `"
   description     = "Updated example repository"

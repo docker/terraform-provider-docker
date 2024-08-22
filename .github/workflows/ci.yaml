@@ -28,8 +28,29 @@ jobs:
     needs: build
     if: ${{ github.event_name == 'pull_request' }}
     name: Acceptance Tests
-    uses: ./.github/workflows/acctest.yaml
-    secrets:
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-    with:
-      terraform-version: '1.9.*'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: acctest
+    concurrency: acctest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - run: go mod download
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: ${{ inputs.terraform-version }}
+          terraform_wrapper: false
+
+      - run: |
+          go test ./... -run=TestAcc -v
+        env:
+          DOCKER_USERNAME: dockerterraformprovideracctest
+          DOCKER_PASSWORD: "${{ secrets.DOCKER_PASSWORD }}"
+          TF_ACC: "1"
+        timeout-minutes: 30

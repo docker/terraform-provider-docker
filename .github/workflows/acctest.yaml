@@ -1,0 +1,48 @@
+name: Acceptance Tests
+
+on:
+  workflow_call:
+    inputs:
+      terraform-version:
+        description: 'Terraform version'
+        type: string
+        required: false
+        default: '1.9.*'
+
+  workflow_dispatch:
+    inputs: 
+      terraform-version:
+        description: 'Terraform version'
+        type: string
+        required: false
+        default: '1.9.*'
+
+jobs:
+  acctest:
+    name: Acceptance Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: acctest
+    concurrency: acctest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - run: go mod download
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: ${{ inputs.terraform-version }}
+          terraform_wrapper: false
+
+      - run: |
+          make testaccc
+        env:
+          TF_ACC: "1"
+          DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        timeout-minutes: 10

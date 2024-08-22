@@ -14,6 +14,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-go@v5
-      - run: |
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: vet
+        run: |
           go vet ./...
+
+  acctest:
+    name: Acceptance Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/workflows/acctest.yaml
+        with:
+          terraform-version: '1.9.*'

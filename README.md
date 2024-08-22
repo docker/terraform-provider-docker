@@ -1,8 +1,8 @@
 # Docker Hub Terraform Provider
 This project is used to manage Docker resources (such as repositories, teams, organization settings, and more) using Terraform. It allows users to define Docker infrastructure as code, integrating Docker services into their Terraform workflows. The Terraform Registry page for this provider can be found [here](https://registry.terraform.io/providers/docker/docker/).
 
-
-Note: this project is **not** for managing objects in a local docker engine. If you would like to use Terraform to interact with a docker engine, [kreuzwerker/docker](https://registry.terraform.io/providers/kreuzwerker/docker/latest) is a fine provider.
+> [!WARNING]
+> This project is **not** for managing objects in a local docker engine. If you would like to use Terraform to interact with a docker engine, [kreuzwerker/docker](https://registry.terraform.io/providers/kreuzwerker/docker/latest) is a fine provider.
 
 ## Requirements
 

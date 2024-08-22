@@ -29,5 +29,6 @@ jobs:
     if: ${{ github.event_name == 'pull_request' }}
     name: Acceptance Tests
     uses: ./.github/workflows/acctest.yaml
+    secrets: inherit
     with:
       terraform-version: '1.9.*'

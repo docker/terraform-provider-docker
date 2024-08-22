@@ -41,7 +41,7 @@ type Repository struct {
 }
 
 func (d *RepositoriesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_repositories"
+	resp.TypeName = req.ProviderTypeName + "_hub_repositories"
 }
 
 func (d *RepositoriesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {

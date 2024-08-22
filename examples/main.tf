@@ -29,7 +29,7 @@ resource "docker_org_team_member_association" "example_association" {
 }
 
 # Create repository
-resource "docker_repository" "org_repo" {
+resource "docker_hub_repository" "org_hub_repo" {
   namespace        = "dockerterraform"
   name             = "docker-terraform-repo-demo"
   description      = "This is a repo demo"
@@ -37,8 +37,8 @@ resource "docker_repository" "org_repo" {
 }
 
 # Create repository team permission
-resource "docker_repository_team_permission" "test" {
-  repo_id    = docker_repository.org_repo.id
+resource "docker_hub_repository_team_permission" "test" {
+  repo_id    = docker_hub_repository.org_hub_repo.id
   team_id    = docker_org_team.terraform-team.id
   permission = "admin"
 }
@@ -52,7 +52,7 @@ resource "docker_access_token" "new_token_v2" {
 
 # Output Demos
 output "repo_output" {
-  value = resource.docker_repository.org_repo
+  value = resource.docker_hub_repository.org_hub_repo
 }
 
 output "org_team_output" {

@@ -21,9 +21,9 @@ func TestAccRepositoryTeamPermission(t *testing.T) {
 				// create
 				Config: testAccRepositoryTeamPermission(orgName, teamName, repoName, hubclient.TeamRepoPermissionLevelRead),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "repo_id", "docker_repository.test", "id"),
-					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "team_id", "docker_org_team.test", "id"),
-					resource.TestCheckResourceAttr("docker_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelRead),
+					resource.TestCheckResourceAttrPair("docker_hub_repository_team_permission.test", "repo_id", "docker_hub_repository.test", "id"),
+					resource.TestCheckResourceAttrPair("docker_hub_repository_team_permission.test", "team_id", "docker_org_team.test", "id"),
+					resource.TestCheckResourceAttr("docker_hub_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelRead),
 				),
 			},
 			{
@@ -34,20 +34,20 @@ func TestAccRepositoryTeamPermission(t *testing.T) {
 					teamID := state.RootModule().Resources["docker_org_team.test"].Primary.Attributes["id"]
 					return orgName + "/" + repoName + "/" + teamID, nil
 				},
-				ResourceName: "docker_repository_team_permission.test",
+				ResourceName: "docker_hub_repository_team_permission.test",
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "repo_id", "docker_repository.test", "id"),
-					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "team_id", "docker_org_team.test", "id"),
-					resource.TestCheckResourceAttr("docker_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelRead),
+					resource.TestCheckResourceAttrPair("docker_hub_repository_team_permission.test", "repo_id", "docker_hub_repository.test", "id"),
+					resource.TestCheckResourceAttrPair("docker_hub_repository_team_permission.test", "team_id", "docker_org_team.test", "id"),
+					resource.TestCheckResourceAttr("docker_hub_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelRead),
 				),
 			},
 			{
 				// update permission
 				Config: testAccRepositoryTeamPermission(orgName, teamName, repoName, hubclient.TeamRepoPermissionLevelAdmin),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "repo_id", "docker_repository.test", "id"),
-					resource.TestCheckResourceAttrPair("docker_repository_team_permission.test", "team_id", "docker_org_team.test", "id"),
-					resource.TestCheckResourceAttr("docker_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelAdmin),
+					resource.TestCheckResourceAttrPair("docker_hub_repository_team_permission.test", "repo_id", "docker_hub_repository.test", "id"),
+					resource.TestCheckResourceAttrPair("docker_hub_repository_team_permission.test", "team_id", "docker_org_team.test", "id"),
+					resource.TestCheckResourceAttr("docker_hub_repository_team_permission.test", "permission", hubclient.TeamRepoPermissionLevelAdmin),
 				),
 			},
 			{
@@ -69,7 +69,7 @@ resource "docker_org_team" "test" {
   team_name        = "%[2]s"
 }
 
-resource "docker_repository" "test" {
+resource "docker_hub_repository" "test" {
   namespace = "%[1]s"
   name      = "%[3]s"
 }`, orgName, teamName, repoName)
@@ -79,8 +79,8 @@ func testAccRepositoryTeamPermission(orgName, teamName, repoName string, permiss
 	return fmt.Sprintf(`
 %[1]s
 
-resource "docker_repository_team_permission" "test" {
-  repo_id    = docker_repository.test.id
+resource "docker_hub_repository_team_permission" "test" {
+  repo_id    = docker_hub_repository.test.id
   team_id    = docker_org_team.test.id
   permission = "%[2]s"
 }

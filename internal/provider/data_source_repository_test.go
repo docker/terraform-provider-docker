@@ -15,7 +15,7 @@ func TestAccRepositoryDataSource(t *testing.T) {
 			{
 				Config: testAccExampleDataSourceConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.docker_repository.test", "id", "ryanhristovski/data-source-example"),
+					resource.TestCheckResourceAttr("data.docker_hub_repository.test", "id", "ryanhristovski/data-source-example"),
 				),
 			},
 		},
@@ -26,7 +26,7 @@ const testAccExampleDataSourceConfig = `
 provider "docker" {
   host = "https://hub-stage.docker.com/v2"
 }
-data "docker_repository" "test" {
+data "docker_hub_repository" "test" {
   namespace = "ryanhristovski"
   name = "data-source-example"
 }

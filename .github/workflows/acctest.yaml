@@ -1,12 +1,6 @@
 name: Acceptance Tests
 
 on:
-  workflow_run:
-    workflows: 
-      - CI
-    types:
-      - completed
-
   workflow_dispatch:
     inputs: 
       terraform-version:
@@ -20,7 +14,6 @@ jobs:
     name: Acceptance Test
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    environment: acctest
     concurrency: acctest
     steps:
       - uses: actions/checkout@v4
@@ -34,13 +27,13 @@ jobs:
 
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
         with:
-          terraform_version: ${{ inputs.terraform-version || '1.9.*' }}
+          terraform_version: ${{ inputs.terraform-version }}
           terraform_wrapper: false
 
       - run: |
           go test ./... -run=TestAcc -v
         env:
-          DOCKER_USERNAME: dockerterraformprovideracctest
+          DOCKER_USERNAME: "${{ vars.DOCKER_USERNAME }}"
           DOCKER_PASSWORD: "${{ secrets.DOCKER_PASSWORD }}"
           TF_ACC: "1"
         timeout-minutes: 30

@@ -60,6 +60,34 @@ type OrgTeamMemberRequest struct {
 	Member string `json:"member"`
 }
 
+type OrgMemberRequest struct {
+	Org      string   `json:"org"`
+	Team     string   `json:"team"`
+	Invitees []string `json:"invitees"`
+	Role     string   `json:"role"`
+	DryRun   bool     `json:"dry_run"`
+}
+
+type OrgInviteResponse struct {
+	OrgInvitees []OrgInvitee `json:"invitees"`
+}
+
+type OrgInvitee struct {
+	Invitee string    `json:"invitee"`
+	Status  string    `json:"status"`
+	Invite  OrgInvite `json:"invite"`
+}
+
+type OrgInvite struct {
+	ID              string `json:"id"`
+	InviterUsername string `json:"inviter_username"`
+	Invitee         string `json:"invitee"`
+	Team            string `json:"team"`
+	Org             string `json:"org"`
+	Role            string `json:"role"`
+	CreatedAt       string `json:"created_at"`
+}
+
 type OrgSettingImageAccessManagement struct {
 	RestrictedImages ImageAccessManagementRestrictedImages `json:"restricted_images"`
 }
@@ -199,3 +227,45 @@ func (c *Client) SetOrgSettingRegistryAccessManagement(ctx context.Context, orgN
 	}
 	return c.GetOrgSettingRegistryAccessManagement(ctx, orgName)
 }
+
+func (c *Client) InviteOrgMember(ctx context.Context, orgName, teamName, role string, invitees []string, dryRun bool) (OrgInviteResponse, error) {
+	inviteRequest := OrgMemberRequest{
+		Org:      orgName,
+		Team:     teamName,
+		Invitees: invitees,
+		Role:     role,
+		DryRun:   dryRun,
+	}
+	reqBody, err := json.Marshal(inviteRequest)
+	if err != nil {
+		return OrgInviteResponse{}, err
+	}
+
+	var inviteResponse OrgInviteResponse
+	err = c.sendRequest(ctx, "POST", "/invites/bulk", reqBody, &inviteResponse)
+	return inviteResponse, err
+}
+
+func (c *Client) DeleteOrgInvite(ctx context.Context, inviteID string) error {
+	url := fmt.Sprintf("/invites/%s", inviteID)
+	return c.sendRequest(ctx, "DELETE", url, nil, nil)
+}
+
+func (c *Client) DeleteOrgMember(ctx context.Context, orgName string, userName string) error {
+	url := fmt.Sprintf("/orgs/%s/members/%s/", orgName, userName)
+	return c.sendRequest(ctx, "DELETE", url, nil, nil)
+}
+
+// func (c *Client) GetOrgInvitedMember(ctx context.Context, inviteID string) (OrgMembersResponse, error) {
+// 	url := fmt.Sprintf("/invites", inviteID)
+// 	var membersResponse OrgMembersResponse
+// 	err := c.sendRequest(ctx, "GET", url, nil, &membersResponse)
+// 	return membersResponse, err
+// }
+
+// func (c *Client) GetOrgMembers(ctx context.Context, orgName string) (OrgMembersResponse, error) {
+// 	url := fmt.Sprintf("/orgs/%s/members", orgName)
+// 	var membersResponse OrgMembersResponse
+// 	err := c.sendRequest(ctx, "GET", url, nil, &membersResponse)
+// 	return membersResponse, err
+// }

@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/go-jose/go-jose/v3/jwt"
 )
 
 type Auth struct {
@@ -59,17 +59,20 @@ func NewClient(config Config) *Client {
 	}
 }
 
-// parseTokenExpiration parses the JWT token to get the exact expiration time.
+// parseTokenExpiration parses the JWT token to get the exact expiration time using go-jose.
 func parseTokenExpiration(tokenString string) (time.Time, error) {
-	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
+	token, err := jwt.ParseSigned(tokenString)
 	if err != nil {
 		return time.Time{}, err
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		if exp, ok := claims["exp"].(float64); ok {
-			return time.Unix(int64(exp), 0), nil
-		}
+	claims := jwt.Claims{}
+	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+		return time.Time{}, err
+	}
+
+	if claims.Expiry != nil {
+		return claims.Expiry.Time(), nil
 	}
 
 	return time.Time{}, fmt.Errorf("could not find expiration in token")

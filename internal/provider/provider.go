@@ -185,7 +185,7 @@ func (p *DockerProvider) Resources(ctx context.Context) []func() resource.Resour
 		NewOrgTeamMemberAssociationResource,
 		NewRepositoryResource,
 		NewRepositoryTeamPermissionResource,
-		NewOrgMemberAssociationResource,
+		NewOrgMemberResource,
 	}
 }
 

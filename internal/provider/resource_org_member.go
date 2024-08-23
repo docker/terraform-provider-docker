@@ -16,20 +16,20 @@ import (
 )
 
 var (
-	_ resource.Resource                = &OrgMemberAssociationResource{}
-	_ resource.ResourceWithConfigure   = &OrgMemberAssociationResource{}
-	_ resource.ResourceWithImportState = &OrgMemberAssociationResource{}
+	_ resource.Resource                = &OrgMemberResource{}
+	_ resource.ResourceWithConfigure   = &OrgMemberResource{}
+	_ resource.ResourceWithImportState = &OrgMemberResource{}
 )
 
-func NewOrgMemberAssociationResource() resource.Resource {
-	return &OrgMemberAssociationResource{}
+func NewOrgMemberResource() resource.Resource {
+	return &OrgMemberResource{}
 }
 
-type OrgMemberAssociationResource struct {
+type OrgMemberResource struct {
 	client *hubclient.Client
 }
 
-type OrgMemberAssociationResourceModel struct {
+type OrgMemberResourceModel struct {
 	OrgName  types.String `tfsdk:"org_name"`
 	TeamName types.String `tfsdk:"team_name"`
 	UserName types.String `tfsdk:"user_name"`
@@ -37,7 +37,7 @@ type OrgMemberAssociationResourceModel struct {
 	InviteID types.String `tfsdk:"invite_id"` // This is needed for deletion
 }
 
-func (r *OrgMemberAssociationResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *OrgMemberResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 
 	if req.ProviderData == nil {
 		return
@@ -53,13 +53,13 @@ func (r *OrgMemberAssociationResource) Configure(ctx context.Context, req resour
 	r.client = client
 }
 
-func (r *OrgMemberAssociationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_org_member_association"
+func (r *OrgMemberResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_org_member"
 }
 
-func (r *OrgMemberAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *OrgMemberResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages the association of a member with a team in an organization.",
+		MarkdownDescription: "Manages the  of a member with a team in an organization.",
 
 		Attributes: map[string]schema.Attribute{
 			"org_name": schema.StringAttribute{
@@ -85,7 +85,7 @@ func (r *OrgMemberAssociationResource) Schema(ctx context.Context, req resource.
 				},
 			},
 			"role": schema.StringAttribute{
-				MarkdownDescription: "Role assigned to the user within the organization (e.g., 'member', 'admin').",
+				MarkdownDescription: "Role assigned to the user within the organization (e.g., 'member', 'editor', 'owner').",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -95,16 +95,16 @@ func (r *OrgMemberAssociationResource) Schema(ctx context.Context, req resource.
 				},
 			},
 			"invite_id": schema.StringAttribute{
-				MarkdownDescription: "The ID of the invite. Used for managing the association, especially for deletion.",
+				MarkdownDescription: "The ID of the invite. Used for managing the , especially for deletion.",
 				Computed:            true,
 			},
 		},
 	}
 }
 
-func (r *OrgMemberAssociationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *OrgMemberResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 
-	var data OrgMemberAssociationResourceModel
+	var data OrgMemberResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -112,13 +112,13 @@ func (r *OrgMemberAssociationResource) Create(ctx context.Context, req resource.
 
 	inviteResp, err := r.client.InviteOrgMember(ctx, data.OrgName.ValueString(), data.TeamName.ValueString(), data.Role.ValueString(), []string{data.UserName.ValueString()}, false)
 	if err != nil {
-		errMsg := fmt.Sprintf("Unable to create org_member_association resource: %v", err)
+		errMsg := fmt.Sprintf("Unable to create org_member resource: %v", err)
 		resp.Diagnostics.AddError("Error Creating Resource", errMsg)
 		return
 	}
 
 	if len(inviteResp.OrgInvitees) == 0 {
-		errMsg := "Invite failed: No invitees were returned from the Docker Hub API."
+		errMsg := "No invitees were returned from the Docker Hub API."
 		resp.Diagnostics.AddError("Invite Failed", errMsg)
 		return
 	}
@@ -130,9 +130,9 @@ func (r *OrgMemberAssociationResource) Create(ctx context.Context, req resource.
 }
 
 // TODO: finish read
-func (r *OrgMemberAssociationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *OrgMemberResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 
-	var data OrgMemberAssociationResourceModel
+	var data OrgMemberResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -140,12 +140,12 @@ func (r *OrgMemberAssociationResource) Read(ctx context.Context, req resource.Re
 }
 
 // TODO: setup update
-func (r *OrgMemberAssociationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *OrgMemberResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	return
 }
 
-func (r *OrgMemberAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data OrgMemberAssociationResourceModel
+func (r *OrgMemberResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data OrgMemberResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -159,7 +159,7 @@ func (r *OrgMemberAssociationResource) Delete(ctx context.Context, req resource.
 		// If deleting by inviteID fails, try deleting by orgName and userName
 		err = r.client.DeleteOrgMember(ctx, data.OrgName.ValueString(), data.UserName.ValueString())
 		if err != nil {
-			errMsg := fmt.Sprintf("Unable to delete org_member_association resource: %v", err)
+			errMsg := fmt.Sprintf("Unable to delete org_member resource: %v", err)
 			log.Println(errMsg)
 			resp.Diagnostics.AddError("Error Deleting Resource", errMsg)
 			return
@@ -167,10 +167,10 @@ func (r *OrgMemberAssociationResource) Delete(ctx context.Context, req resource.
 	}
 
 	resp.State.RemoveResource(ctx)
-	log.Println("Successfully deleted OrgMemberAssociationResource.")
+	log.Println("Successfully deleted OrgMemberResource.")
 }
 
 // TODO: setup import state
-func (r *OrgMemberAssociationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *OrgMemberResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	return
 }

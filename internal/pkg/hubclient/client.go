@@ -1,4 +1,3 @@
-// API client for hub.docker.com
 package hubclient
 
 import (
@@ -9,7 +8,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
+
+	"github.com/go-jose/go-jose/v3/jwt"
 )
 
 type Auth struct {
@@ -22,10 +24,13 @@ type Token struct {
 }
 
 type Client struct {
-	BaseURL    string
-	auth       Auth
-	HTTPClient *http.Client
-	userAgent  string
+	BaseURL     string
+	auth        Auth
+	HTTPClient  *http.Client
+	userAgent   string
+	token       string
+	tokenExpiry time.Time
+	mu          sync.Mutex
 }
 
 type Config struct {
@@ -35,7 +40,6 @@ type Config struct {
 	UserAgentVersion string
 }
 
-// Create the API client, providing the authentication.
 func NewClient(config Config) *Client {
 	version := config.UserAgentVersion
 	if version == "" {
@@ -55,51 +59,90 @@ func NewClient(config Config) *Client {
 	}
 }
 
-func (c *Client) sendRequest(ctx context.Context, method string, url string, body []byte, result interface{}) error {
+// parseTokenExpiration parses the JWT token to get the exact expiration time using go-jose.
+func parseTokenExpiration(tokenString string) (time.Time, error) {
+	token, err := jwt.ParseSigned(tokenString)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	claims := jwt.Claims{}
+	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+		return time.Time{}, err
+	}
+
+	if claims.Expiry != nil {
+		return claims.Expiry.Time(), nil
+	}
+
+	return time.Time{}, fmt.Errorf("could not find expiration in token")
+}
+
+func (c *Client) ensureValidToken(ctx context.Context) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.token != "" && time.Now().Before(c.tokenExpiry) {
+		return nil
+	}
+
 	authJSON, err := json.Marshal(c.auth)
 	if err != nil {
 		return err
 	}
+
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/login/", c.BaseURL), bytes.NewBuffer(authJSON))
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-	req.Header.Set("Accept", "application/json; charset=utf-8")
-
+	req.Header.Set("Content-Type", "application/json")
 	req = req.WithContext(ctx)
 
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
-
 	defer res.Body.Close()
 
 	if res.StatusCode < http.StatusOK || res.StatusCode >= http.StatusBadRequest {
-		bodyBytes, readErr := io.ReadAll(res.Body)
-		if readErr != nil {
-			return readErr
-		}
-		return errors.New(string(bodyBytes))
+		return fmt.Errorf("HTTP error: %s", res.Status)
 	}
+
 	token := Token{}
 	if err = json.NewDecoder(res.Body).Decode(&token); err != nil {
 		return err
 	}
 
-	req, err = http.NewRequest(method, fmt.Sprintf("%s%s", c.BaseURL, url), bytes.NewBuffer(body))
+	// Parse the exact expiration time from the token
+	expirationTime, err := parseTokenExpiration(token.Token)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-	req.Header.Set("Accept", "application/json; charset=utf-8")
+
+	// Store the new token and its exact expiration time
+	c.token = token.Token
+	c.tokenExpiry = expirationTime
+
+	return nil
+}
+
+func (c *Client) sendRequest(ctx context.Context, method string, url string, body []byte, result interface{}) error {
+	if err := c.ensureValidToken(ctx); err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(method, fmt.Sprintf("%s%s", c.BaseURL, url), bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 	req.Header.Set("User-Agent", c.userAgent)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.Token))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
 
 	req = req.WithContext(ctx)
 
-	res, err = c.HTTPClient.Do(req)
+	res, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return err
 	}

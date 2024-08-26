@@ -105,7 +105,7 @@ type OrgSettingRegistryAccessManagement struct {
 }
 
 const (
-	StandardRegistryDocker = "Docker"
+	StandardRegistryDocker = "DockerHub"
 )
 
 type RegistryAccessManagementStandardRegistry struct {

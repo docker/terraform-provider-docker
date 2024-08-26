@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,7 +33,7 @@ type Client struct {
 }
 
 type Config struct {
-	Host             string
+	BaseURL          string
 	Username         string
 	Password         string
 	UserAgentVersion string
@@ -47,7 +46,7 @@ func NewClient(config Config) *Client {
 	}
 
 	return &Client{
-		BaseURL: config.Host,
+		BaseURL: config.BaseURL,
 		auth: Auth{
 			Username: config.Username,
 			Password: config.Password,
@@ -88,7 +87,7 @@ func (c *Client) ensureValidToken(ctx context.Context) error {
 
 	authJSON, err := json.Marshal(c.auth)
 	if err != nil {
-		return err
+		return fmt.Errorf("decode auth settings: %v", err)
 	}
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/users/login/", c.BaseURL), bytes.NewBuffer(authJSON))
@@ -100,23 +99,23 @@ func (c *Client) ensureValidToken(ctx context.Context) error {
 
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("check credentials: %v", err)
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode < http.StatusOK || res.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("HTTP error: %s", res.Status)
+		return fmt.Errorf("check credentials status: %s", res.Status)
 	}
 
 	token := Token{}
 	if err = json.NewDecoder(res.Body).Decode(&token); err != nil {
-		return err
+		return fmt.Errorf("check credentials decode response: %v", err)
 	}
 
 	// Parse the exact expiration time from the token
 	expirationTime, err := parseTokenExpiration(token.Token)
 	if err != nil {
-		return err
+		return fmt.Errorf("check credentials expiry: %v", err)
 	}
 
 	// Store the new token and its exact expiration time
@@ -131,7 +130,8 @@ func (c *Client) sendRequest(ctx context.Context, method string, url string, bod
 		return err
 	}
 
-	req, err := http.NewRequest(method, fmt.Sprintf("%s%s", c.BaseURL, url), bytes.NewBuffer(body))
+	path := fmt.Sprintf("%s%s", c.BaseURL, url)
+	req, err := http.NewRequest(method, path, bytes.NewBuffer(body))
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func (c *Client) sendRequest(ctx context.Context, method string, url string, bod
 		if readErr != nil {
 			return readErr
 		}
-		return errors.New(string(bodyBytes))
+		return fmt.Errorf("server response %s: %s", path, string(bodyBytes))
 	}
 
 	if result != nil {

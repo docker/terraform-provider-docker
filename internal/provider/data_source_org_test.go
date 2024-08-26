@@ -24,7 +24,7 @@ func TestOrgDataSource(t *testing.T) {
 
 const testOrgExampleDataSourceConfig = `
 provider "docker" {
-  host = "https://hub-stage.docker.com/v2"
+  host = "hub-stage.docker.com"
 }
 data "docker_org" "test" {
   org_name = "dockerhackathon"

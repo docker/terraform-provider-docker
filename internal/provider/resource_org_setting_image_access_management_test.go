@@ -66,7 +66,7 @@ func TestAccOrgSettingImageAccessManagement(t *testing.T) {
 
 const testAccOrgSettingImageAccessManagementBase = `
 provider "docker" {
-  host = "https://hub-stage.docker.com/v2"
+  host = "hub-stage.docker.com"
 }`
 
 func testAccOrgSettingImageAccessManagement(orgName string, enabled, allowOfficialImages, allowVerifiedPublishers bool) string {

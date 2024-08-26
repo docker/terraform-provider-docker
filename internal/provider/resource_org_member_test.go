@@ -34,6 +34,7 @@ func TestAccOrgMemberResource(t *testing.T) {
 func testOrgMemberResourceConfig() string {
 	return `
 provider "docker" {
+  host = "hub-stage.docker.com"
 }
 
 resource "docker_org_member" "test" {

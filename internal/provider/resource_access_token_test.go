@@ -40,7 +40,7 @@ func TestAccessTokenResource(t *testing.T) {
 
 const testAccessTokenResourceConfig = `
 provider "docker" {
-  host     = "https://hub-stage.docker.com/v2"
+  host = "hub-stage.docker.com"
 }
 
 resource "docker_access_token" "test" {

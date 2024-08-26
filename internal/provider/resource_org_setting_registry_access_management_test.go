@@ -109,7 +109,7 @@ func TestAccOrgSettingRegistryAccessManagement(t *testing.T) {
 
 const testAccOrgSettingRegistryAccessManagementBase = `
 provider "docker" {
-  host = "https://hub-stage.docker.com/v2"
+  host = "hub-stage.docker.com"
 }`
 
 func testAccOrgSettingRegistryAccessManagementCustomRegistry(orgName string, enabled, allowDocker bool, custom hubclient.RegistryAccessManagementCustomRegistry) string {

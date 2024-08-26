@@ -26,7 +26,7 @@ func TestAccRepositoriesDataSource(t *testing.T) {
 func testReposExampleDataSourceConfig() string {
 	return `
 provider "docker" {
-  host = "https://hub-stage.docker.com/v2"
+  host = "hub-stage.docker.com"
 }
 
 data "docker_hub_repositories" "test" {

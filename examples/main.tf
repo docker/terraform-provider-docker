@@ -10,7 +10,7 @@ terraform {
 }
 
 provider "docker" {
-  host = "https://hub-stage.docker.com/v2"
+  host = "hub-stage.docker.com"
 }
 
 # Resources Demo

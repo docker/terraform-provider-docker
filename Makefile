@@ -1,10 +1,18 @@
+ACCTEST_COUNT                ?= 1
+ACCTEST_PARALLELISM          ?= 20
+ACCTEST_TIMEOUT              ?= 120m
+
+ifneq ($(origin TESTS), undefined)
+	RUNARGS = -run='$(TESTS)'
+endif
+
 # Default target
 default: testacc
 
 # Run acceptance tests
 .PHONY: testacc
 testacc:
-	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test ./... -v -count $(ACCTEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -timeout $(ACCTEST_TIMEOUT) $(RUNARGS) $(TESTARGS)
 
 # Install the provider binary to GOBIN
 .PHONY: install

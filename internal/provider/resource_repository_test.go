@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -8,24 +9,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestRepositoryResource(t *testing.T) {
+func TestAccRepositoryResource(t *testing.T) {
+	namespace := os.Getenv("DOCKER_USERNAME")
+	name := "example-repo" + randString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testRepositoryResourceConfig(),
+				Config: testRepositoryResourceConfig(namespace, name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("docker_hub_repository.test", "id"),
-					resource.TestCheckResourceAttr("docker_hub_repository.test", "name", "example-repo"),
-					resource.TestCheckResourceAttr("docker_hub_repository.test", "namespace", os.Getenv("DOCKER_USERNAME")),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "name", name),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "namespace", namespace),
 					resource.TestCheckResourceAttr("docker_hub_repository.test", "description", "Example repository"),
 					resource.TestCheckNoResourceAttr("docker_hub_repository.test", "full_description"),
 					resource.TestCheckResourceAttr("docker_hub_repository.test", "private", "false"),
 				),
 			},
 			{
-				Config: testRepositoryResourceConfigUpdated(),
+				Config: testRepositoryResourceConfigUpdated(namespace, name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("docker_hub_repository.test", "description", "Updated example repository"),
 					resource.TestCheckResourceAttr("docker_hub_repository.test", "full_description", "Full description update"),
@@ -45,25 +48,31 @@ func TestRepositoryResource(t *testing.T) {
 	})
 }
 
-func testRepositoryResourceConfig() string {
-	return `
-resource "docker_hub_repository" "test" {
-  name            = "example-repo"
-  namespace       = "` + os.Getenv("DOCKER_USERNAME") + `"
-  description     = "Example repository"
-  private         = false
-}
-`
+func testRepositoryResourceConfig(namespace, name string) string {
+	return fmt.Sprintf(`
+provider "docker" {
+  host = "hub-stage.docker.com"
 }
 
-func testRepositoryResourceConfigUpdated() string {
-	return `
 resource "docker_hub_repository" "test" {
-  name            = "example-repo"
-  namespace       = "` + os.Getenv("DOCKER_USERNAME") + `"
+  name            = "%[2]s"
+  namespace       = "%[1]s"
+  description     = "Example repository"
+  private         = false
+}`, namespace, name)
+}
+
+func testRepositoryResourceConfigUpdated(namespace, name string) string {
+	return fmt.Sprintf(`
+provider "docker" {
+  host = "hub-stage.docker.com"
+}
+
+resource "docker_hub_repository" "test" {
+  name            = "%[2]s"
+  namespace       = "%[1]s"
   description     = "Updated example repository"
   full_description = "Full description update"
   private         = true
-}
-`
+}`, namespace, name)
 }

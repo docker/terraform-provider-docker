@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/docker/terraform-provider-docker/internal/envvar"
 	"github.com/docker/terraform-provider-docker/internal/pkg/hubclient"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccOrgSettingRegistryAccessManagement(t *testing.T) {
-	orgName := "dockerterraform"
+	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)
 	customRegistry := hubclient.RegistryAccessManagementCustomRegistry{
 		Allowed:      true,
 		FriendlyName: "My personal registry",

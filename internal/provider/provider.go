@@ -30,9 +30,6 @@ var (
 
 // DockerProvider defines the provider implementation.
 type DockerProvider struct {
-	// version is set to the provider version on release, "dev" when the
-	// provider is built and ran locally, and "test" when running acceptance
-	// testing.
 	version string
 }
 
@@ -131,20 +128,35 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		password = data.Password.ValueString()
 	}
 
-	// If username or password are not set, retrieve them from the credential store
+	// If DOCKER_USERNAME and DOCKER_PASSWORD are not set, or if they are empty,
+	// retrieve them from the credential store
 	if username == "" || password == "" {
-		credsHost := os.Getenv("DOCKER_LOGIN_HOST")
-		if credsHost == "" {
-			credsHost = "index.docker.io/v1/"
+		// List of possible credential hosts to check
+		credsHosts := []string{
+			"index.docker.io/v1/",
+			"hub.docker.com/v2/users/login",
 		}
 
-		creds, err := tools.ReadCredentialsFromStore(fmt.Sprintf("https://%s", credsHost))
-		if err != nil {
-			resp.Diagnostics.AddError("Credential Store Error", fmt.Sprintf("Failed to retrieve credentials from the OS credential store: %v", err))
+		// Attempt to retrieve credentials from multiple credsHost
+		for _, credsHost := range credsHosts {
+			if credsHostEnv := os.Getenv("DOCKER_LOGIN_HOST"); credsHostEnv != "" {
+				credsHost = credsHostEnv
+			}
+
+			// Use the getUserCreds function to retrieve credentials from Docker config
+			var err error
+			username, password, err = tools.GetUserCreds(fmt.Sprintf("https://%s", credsHost))
+			if err == nil {
+				// Credentials were successfully retrieved, break the loop
+				break
+			}
+		}
+
+		// If credentials could not be retrieved, report an error
+		if username == "" || password == "" {
+			resp.Diagnostics.AddError("Credential Store Error", "Failed to retrieve credentials from the Docker config file.")
 			return
 		}
-		username = creds.Username
-		password = creds.Secret
 	}
 
 	// If any of the expected configurations are missing, return

@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/docker/terraform-provider-docker/internal/pkg/hubclient"
+	"github.com/docker/terraform-provider-docker/tools"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
@@ -130,9 +131,24 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		password = data.Password.ValueString()
 	}
 
+	// If username or password are not set, retrieve them from the credential store
+	if username == "" || password == "" {
+		credsHost := os.Getenv("DOCKER_LOGIN_HOST")
+		if credsHost == "" {
+			credsHost = "registry-1-stage.docker.io"
+		}
+
+		creds, err := tools.ReadCredentialsFromStore(fmt.Sprintf("https://%s", credsHost))
+		if err != nil {
+			resp.Diagnostics.AddError("Credential Store Error", fmt.Sprintf("Failed to retrieve credentials from the OS credential store: %v", err))
+			return
+		}
+		username = creds.Username
+		password = creds.Secret
+	}
+
 	// If any of the expected configurations are missing, return
 	// errors with provider-specific guidance.
-
 	if host == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("host"),

@@ -135,7 +135,7 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	if username == "" || password == "" {
 		credsHost := os.Getenv("DOCKER_LOGIN_HOST")
 		if credsHost == "" {
-			credsHost = "registry-1-stage.docker.io"
+			credsHost = "index.docker.io/v1/"
 		}
 
 		creds, err := tools.ReadCredentialsFromStore(fmt.Sprintf("https://%s", credsHost))

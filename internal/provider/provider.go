@@ -2,18 +2,24 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"regexp"
 
 	"github.com/docker/terraform-provider-docker/internal/pkg/hubclient"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+var hostRegexp = regexp.MustCompile(`^[a-zA-Z0-9:.-]+$`)
 
 // Ensure DockerProvider satisfies various provider interfaces.
 var (
@@ -45,8 +51,11 @@ func (p *DockerProvider) Schema(ctx context.Context, req provider.SchemaRequest,
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"host": schema.StringAttribute{
-				MarkdownDescription: "Docker Hub host URL",
+				MarkdownDescription: "Docker Hub API Host. Default is `hub.docker.com`.",
 				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(hostRegexp, "Must be a valid host"),
+				},
 			},
 			"username": schema.StringAttribute{
 				MarkdownDescription: "Username for authentication",
@@ -75,7 +84,7 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 			path.Root("host"),
 			"Unknown Docker Hub API Host",
 			"The provider cannot create the Docker Hub API client as there is an unknown configuration value for the Docker Hub API host. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the DOCKER_HOST environment variable.",
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the DOCKER_HUB_HOST environment variable.",
 		)
 	}
 
@@ -103,11 +112,9 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 	// Default values to environment variables, but override
 	// with Terraform configuration value if set.
-	host := os.Getenv("DOCKER_HOST")
+	host := os.Getenv("DOCKER_HUB_HOST")
 	if host == "" {
-		// once this is ready for the lime-light, we should default this to prod
-		// host = "https://hub.docker.com/v2"
-		host = "https://hub-stage.docker.com/v2"
+		host = "hub.docker.com"
 	}
 	if !data.Host.IsNull() {
 		host = data.Host.ValueString()
@@ -131,9 +138,14 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 			path.Root("host"),
 			"Missing Docker Hub API Host",
 			"The provider cannot create the Docker Hub API client as there is a missing or empty value for the Docker Hub API host. "+
-				"Set the host value in the configuration or use the DOCKER_HOST environment variable. "+
+				"Set the host value in the configuration or use the DOCKER_HUB_HOST environment variable. "+
 				"If either is already set, ensure the value is not empty.",
 		)
+	} else if !hostRegexp.MatchString(host) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("host"),
+			"Invalid Docker Hub API Host",
+			"DOCKER_HUB_HOST must be a valid host (of the form 'hub.docker.com').")
 	}
 
 	if username == "" {
@@ -160,14 +172,14 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	ctx = tflog.SetField(ctx, "docker_host", host)
+	ctx = tflog.SetField(ctx, "docker_hub_host", host)
 	ctx = tflog.SetField(ctx, "docker_username", username)
 	ctx = tflog.SetField(ctx, "docker_password", password)
 
 	tflog.Debug(ctx, "Creating Docker Hub client")
 
 	client := hubclient.NewClient(hubclient.Config{
-		Host:             host,
+		BaseURL:          fmt.Sprintf("https://%s/v2", host),
 		Username:         username,
 		Password:         password,
 		UserAgentVersion: p.version,

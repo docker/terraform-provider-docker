@@ -8,7 +8,7 @@ import (
 )
 
 func ReadCredentialsFromStore(serverAddress string) (credentials.Credentials, error) {
-	helper := secretservice.SecretService{}
+	helper := secretservice.Secretservice{}
 	username, password, err := helper.Get(serverAddress)
 	if err != nil {
 		return credentials.Credentials{}, err

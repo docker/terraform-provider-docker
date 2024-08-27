@@ -8,6 +8,11 @@ on:
         type: string
         required: false
         default: '1.9.*'
+      ref: 
+        description: 'The ref to checkout e.g the SHA of a fork in PR'
+        type: string
+        required: false
+        default: 'main'
 
 jobs:
   acctest:
@@ -17,6 +22,8 @@ jobs:
     concurrency: acctest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
 
       - uses: actions/setup-go@v5
 

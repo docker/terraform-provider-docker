@@ -137,7 +137,6 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		// List of possible credential hosts to check
 		credsHosts := []string{
 			"index.docker.io/v1/",
-			"hub.docker.com/v2/users/login",
 		}
 
 		// Attempt to retrieve credentials from multiple credsHost
@@ -148,7 +147,7 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 			// Use the getUserCreds function to retrieve credentials from Docker config
 			var err error
-			username, password, err = tools.GetUserCreds(fmt.Sprintf("https://%s", credsHost))
+			username, password, err = tools.GetUserCreds(credsHost)
 			if err == nil {
 				// Credentials were successfully retrieved, break the loop
 				break
@@ -158,7 +157,6 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		// If credentials could not be retrieved, report an error
 		if username == "" || password == "" {
 			resp.Diagnostics.AddError("Credential Store Error", "Failed to retrieve credentials from the Docker config file.")
-			return
 		}
 	}
 

@@ -61,10 +61,6 @@ func TestAccRepositoryTeamPermission(t *testing.T) {
 
 func testAccRepositoryTeamPermissionBase(orgName, teamName, repoName string) string {
 	return fmt.Sprintf(`
-provider "docker" {
-  host = "hub-stage.docker.com"
-}
-
 resource "docker_org_team" "test" {
   org_name         = "%[1]s"
   team_name        = "%[2]s"

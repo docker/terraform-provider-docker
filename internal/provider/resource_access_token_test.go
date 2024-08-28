@@ -39,10 +39,6 @@ func TestAccessTokenResource(t *testing.T) {
 }
 
 const testAccessTokenResourceConfig = `
-provider "docker" {
-  host = "hub-stage.docker.com"
-}
-
 resource "docker_access_token" "test" {
   token_label = "test-label"
   scopes      = ["repo:read", "repo:write"]

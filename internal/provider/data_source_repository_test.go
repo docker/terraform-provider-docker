@@ -23,9 +23,6 @@ func TestAccRepositoryDataSource(t *testing.T) {
 }
 
 const testAccExampleDataSourceConfig = `
-provider "docker" {
-  host = "hub-stage.docker.com"
-}
 data "docker_hub_repository" "test" {
   namespace = "ryanhristovski"
   name = "data-source-example"

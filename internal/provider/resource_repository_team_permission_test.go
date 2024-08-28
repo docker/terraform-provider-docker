@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/docker/terraform-provider-docker/internal/envvar"
 	"github.com/docker/terraform-provider-docker/internal/pkg/hubclient"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccRepositoryTeamPermission(t *testing.T) {
-	orgName := "dockerterraform"
+	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)
 	teamName := "test" + randString(10)
 	repoName := "test" + randString(10)
 	resource.Test(t, resource.TestCase{

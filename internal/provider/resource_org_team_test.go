@@ -5,11 +5,12 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/docker/terraform-provider-docker/internal/envvar"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccOrgTeamResource(t *testing.T) {
-	orgName := "dockerterraform"
+	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)
 	teamName := "test" + randString(10)
 	updatedName := "test" + randString(10)
 	resource.Test(t, resource.TestCase{

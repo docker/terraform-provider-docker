@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/docker/terraform-provider-docker/internal/envvar"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccOrgSettingImageAccessManagement(t *testing.T) {
-	orgName := "dockerterraform"
+	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

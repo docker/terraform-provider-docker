@@ -85,6 +85,8 @@ where `TestFuncName` is the testing function within the `_test.go` file.
 # enable debug logging
 export TF_LOG=DEBUG
 export TF_LOG_PATH="/PATH/TO/YOUR/LOG_FILE.log"
+# acceptance testing overrides
+export ACCTEST_DOCKER_ORG=myorgname
 ...
 ```
 

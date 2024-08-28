@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/docker/terraform-provider-docker/internal/pkg/hubclient"
+	"github.com/docker/terraform-provider-docker/tools"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
@@ -130,9 +131,37 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		password = data.Password.ValueString()
 	}
 
+	// If DOCKER_USERNAME and DOCKER_PASSWORD are not set, or if they are empty,
+	// retrieve them from the credential store
+	if username == "" || password == "" {
+		// List of possible credential hosts to check
+		credsHosts := []string{
+			"index.docker.io/v1/",
+		}
+
+		// Attempt to retrieve credentials from multiple credsHost
+		for _, credsHost := range credsHosts {
+			if credsHostEnv := os.Getenv("DOCKER_LOGIN_HOST"); credsHostEnv != "" {
+				credsHost = credsHostEnv
+			}
+
+			// Use the getUserCreds function to retrieve credentials from Docker config
+			var err error
+			username, password, err = tools.GetUserCreds(credsHost)
+			if err == nil {
+				// Credentials were successfully retrieved, break the loop
+				break
+			}
+		}
+
+		// If credentials could not be retrieved, report an error
+		if username == "" || password == "" {
+			resp.Diagnostics.AddError("Credential Store Error", "Failed to retrieve credentials from the Docker config file.")
+		}
+	}
+
 	// If any of the expected configurations are missing, return
 	// errors with provider-specific guidance.
-
 	if host == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("host"),

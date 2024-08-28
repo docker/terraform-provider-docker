@@ -28,7 +28,6 @@ type OrgTeamDataSourceModel struct {
 	OrgName     types.String `tfsdk:"org_name"`
 	TeamName    types.String `tfsdk:"team_name"`
 	UUID        types.String `tfsdk:"uuid"`
-	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
 	MemberCount types.Int64  `tfsdk:"member_count"`
 }
@@ -106,7 +105,6 @@ func (d *OrgTeamDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	data.ID = types.Int64Value(int64(orgTeam.ID))
 	data.UUID = types.StringValue(orgTeam.UUID)
-	data.Name = types.StringValue(orgTeam.Name)
 	data.Description = types.StringValue(orgTeam.Description)
 	data.MemberCount = types.Int64Value(int64(orgTeam.MemberCount))
 

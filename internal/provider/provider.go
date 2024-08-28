@@ -23,7 +23,9 @@ import (
 var hostRegexp = regexp.MustCompile(`^[a-zA-Z0-9:.-]+$`)
 
 const dockerHubConfigfileKey = "https://index.docker.io/v1/"
+const dockerHubStageConfigfileKey = "index-stage.docker.io"
 const dockerHubHost = "hub.docker.com"
+const dockerHubStageHost = "hub-stage.docker.com"
 
 // Ensure DockerProvider satisfies various provider interfaces.
 var (
@@ -145,6 +147,8 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		configfileKey := host
 		if host == dockerHubHost {
 			configfileKey = dockerHubConfigfileKey
+		} else if host == dockerHubStageHost {
+			configfileKey = dockerHubStageConfigfileKey
 		}
 
 		// Use the getUserCreds function to retrieve credentials from Docker config

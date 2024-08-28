@@ -112,7 +112,7 @@ func (r *OrgTeamResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	data.ID = types.Int64Value(int64(orgTeam.ID))
+	data.ID = types.Int64Value(orgTeam.ID)
 	data.TeamName = types.StringValue(orgTeam.Name)
 	if len(orgTeam.Description) > 0 {
 		data.TeamDesc = types.StringValue(orgTeam.Description)
@@ -140,7 +140,7 @@ func (r *OrgTeamResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	data.ID = types.Int64Value(int64(orgTeam.ID))
+	data.ID = types.Int64Value(orgTeam.ID)
 	data.TeamName = types.StringValue(orgTeam.Name)
 	if len(orgTeam.Description) > 0 {
 		data.TeamDesc = types.StringValue(orgTeam.Description)
@@ -176,7 +176,7 @@ func (r *OrgTeamResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	data.ID = types.Int64Value(int64(orgTeam.ID))
+	data.ID = types.Int64Value(orgTeam.ID)
 	data.TeamName = types.StringValue(orgTeam.Name)
 	if len(orgTeam.Description) > 0 {
 		data.TeamDesc = types.StringValue(orgTeam.Description)

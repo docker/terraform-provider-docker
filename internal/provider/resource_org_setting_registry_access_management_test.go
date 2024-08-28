@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/docker/terraform-provider-docker/internal/envvar"
-	"github.com/docker/terraform-provider-docker/internal/pkg/hubclient"
+	"github.com/docker/terraform-provider-docker/internal/hubclient"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 

@@ -102,8 +102,8 @@ func (r *OrgTeamResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	createReq := hubclient.OrgTeam{
-		TeamName:        data.TeamName.ValueString(),
-		TeamDescription: data.TeamDesc.ValueString(),
+		Name:        data.TeamName.ValueString(),
+		Description: data.TeamDesc.ValueString(),
 	}
 
 	orgTeam, err := r.client.CreateOrgTeam(ctx, data.OrgName.ValueString(), createReq)
@@ -113,9 +113,9 @@ func (r *OrgTeamResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	data.ID = types.Int64Value(orgTeam.ID)
-	data.TeamName = types.StringValue(orgTeam.TeamName)
-	if len(orgTeam.TeamDescription) > 0 {
-		data.TeamDesc = types.StringValue(orgTeam.TeamDescription)
+	data.TeamName = types.StringValue(orgTeam.Name)
+	if len(orgTeam.Description) > 0 {
+		data.TeamDesc = types.StringValue(orgTeam.Description)
 	} else {
 		data.TeamDesc = types.StringNull()
 	}
@@ -141,9 +141,9 @@ func (r *OrgTeamResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	data.ID = types.Int64Value(orgTeam.ID)
-	data.TeamName = types.StringValue(orgTeam.TeamName)
-	if len(orgTeam.TeamDescription) > 0 {
-		data.TeamDesc = types.StringValue(orgTeam.TeamDescription)
+	data.TeamName = types.StringValue(orgTeam.Name)
+	if len(orgTeam.Description) > 0 {
+		data.TeamDesc = types.StringValue(orgTeam.Description)
 	} else {
 		data.TeamDesc = types.StringNull()
 	}
@@ -159,8 +159,8 @@ func (r *OrgTeamResource) Update(ctx context.Context, req resource.UpdateRequest
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	updateReq := hubclient.OrgTeam{
-		TeamName:        data.TeamName.ValueString(),
-		TeamDescription: data.TeamDesc.ValueString(),
+		Name:        data.TeamName.ValueString(),
+		Description: data.TeamDesc.ValueString(),
 	}
 
 	// Updates to Team Names are a bit awkward.
@@ -177,9 +177,9 @@ func (r *OrgTeamResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	data.ID = types.Int64Value(orgTeam.ID)
-	data.TeamName = types.StringValue(orgTeam.TeamName)
-	if len(orgTeam.TeamDescription) > 0 {
-		data.TeamDesc = types.StringValue(orgTeam.TeamDescription)
+	data.TeamName = types.StringValue(orgTeam.Name)
+	if len(orgTeam.Description) > 0 {
+		data.TeamDesc = types.StringValue(orgTeam.Description)
 	} else {
 		data.TeamDesc = types.StringNull()
 	}

@@ -22,9 +22,11 @@ type OrgSettings struct {
 }
 
 type OrgTeam struct {
-	ID              int64  `json:"id"`
-	TeamName        string `json:"name"`
-	TeamDescription string `json:"description"`
+	ID          int64  `json:"id"`
+	UUID        string `json:"uuid"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	MemberCount int    `json:"member_count"`
 }
 
 type OrgTeamMember struct {

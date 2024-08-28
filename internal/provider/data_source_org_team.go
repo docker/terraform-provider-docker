@@ -58,10 +58,6 @@ func (d *OrgTeamDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 				MarkdownDescription: "UUID of the team",
 				Computed:            true,
 			},
-			"name": schema.StringAttribute{
-				MarkdownDescription: "Name of the team",
-				Computed:            true,
-			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "Description of the team",
 				Computed:            true,

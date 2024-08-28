@@ -102,70 +102,53 @@ func TestAccOrgSettingRegistryAccessManagement(t *testing.T) {
 			},
 			{
 				// delete
-				Config: testAccOrgSettingRegistryAccessManagementBase,
+				Config: " ",
 			},
 		},
 	})
 }
 
-const testAccOrgSettingRegistryAccessManagementBase = `
-provider "docker" {
-  host = "hub-stage.docker.com"
-}`
-
 func testAccOrgSettingRegistryAccessManagementCustomRegistry(orgName string, enabled, allowDocker bool, custom hubclient.RegistryAccessManagementCustomRegistry) string {
 	return fmt.Sprintf(`
-%[1]s
-
 resource "docker_org_setting_registry_access_management" "test" {
-  org_name                     = "%[2]s"
-  enabled                      = %[3]t
+  org_name                     = "%[1]s"
+  enabled                      = %[2]t
   standard_registry_docker_hub = {
-    allowed = %[4]t
+    allowed = %[3]t
   }
   custom_registries = [
     {
-	  address       = "%[5]s",
-	  friendly_name = "%[6]s",
-	  allowed       = %[7]t
+	  address       = "%[4]s",
+	  friendly_name = "%[5]s",
+	  allowed       = %[6]t
   	}
   ]
 }
-`, testAccOrgSettingRegistryAccessManagementBase,
-		orgName,
-		enabled,
-		allowDocker,
-		custom.Address,
-		custom.FriendlyName,
-		custom.Allowed,
-	)
+`, orgName, enabled, allowDocker, custom.Address, custom.FriendlyName, custom.Allowed)
 }
 
 func testAccOrgSettingRegistryAccessManagementMultipleCustomRegistries(orgName string, enabled, allowDocker bool, custom1 hubclient.RegistryAccessManagementCustomRegistry, custom2 hubclient.RegistryAccessManagementCustomRegistry) string {
 	return fmt.Sprintf(`
-%[1]s
-
 resource "docker_org_setting_registry_access_management" "test" {
-  org_name                     = "%[2]s"
-  enabled                      = %[3]t
+  org_name                     = "%[1]s"
+  enabled                      = %[2]t
   standard_registry_docker_hub = {
-    allowed = %[4]t
+    allowed = %[3]t
   }
   custom_registries = [
     {
-	  address       = "%[5]s",
-	  friendly_name = "%[6]s",
-	  allowed       = %[7]t
+	  address       = "%[4]s",
+	  friendly_name = "%[5]s",
+	  allowed       = %[6]t
   	},
 	{
-	  address       = "%[8]s",
-	  friendly_name = "%[9]s",
-	  allowed       = %[10]t
+	  address       = "%[7]s",
+	  friendly_name = "%[8]s",
+	  allowed       = %[9]t
   	}
   ]
 }
 `,
-		testAccOrgSettingRegistryAccessManagementBase,
 		orgName,
 		enabled,
 		allowDocker,
@@ -180,15 +163,13 @@ resource "docker_org_setting_registry_access_management" "test" {
 
 func testAccOrgSettingRegistryAccessManagementNoCustomRegistry(orgName string, enabled, allowDocker bool) string {
 	return fmt.Sprintf(`
-%[1]s
-
 resource "docker_org_setting_registry_access_management" "test" {
-  org_name                     = "%[2]s"
-  enabled                      = %[3]t
+  org_name                     = "%[1]s"
+  enabled                      = %[2]t
   standard_registry_docker_hub = {
-    allowed = %[4]t
+    allowed = %[3]t
   }
   custom_registries = []
 }
-`, testAccOrgSettingRegistryAccessManagementBase, orgName, enabled, allowDocker)
+`, orgName, enabled, allowDocker)
 }

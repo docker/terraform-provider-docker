@@ -25,10 +25,6 @@ func TestAccRepositoriesDataSource(t *testing.T) {
 
 func testReposExampleDataSourceConfig() string {
 	return `
-provider "docker" {
-  host = "hub-stage.docker.com"
-}
-
 data "docker_hub_repositories" "test" {
   namespace         = "` + os.Getenv("DOCKER_USERNAME") + `"
   max_number_results = 10

@@ -62,7 +62,7 @@ func TestAccOrgTeamResource(t *testing.T) {
 			},
 			{
 				// delete
-				Config: testAccOrgTeamResourceBase,
+				Config: " ",
 			},
 			{
 				// create no description
@@ -78,31 +78,23 @@ func TestAccOrgTeamResource(t *testing.T) {
 	})
 }
 
-const testAccOrgTeamResourceBase = `
-provider "docker" {
-  host = "hub-stage.docker.com"
-}
-`
-
 func testAccOrgTeamResource(orgName, teamName, teamDesc string) string {
 	return fmt.Sprintf(`
-%s
 resource "docker_org_team" "testing" {
   org_name         = "%s"
   team_name        = "%s"
   team_description = "%s"
 }
-`, testAccOrgTeamResourceBase, orgName, teamName, teamDesc)
+`, orgName, teamName, teamDesc)
 }
 
 func testAccOrgTeamResourceNoDescription(orgName, teamName string) string {
 	return fmt.Sprintf(`
-%s
 resource "docker_org_team" "testing" {
   org_name         = "%s"
   team_name        = "%s"
 }
-`, testAccOrgTeamResourceBase, orgName, teamName)
+`, orgName, teamName)
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyz1234567890")

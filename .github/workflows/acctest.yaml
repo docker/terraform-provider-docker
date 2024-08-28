@@ -3,16 +3,21 @@ name: Acceptance Tests
 on:
   workflow_dispatch:
     inputs: 
-      terraform-version:
-        description: 'Terraform version'
-        type: string
-        required: false
-        default: '1.9.*'
       ref: 
         description: 'The ref to checkout e.g the SHA of a fork in PR'
         type: string
         required: false
         default: 'main'
+      tests: 
+        description: 'The TESTS pattern to supply to `make testacc`. Default is all tests.'
+        type: string
+        required: false
+        default: 'TestAcc'
+      terraform-version:
+        description: 'Terraform version'
+        type: string
+        required: false
+        default: '1.9.*'
 
 jobs:
   acctest:
@@ -35,9 +40,10 @@ jobs:
           terraform_wrapper: false
 
       - run: |
-          go test ./... -run=TestAcc -v
+          make testacc TESTS='${{ inputs.tests }}'
         env:
           DOCKER_USERNAME: "${{ vars.DOCKER_USERNAME }}"
           DOCKER_PASSWORD: "${{ secrets.DOCKER_PASSWORD }}"
+          DOCKER_HUB_HOST: "hub-stage.docker.com"
           TF_ACC: "1"
         timeout-minutes: 30

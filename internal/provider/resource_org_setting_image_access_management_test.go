@@ -59,26 +59,19 @@ func TestAccOrgSettingImageAccessManagement(t *testing.T) {
 			},
 			{
 				// delete
-				Config: testAccOrgSettingImageAccessManagementBase,
+				Config: " ",
 			},
 		},
 	})
 }
 
-const testAccOrgSettingImageAccessManagementBase = `
-provider "docker" {
-  host = "hub-stage.docker.com"
-}`
-
 func testAccOrgSettingImageAccessManagement(orgName string, enabled, allowOfficialImages, allowVerifiedPublishers bool) string {
 	return fmt.Sprintf(`
-%[1]s
-
 resource "docker_org_setting_image_access_management" "test" {
-  org_name                  = "%[2]s"
-  enabled                   = %[3]t
-  allow_official_images     = %[4]t
-  allow_verified_publishers = %[5]t
+  org_name                  = "%[1]s"
+  enabled                   = %[2]t
+  allow_official_images     = %[3]t
+  allow_verified_publishers = %[4]t
 }
-`, testAccOrgSettingImageAccessManagementBase, orgName, enabled, allowOfficialImages, allowVerifiedPublishers)
+`, orgName, enabled, allowOfficialImages, allowVerifiedPublishers)
 }

@@ -27,9 +27,6 @@ func TestOrgDataSource(t *testing.T) {
 
 func testOrgExampleDataSourceConfig(org string) string {
 	return fmt.Sprintf(`
-provider "docker" {
-  host = "hub-stage.docker.com"
-}
 data "docker_org" "test" {
   org_name = "%[1]s"
 }`, org)

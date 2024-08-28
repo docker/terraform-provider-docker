@@ -50,10 +50,6 @@ func TestAccRepositoryResource(t *testing.T) {
 
 func testRepositoryResourceConfig(namespace, name string) string {
 	return fmt.Sprintf(`
-provider "docker" {
-  host = "hub-stage.docker.com"
-}
-
 resource "docker_hub_repository" "test" {
   name            = "%[2]s"
   namespace       = "%[1]s"
@@ -64,10 +60,6 @@ resource "docker_hub_repository" "test" {
 
 func testRepositoryResourceConfigUpdated(namespace, name string) string {
 	return fmt.Sprintf(`
-provider "docker" {
-  host = "hub-stage.docker.com"
-}
-
 resource "docker_hub_repository" "test" {
   name            = "%[2]s"
   namespace       = "%[1]s"

@@ -3,11 +3,14 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -65,6 +68,9 @@ func (d *OrgTeamMemberDataSource) Schema(ctx context.Context, req datasource.Sch
 			"team_name": schema.StringAttribute{
 				MarkdownDescription: "Team name",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_-]{3,30}$`), "Team name must be 3-30 characters long and can only contain letters, numbers, underscores, or hyphens."),
+				},
 			},
 			"members": schema.ListNestedAttribute{
 				MarkdownDescription: "List of members",

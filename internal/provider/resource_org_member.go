@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -75,6 +76,9 @@ func (r *OrgMemberResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_-]{3,30}$`), "Team name must be 3-30 characters long and can only contain letters, numbers, underscores, or hyphens."),
 				},
 			},
 			"user_name": schema.StringAttribute{

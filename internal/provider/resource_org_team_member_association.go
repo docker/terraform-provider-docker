@@ -3,15 +3,17 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -30,10 +32,10 @@ type OrgTeamMemberAssociationResource struct {
 }
 
 type OrgTeamMemberAssociationResourceModel struct {
-	ID        types.String `tfsdk:"id"`
-	OrgName   types.String `tfsdk:"org_name"`
-	TeamName  types.String `tfsdk:"team_name"`
-	UserNames types.List   `tfsdk:"user_names"`
+	ID       types.String `tfsdk:"id"`
+	OrgName  types.String `tfsdk:"org_name"`
+	TeamName types.String `tfsdk:"team_name"`
+	UserName types.String `tfsdk:"user_name"`
 }
 
 func (r *OrgTeamMemberAssociationResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -78,11 +80,13 @@ func (r *OrgTeamMemberAssociationResource) Schema(ctx context.Context, req resou
 			"team_name": schema.StringAttribute{
 				MarkdownDescription: "Team name",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_-]{3,30}$`), "Team name must be 3-30 characters long and can only contain letters, numbers, underscores, or hyphens."),
+				},
 			},
-			"user_names": schema.ListAttribute{
-				MarkdownDescription: "User names to be added to the team",
+			"user_name": schema.StringAttribute{
+				MarkdownDescription: "User name to be added to the team",
 				Required:            true,
-				ElementType:         types.StringType,
 			},
 		},
 	}
@@ -98,21 +102,13 @@ func (r *OrgTeamMemberAssociationResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	usernames := []string{}
-	resp.Diagnostics.Append(data.UserNames.ElementsAs(ctx, &usernames, false)...)
-	if resp.Diagnostics.HasError() {
+	err := r.client.AddOrgTeamMember(ctx, data.OrgName.ValueString(), data.TeamName.ValueString(), data.UserName.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Unable to add team member", err.Error())
 		return
 	}
 
-	for _, userName := range usernames {
-		err := r.client.AddOrgTeamMember(ctx, data.OrgName.ValueString(), data.TeamName.ValueString(), userName)
-		if err != nil {
-			resp.Diagnostics.AddError("Unable to add team member", err.Error())
-			return
-		}
-	}
-
-	data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s", data.OrgName.ValueString(), data.TeamName.ValueString(), strings.Join(usernames, ",")))
+	data.ID = types.StringValue(fmt.Sprintf("%s/%s/%s", data.OrgName.ValueString(), data.TeamName.ValueString(), data.UserName.ValueString()))
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,13 +133,20 @@ func (r *OrgTeamMemberAssociationResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	// Convert the list of members to a list of attr.Value
-	usernames := make([]attr.Value, len(members.Results))
-	for i, member := range members.Results {
-		usernames[i] = types.StringValue(member.Username)
+	// Check if the specified user is in the team
+	found := false
+	for _, member := range members.Results {
+		if member.Username == data.UserName.ValueString() {
+			found = true
+			break
+		}
 	}
 
-	data.UserNames = types.ListValueMust(types.StringType, usernames)
+	if !found {
+		resp.Diagnostics.AddError("User not found", fmt.Sprintf("User %s is not a member of team %s", data.UserName.ValueString(), data.TeamName.ValueString()))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -161,50 +164,25 @@ func (r *OrgTeamMemberAssociationResource) Update(ctx context.Context, req resou
 		return
 	}
 
-	// Convert Terraform types.List to Go slices
-	var planUsernames []string
-	var stateUsernames []string
-	resp.Diagnostics.Append(plan.UserNames.ElementsAs(ctx, &planUsernames, false)...)
-	resp.Diagnostics.Append(state.UserNames.ElementsAs(ctx, &stateUsernames, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Create maps for quick lookup
-	planMap := make(map[string]bool, len(planUsernames))
-	for _, username := range planUsernames {
-		planMap[username] = true
-	}
-
-	stateMap := make(map[string]bool, len(stateUsernames))
-	for _, username := range stateUsernames {
-		stateMap[username] = true
-	}
-
-	// Add new users
-	for _, username := range planUsernames {
-		if !stateMap[username] {
-			err := r.client.AddOrgTeamMember(ctx, plan.OrgName.ValueString(), plan.TeamName.ValueString(), username)
-			if err != nil {
-				resp.Diagnostics.AddError("Unable to add team member", err.Error())
-				return
-			}
+	// If the username has changed, update the team member
+	if plan.UserName.ValueString() != state.UserName.ValueString() {
+		// Remove the old user
+		err := r.client.DeleteOrgTeamMember(ctx, state.OrgName.ValueString(), state.TeamName.ValueString(), state.UserName.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Unable to delete old team member", err.Error())
+			return
 		}
-	}
 
-	// Remove old users
-	for _, username := range stateUsernames {
-		if !planMap[username] {
-			err := r.client.DeleteOrgTeamMember(ctx, plan.OrgName.ValueString(), plan.TeamName.ValueString(), username)
-			if err != nil {
-				resp.Diagnostics.AddError("Unable to delete team member", err.Error())
-				return
-			}
+		// Add the new user
+		err = r.client.AddOrgTeamMember(ctx, plan.OrgName.ValueString(), plan.TeamName.ValueString(), plan.UserName.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Unable to add new team member", err.Error())
+			return
 		}
 	}
 
 	// Save the updated state
-	plan.ID = types.StringValue(fmt.Sprintf("%s/%s/%s", plan.OrgName.ValueString(), plan.TeamName.ValueString(), strings.Join(planUsernames, ",")))
+	plan.ID = types.StringValue(fmt.Sprintf("%s/%s/%s", plan.OrgName.ValueString(), plan.TeamName.ValueString(), plan.UserName.ValueString()))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -214,18 +192,10 @@ func (r *OrgTeamMemberAssociationResource) Delete(ctx context.Context, req resou
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
-	usernames := []string{}
-	resp.Diagnostics.Append(data.UserNames.ElementsAs(ctx, &usernames, false)...)
-	if resp.Diagnostics.HasError() {
+	err := r.client.DeleteOrgTeamMember(ctx, data.OrgName.ValueString(), data.TeamName.ValueString(), data.UserName.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Unable to delete team member", err.Error())
 		return
-	}
-
-	for _, userName := range usernames {
-		err := r.client.DeleteOrgTeamMember(ctx, data.OrgName.ValueString(), data.TeamName.ValueString(), userName)
-		if err != nil {
-			resp.Diagnostics.AddError("Unable to delete team member", err.Error())
-			return
-		}
 	}
 
 	resp.State.RemoveResource(ctx)
@@ -238,12 +208,12 @@ func (r *OrgTeamMemberAssociationResource) ImportState(ctx context.Context, req 
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: org_name/team_name/user_names. Got: %q", req.ID),
+			fmt.Sprintf("Expected import identifier with format: org_name/team_name/user_name. Got: %q", req.ID),
 		)
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("org_name"), idParts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("team_name"), idParts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_names"), strings.Split(idParts[2], ","))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_name"), idParts[2])...)
 }

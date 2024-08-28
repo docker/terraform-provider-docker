@@ -2,13 +2,13 @@ name: Acceptance Tests
 
 on:
   workflow_dispatch:
-    inputs: 
-      ref: 
+    inputs:
+      ref:
         description: 'The ref to checkout e.g the SHA of a fork in PR'
         type: string
         required: false
         default: 'main'
-      tests: 
+      tests:
         description: 'The TESTS pattern to supply to `make testacc`. Default is all tests.'
         type: string
         required: false
@@ -39,11 +39,16 @@ jobs:
           terraform_version: ${{ inputs.terraform-version }}
           terraform_wrapper: false
 
+      - uses: docker/login-action@v2
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: index-stage.docker.io
+
       - run: |
           make testacc TESTS='${{ inputs.tests }}'
         env:
-          DOCKER_USERNAME: "${{ vars.DOCKER_USERNAME }}"
-          DOCKER_PASSWORD: "${{ secrets.DOCKER_PASSWORD }}"
+          DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
           DOCKER_HUB_HOST: "hub-stage.docker.com"
           TF_ACC: "1"
         timeout-minutes: 30

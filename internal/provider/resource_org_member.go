@@ -59,7 +59,10 @@ func (r *OrgMemberResource) Metadata(ctx context.Context, req resource.MetadataR
 
 func (r *OrgMemberResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages the  of a member with a team in an organization.",
+		MarkdownDescription: `Manages team members associated with an organization.
+
+~> **Note** Only available when authenticated with a username and password as an owner of the org.
+`,
 
 		Attributes: map[string]schema.Attribute{
 			"org_name": schema.StringAttribute{

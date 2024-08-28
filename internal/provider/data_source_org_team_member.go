@@ -55,7 +55,10 @@ func (d *OrgTeamMemberDataSource) Metadata(ctx context.Context, req datasource.M
 
 func (d *OrgTeamMemberDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Docker Hub Organization Team Member Data Source",
+		MarkdownDescription: `Reads team member of an organization.
+
+~> **Note** Only available when authenticated with a username and password.
+`,
 
 		Attributes: map[string]schema.Attribute{
 			"org_name": schema.StringAttribute{

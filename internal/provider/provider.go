@@ -30,6 +30,9 @@ var (
 
 // DockerProvider defines the provider implementation.
 type DockerProvider struct {
+	// version is set to the provider version on release, "dev" when the
+	// provider is built and ran locally, and "test" when running acceptance
+	// testing.
 	version string
 }
 

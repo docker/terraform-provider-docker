@@ -23,7 +23,4 @@ func testAccPreCheck(t *testing.T) {
 	if v := os.Getenv("DOCKER_USERNAME"); v == "" {
 		t.Fatal("DOCKER_USERNAME must be set for acceptance tests")
 	}
-	if v := os.Getenv("DOCKER_PASSWORD"); v == "" {
-		t.Fatal("DOCKER_PASSWORD must be set for acceptance tests")
-	}
 }

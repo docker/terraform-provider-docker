@@ -22,6 +22,9 @@ import (
 
 var hostRegexp = regexp.MustCompile(`^[a-zA-Z0-9:.-]+$`)
 
+const dockerHubConfigfileKey = "https://index.docker.io/v1/"
+const dockerHubHost = "hub.docker.com"
+
 // Ensure DockerProvider satisfies various provider interfaces.
 var (
 	_ provider.Provider              = &DockerProvider{}
@@ -134,29 +137,22 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	// If DOCKER_USERNAME and DOCKER_PASSWORD are not set, or if they are empty,
 	// retrieve them from the credential store
 	if username == "" || password == "" {
-		// List of possible credential hosts to check
-		credsHosts := []string{
-			"index.docker.io/v1/",
+		// Loosely adapted from
+		// https://github.com/moby/buildkit/blob/b9a3e7b31958b83f9ab1850a8c2ab1c66bf21f1f/session/auth/authprovider/authprovider.go#L243
+		//
+		// The Docker Hub host is a special case
+		// that stores its credentials differently in the store.
+		configfileKey := host
+		if host == dockerHubHost {
+			configfileKey = dockerHubConfigfileKey
 		}
 
-		// Attempt to retrieve credentials from multiple credsHost
-		for _, credsHost := range credsHosts {
-			if credsHostEnv := os.Getenv("DOCKER_LOGIN_HOST"); credsHostEnv != "" {
-				credsHost = credsHostEnv
-			}
-
-			// Use the getUserCreds function to retrieve credentials from Docker config
-			var err error
-			username, password, err = tools.GetUserCreds(credsHost)
-			if err == nil {
-				// Credentials were successfully retrieved, break the loop
-				break
-			}
-		}
-
-		// If credentials could not be retrieved, report an error
-		if username == "" || password == "" {
-			resp.Diagnostics.AddError("Credential Store Error", "Failed to retrieve credentials from the Docker config file.")
+		// Use the getUserCreds function to retrieve credentials from Docker config
+		var err error
+		username, password, err = tools.GetUserCreds(configfileKey)
+		if err != nil {
+			resp.Diagnostics.AddError("Credential Store Error",
+				fmt.Sprintf("Failed to retrieve credentials from the Docker config file: %v", err))
 		}
 	}
 

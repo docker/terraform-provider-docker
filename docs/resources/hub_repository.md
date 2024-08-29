@@ -3,12 +3,19 @@
 page_title: "docker_hub_repository Resource - docker"
 subcategory: ""
 description: |-
-  
+  Manages an image repository in your account or organization.
+  ~> Note When used with a Personal Access Token authentication (PAT), the PAT should
+  have the "Read, Write, and Delete" scope to create and delete repositories. The
+  owner of the PAT must be an editor of the org.
 ---
 
 # docker_hub_repository (Resource)
 
+Manages an image repository in your account or organization.
 
+~> **Note** When used with a Personal Access Token authentication (PAT), the PAT should
+   have the "Read, Write, and Delete" scope to create and delete repositories. The
+   owner of the PAT must be an editor of the org.
 
 
 

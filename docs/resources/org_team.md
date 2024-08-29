@@ -3,12 +3,15 @@
 page_title: "docker_org_team Resource - docker"
 subcategory: ""
 description: |-
-  Manages Docker teams for an organization.
+  Manages teams for an organization.
+  ~> Note Only available when authenticated with a username and password as an owner of the org.
 ---
 
 # docker_org_team (Resource)
 
-Manages Docker teams for an organization.
+Manages teams for an organization.
+
+~> **Note** Only available when authenticated with a username and password as an owner of the org.
 
 
 

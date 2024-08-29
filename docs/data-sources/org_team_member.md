@@ -3,12 +3,15 @@
 page_title: "docker_org_team_member Data Source - docker"
 subcategory: ""
 description: |-
-  Docker Hub Organization Team Member Data Source
+  Reads team member of an organization.
+  ~> Note Only available when authenticated with a username and password.
 ---
 
 # docker_org_team_member (Data Source)
 
-Docker Hub Organization Team Member Data Source
+Reads team member of an organization.
+
+~> **Note** Only available when authenticated with a username and password.
 
 
 

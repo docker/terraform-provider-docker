@@ -3,12 +3,19 @@
 page_title: "docker_hub_repository_team_permission Resource - docker"
 subcategory: ""
 description: |-
-  Manages the permissions for a team and repository.
+  Grants team permissions to an image repository.
+  ~> Note When used with a Personal Access Token authentication (PAT), the PAT should
+  have the "Read, Write, and Delete" scope to create and delete team permissions. The
+  owner of the PAT must be an editor of the org.
 ---
 
 # docker_hub_repository_team_permission (Resource)
 
-Manages the permissions for a team and repository.
+Grants team permissions to an image repository.
+
+~> **Note** When used with a Personal Access Token authentication (PAT), the PAT should
+   have the "Read, Write, and Delete" scope to create and delete team permissions. The
+   owner of the PAT must be an editor of the org.
 
 
 

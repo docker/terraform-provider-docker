@@ -3,12 +3,15 @@
 page_title: "docker_org Data Source - docker"
 subcategory: ""
 description: |-
-  Docker Hub Organization
+  Reads an organization properties.
+  ~> Note Only available when authenticated with a username and password.
 ---
 
 # docker_org (Data Source)
 
-Docker Hub Organization
+Reads an organization properties.
+
+~> **Note** Only available when authenticated with a username and password.
 
 
 

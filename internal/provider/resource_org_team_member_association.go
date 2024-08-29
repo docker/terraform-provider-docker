@@ -61,7 +61,10 @@ func (r *OrgTeamMemberAssociationResource) Metadata(ctx context.Context, req res
 
 func (r *OrgTeamMemberAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages Docker team member associations for an organization.",
+		MarkdownDescription: `Manages team members associated with an organization.
+
+~> **Note** Only available when authenticated with a username and password as an owner of the org.
+`,
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

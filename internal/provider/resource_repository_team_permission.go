@@ -63,7 +63,12 @@ func (r *RepositoryTeamPermissionResource) Metadata(ctx context.Context, req res
 
 func (r *RepositoryTeamPermissionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages the permissions for a team and repository.",
+		MarkdownDescription: `Grants team permissions to an image repository.
+
+~> **Note** When used with a Personal Access Token authentication (PAT), the PAT should
+   have the "Read, Write, and Delete" scope to create and delete team permissions. The
+   owner of the PAT must be an editor of the org.
+`,
 
 		Attributes: map[string]schema.Attribute{
 			"repo_id": schema.StringAttribute{

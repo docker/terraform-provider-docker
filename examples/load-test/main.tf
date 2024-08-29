@@ -43,7 +43,7 @@ resource "docker_org_team" "terraform_team" {
 }
 
 # Team associations with variations
-resource "docker_org_team_member_association" "example_association" {
+resource "docker_org_team_member" "example_association" {
   count      = 200
   org_name   = "dockerterraform"
   team_name  = docker_org_team.terraform_team[count.index].team_name

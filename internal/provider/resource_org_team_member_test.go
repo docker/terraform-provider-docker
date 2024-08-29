@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/docker/terraform-provider-docker/internal/envvar"
@@ -11,8 +12,8 @@ import (
 
 func TestAccOrgTeamMemberAssociation(t *testing.T) {
 	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)
-	teamName := "testteam"
-	userName := "dockerterraformprovideracctest"
+	teamName := fmt.Sprintf("test%s", randString(5))
+	userName := os.Getenv("DOCKER_USERNAME")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -21,15 +22,15 @@ func TestAccOrgTeamMemberAssociation(t *testing.T) {
 			{
 				Config: testAccOrgTeamMemberAssociationConfig(orgName, teamName, userName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("docker_org_team_member_association.test", "org_name", orgName),
-					resource.TestCheckResourceAttr("docker_org_team_member_association.test", "team_name", teamName),
-					resource.TestCheckResourceAttr("docker_org_team_member_association.test", "user_name", userName),
+					resource.TestCheckResourceAttr("docker_org_team_member.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_team_member.test", "team_name", teamName),
+					resource.TestCheckResourceAttr("docker_org_team_member.test", "user_name", userName),
 				),
 			},
 			{
 				Config: " ",
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testCheckResourceDoesNotExist("docker_org_team_member_association.test"),
+					testCheckResourceDoesNotExist("docker_org_team_member.test"),
 				),
 			},
 		},
@@ -43,7 +44,7 @@ resource "docker_org_team" "test" {
   team_name  = "%[2]s"
 }
 
-resource "docker_org_team_member_association" "test" {
+resource "docker_org_team_member" "test" {
   org_name   = docker_org_team.test.org_name
   team_name  = docker_org_team.test.team_name
   user_name  = "%[3]s"

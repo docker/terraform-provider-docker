@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestAccOrgTeamMemberAssociation(t *testing.T) {
+func TestAccOrgTeamMember(t *testing.T) {
 	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)
 	teamName := fmt.Sprintf("test%s", randString(5))
 	userName := os.Getenv("DOCKER_USERNAME")
@@ -20,7 +20,7 @@ func TestAccOrgTeamMemberAssociation(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrgTeamMemberAssociationConfig(orgName, teamName, userName),
+				Config: testAccOrgTeamMemberConfig(orgName, teamName, userName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("docker_org_team_member.test", "org_name", orgName),
 					resource.TestCheckResourceAttr("docker_org_team_member.test", "team_name", teamName),
@@ -37,7 +37,7 @@ func TestAccOrgTeamMemberAssociation(t *testing.T) {
 	})
 }
 
-func testAccOrgTeamMemberAssociationConfig(orgName, teamName, userName string) string {
+func testAccOrgTeamMemberConfig(orgName, teamName, userName string) string {
 	return fmt.Sprintf(`
 resource "docker_org_team" "test" {
   org_name   = "%[1]s"

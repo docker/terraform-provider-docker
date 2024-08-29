@@ -121,9 +121,6 @@ func (r *OrgTeamMemberResource) Create(ctx context.Context, req resource.CreateR
 }
 
 func (r *OrgTeamMemberResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TODO:
-	// The endpoint to list team members is returning a 503
-
 	var data OrgTeamMemberResourceModel
 
 	// Read Terraform state data into the model
@@ -133,15 +130,16 @@ func (r *OrgTeamMemberResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	members, err := r.client.ListOrgTeamMembers(ctx, data.OrgName.ValueString(), data.TeamName.ValueString())
+	// Call the new API to list members of the team
+	membersResponse, err := r.client.ListOrgTeamMembers(ctx, data.OrgName.ValueString(), data.TeamName.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to read org_team_member resource", err.Error())
+		resp.Diagnostics.AddError("Unable to read org_team_member resource", fmt.Sprintf("Error retrieving team members: %v", err))
 		return
 	}
 
 	// Check if the specified user is in the team
 	found := false
-	for _, member := range members.Results {
+	for _, member := range membersResponse.Results {
 		if member.Username == data.UserName.ValueString() {
 			found = true
 			break
@@ -149,7 +147,8 @@ func (r *OrgTeamMemberResource) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	if !found {
-		resp.Diagnostics.AddError("User not found", fmt.Sprintf("User %s is not a member of team %s", data.UserName.ValueString(), data.TeamName.ValueString()))
+		// If the user is not found in the team, remove the resource from state
+		resp.Diagnostics.AddWarning("User not found", fmt.Sprintf("User %s is not a member of team %s. Removing from state.", data.UserName.ValueString(), data.TeamName.ValueString()))
 		resp.State.RemoveResource(ctx)
 		return
 	}

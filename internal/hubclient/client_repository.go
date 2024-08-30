@@ -80,7 +80,6 @@ func (c *Client) CreateRepository(ctx context.Context, namespace string, req Cre
 type UpdateRepositoryRequest struct {
 	Description     string `json:"description"`
 	FullDescription string `json:"full_description"`
-	Status          int    `json:"status"`
 }
 
 func (c *Client) UpdateRepository(ctx context.Context, id string, req UpdateRepositoryRequest) (Repository, error) {

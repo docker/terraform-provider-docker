@@ -22,7 +22,7 @@ resource "docker_org_team" "terraform-team" {
 }
 
 # Team association
-resource "docker_org_team_member_association" "example_association" {
+resource "docker_org_team_member" "example_association" {
   org_name   = "dockerterraform"
   team_name  = resource.docker_org_team.terraform-team.team_name
   user_names = ["forrestloomis371", "username-placeholder"]
@@ -60,7 +60,7 @@ output "org_team_output" {
 }
 
 output "org_team_association_output" {
-  value = resource.docker_org_team_member_association.example_association
+  value = resource.docker_org_team_member.example_association
 }
 
 # output "access_tokens_uuids_output" {

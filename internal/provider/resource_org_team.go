@@ -3,15 +3,18 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -65,7 +68,6 @@ func (r *OrgTeamResource) Schema(ctx context.Context, req resource.SchemaRequest
 
 ~> **Note** Only available when authenticated with a username and password as an owner of the org.
 `,
-
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
 				MarkdownDescription: "The numeric id associated to the team",
@@ -84,6 +86,9 @@ func (r *OrgTeamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"team_name": schema.StringAttribute{
 				MarkdownDescription: "Team name",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_-]{3,30}$`), "Team name must be 3-30 characters long and can only contain letters, numbers, underscores, or hyphens."),
+				},
 			},
 			"team_description": schema.StringAttribute{
 				MarkdownDescription: "Team description",

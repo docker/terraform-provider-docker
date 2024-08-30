@@ -187,13 +187,6 @@ func (c *Client) ListOrgTeamMembers(ctx context.Context, orgName string, teamNam
 	return membersResponse, err
 }
 
-// // TODO: This is returning a 503 for some reason... moving on as to no stay blocked
-// func (c *Client) ListOrgTeamMembers(ctx context.Context, orgName string, teamName string) ([]string, error) {
-// 	var members []string
-// 	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/orgs/%s/teams/%s/members", orgName, teamName), nil, &members)
-// 	return members, err
-// }
-
 func (c *Client) GetOrgSettingImageAccessManagement(ctx context.Context, orgName string) (OrgSettingImageAccessManagement, error) {
 	var settings OrgSettingImageAccessManagement
 	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/orgs/%s/settings/", orgName), nil, &settings)

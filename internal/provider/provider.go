@@ -44,7 +44,6 @@ type DockerProvider struct {
 // DockerProviderModel describes the provider data model.
 type DockerProviderModel struct {
 	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
 	Host     types.String `tfsdk:"host"`
 }
 
@@ -66,11 +65,6 @@ func (p *DockerProvider) Schema(ctx context.Context, req provider.SchemaRequest,
 			"username": schema.StringAttribute{
 				MarkdownDescription: "Username for authentication",
 				Optional:            true,
-			},
-			"password": schema.StringAttribute{
-				MarkdownDescription: "Password for authentication",
-				Optional:            true,
-				Sensitive:           true,
 			},
 		},
 	}
@@ -98,17 +92,7 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		resp.Diagnostics.AddAttributeError(
 			path.Root("username"),
 			"Unknown Docker Hub API Username",
-			"The provider cannot create the Docker Hub API client as there is an unknown configuration value for the Docker Hub API username. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the DOCKER_USERNAME environment variable.",
-		)
-	}
-
-	if data.Password.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Unknown Docker Hub API Password",
-			"The provider cannot create the Docker Hub API client as there is an unknown configuration value for the Docker Hub API password. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the DOCKER_PASSWORD environment variable.",
+			"The provider cannot create the Docker Hub API client as there is an unknown configuration value for the Docker Hub API username.",
 		)
 	}
 
@@ -132,9 +116,6 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	password := os.Getenv("DOCKER_PASSWORD")
-	if !data.Password.IsNull() {
-		password = data.Password.ValueString()
-	}
 
 	// If DOCKER_USERNAME and DOCKER_PASSWORD are not set, or if they are empty,
 	// retrieve them from the credential store
@@ -181,9 +162,7 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		resp.Diagnostics.AddAttributeError(
 			path.Root("username"),
 			"Missing Docker Hub API Username",
-			"The provider cannot create the Docker Hub API client as there is a missing or empty value for the Docker Hub API username. "+
-				"Set the username value in the configuration or use the DOCKER_USERNAME environment variable. "+
-				"If either is already set, ensure the value is not empty.",
+			"Missing valid login credentials. More details: https://github.com/docker/terraform-provider-docker#authentication.",
 		)
 	}
 
@@ -191,9 +170,7 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		resp.Diagnostics.AddAttributeError(
 			path.Root("password"),
 			"Missing Docker Hub API Password",
-			"The provider cannot create the Docker Hub API client as there is a missing or empty value for the Docker Hub API password. "+
-				"Set the password value in the configuration or use the DOCKER_PASSWORD environment variable. "+
-				"If either is already set, ensure the value is not empty.",
+			"Missing valid login credentials. More details: https://github.com/docker/terraform-provider-docker#authentication.",
 		)
 	}
 

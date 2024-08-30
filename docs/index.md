@@ -18,5 +18,4 @@ description: |-
 ### Optional
 
 - `host` (String) Docker Hub API Host. Default is `hub.docker.com`.
-- `password` (String, Sensitive) Password for authentication
 - `username` (String) Username for authentication

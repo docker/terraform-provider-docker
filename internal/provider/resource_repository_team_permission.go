@@ -68,6 +68,22 @@ func (r *RepositoryTeamPermissionResource) Schema(ctx context.Context, req resou
 ~> **Note** When used with a Personal Access Token authentication (PAT), the PAT should
    have the "Read, Write, and Delete" scope to create and delete team permissions. The
    owner of the PAT must be an editor of the org.
+
+## Example Usage
+
+` + "```hcl" + `
+resource "docker_hub_repository" "my_repo" {
+  namespace        = "my-namespace"
+  name             = "my-repo"
+}
+
+resource "docker_hub_repository_team_permission" "my_repo" {
+  repo_id    = docker_hub_repository.my_repo.id
+  team_id    = 123456
+  permission = "admin"
+}
+` + "```" + `
+
 `,
 
 		Attributes: map[string]schema.Attribute{

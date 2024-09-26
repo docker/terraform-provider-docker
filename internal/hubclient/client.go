@@ -26,10 +26,18 @@ type Client struct {
 	BaseURL     string
 	auth        Auth
 	HTTPClient  *http.Client
-	userAgent   string
 	token       string
 	tokenExpiry time.Time
 	mu          sync.Mutex
+}
+
+type roundTripper struct {
+	userAgent string
+}
+
+func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", rt.userAgent)
+	return http.DefaultTransport.RoundTrip(req)
 }
 
 type Config struct {
@@ -53,8 +61,10 @@ func NewClient(config Config) *Client {
 		},
 		HTTPClient: &http.Client{
 			Timeout: time.Minute,
+			Transport: &roundTripper{
+				userAgent: fmt.Sprintf("terraform-provider-docker/%s", version),
+			},
 		},
-		userAgent: fmt.Sprintf("terraform-provider-docker/%s", version),
 	}
 }
 
@@ -137,7 +147,6 @@ func (c *Client) sendRequest(ctx context.Context, method string, url string, bod
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", c.userAgent)
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
 
 	req = req.WithContext(ctx)

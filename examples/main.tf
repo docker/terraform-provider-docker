@@ -2,7 +2,7 @@ terraform {
   required_providers {
     docker = {
       source  = "docker/docker"
-      version = "~>1.0"
+      version = "~> 0.2"
     }
   }
 
@@ -23,9 +23,9 @@ resource "docker_org_team" "terraform-team" {
 
 # Team association
 resource "docker_org_team_member" "example_association" {
-  org_name   = "dockerterraform"
-  team_name  = resource.docker_org_team.terraform-team.team_name
-  user_names = ["forrestloomis371", "username-placeholder"]
+  org_name  = "dockerterraform"
+  team_name = resource.docker_org_team.terraform-team.team_name
+  user_name = "username-placeholder"
 }
 
 # Create repository

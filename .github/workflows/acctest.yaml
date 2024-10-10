@@ -39,16 +39,11 @@ jobs:
           terraform_version: ${{ inputs.terraform-version }}
           terraform_wrapper: false
 
-      - uses: docker/login-action@v2
-        with:
-          username: ${{ vars.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          registry: index-stage.docker.io
-
       - run: |
           make testacc TESTS='${{ inputs.tests }}'
         env:
-          DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
-          DOCKER_HUB_HOST: "hub-stage.docker.com"
+          DOCKER_USERNAME: ${{ secrets.ACCTEST_DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.ACCTEST_DOCKER_PASSWORD }}
+          DOCKER_HUB_HOST: ${{ secrets.ACCTEST_HUB_HOST }}
           TF_ACC: "1"
         timeout-minutes: 30

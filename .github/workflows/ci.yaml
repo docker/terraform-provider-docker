@@ -17,6 +17,11 @@ jobs:
 
       - uses: actions/setup-go@v5
 
-      - name: vet
+      - name: check headers
+        run: |
+          make ltag-validate
+
+      - name: test
         run: |
           go vet ./...
+          go test ./...

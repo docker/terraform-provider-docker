@@ -24,6 +24,18 @@ install:
 docs:
 	go generate ./...
 
+# Generate headers.
+.PHONY: ltag
+ltag:
+	go install github.com/kunalkushwaha/ltag@latest
+	ltag
+
+# Generate headers.
+.PHONY: ltag-validate
+ltag-validate:
+	go install github.com/kunalkushwaha/ltag@latest
+	ltag -check
+
 # Setup local development environment
 .PHONY: local-build
 local-build: install setup-terraformrc

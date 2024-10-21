@@ -6,6 +6,8 @@ teams, organization settings, and more) using Terraform.
 > [!WARNING]
 > This project is **not** for managing objects in a local docker engine. If you would like to use Terraform to interact with a docker engine, [kreuzwerker/docker](https://registry.terraform.io/providers/kreuzwerker/docker/latest) is a fine provider.
 
+Documentation: https://registry.terraform.io/providers/docker/docker/latest/docs
+
 ## Requirements
 
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.1

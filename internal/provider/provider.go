@@ -70,6 +70,77 @@ func (p *DockerProvider) Metadata(ctx context.Context, req provider.MetadataRequ
 
 func (p *DockerProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `
+Manage Docker-hosted resources (such as repositories,
+teams, organization settings, and more) using Terraform.
+
+> [!WARNING]
+> This project is **not** for managing objects in a local docker engine. If you would like to use Terraform to interact with a docker engine, [kreuzwerker/docker](https://registry.terraform.io/providers/kreuzwerker/docker/latest) is a fine provider.
+
+## Usage
+
+Below is a basic example of how to use the Docker services Terraform provider to create a Docker repository.
+
+` + "```" + `hcl
+terraform {
+  required_providers {
+    docker = {
+      source  = "docker/docker"
+      version = "~> 0.2"
+    }
+  }
+}
+
+provider "docker" { }
+
+resource "docker_repository" "example" {
+  name        = "example-repo"
+  description = "This is an example Docker repository"
+  private     = true
+}
+` + "```" + `
+
+
+## Authentication
+
+We have multiple ways to set your Docker credentials.
+
+### Setting credentials
+
+Use ` + "`docker login`" + ` to [log in to a
+registry](https://docs.docker.com/reference/cli/docker/login/). The ` + "`docker`" + ` CLI
+will store your credentials securely in your credential store, such as the
+operating system native keychain. The Docker Terraform provider will
+use these credentials automatically.
+
+` + "```" + `
+cat ~/my_password.txt | docker login --username my-username --password-stdin
+` + "```" + `
+
+If you'd like to use a different account for running the provider,
+you can set credentials in the environment:
+
+` + "```" + `
+export DOCKER_USERNAME=my-username
+export DOCKER_PASSWORD=my-secret-token
+terraform plan ...
+` + "```" + `
+
+### Credential types
+
+You can create a personal access token (PAT) to use as an alternative to your
+password for Docker CLI authentication.
+
+A "Read, Write, & Delete" PAT can be used to create, edit, and
+manage permissions for Docker Hub repositories.
+
+The advantage of PATs is that they have [many security
+benefits](https://docs.docker.com/security/for-developers/access-tokens/) over
+passwords.
+
+Unfortunately, PATs are limited to managing repositories. If you'd like to use
+this provider to manage organizations and teams, you will need to authenticate
+`,
 		Attributes: map[string]schema.Attribute{
 			"host": schema.StringAttribute{
 				MarkdownDescription: "Docker Hub API Host. Default is `hub.docker.com`.",

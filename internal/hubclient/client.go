@@ -190,3 +190,7 @@ func (c *Client) sendRequest(ctx context.Context, method string, url string, bod
 
 	return nil
 }
+
+func (c *Client) Username() string {
+	return c.auth.Username
+}

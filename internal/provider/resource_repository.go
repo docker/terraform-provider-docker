@@ -205,7 +205,7 @@ func (r *RepositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
 						regexp.MustCompile(`^[a-z0-9]+(?:[._-][a-z0-9]+)*$`),
-						"Name must only contain alphanumeric characters, '.', or '-', and must start and end with an alphanumeric character",
+						"Name must only contain lowercase alphanumeric characters, '.', or '-', and must start and end with a lowercase alphanumeric character",
 					),
 				},
 			},

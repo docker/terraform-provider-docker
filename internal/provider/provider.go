@@ -297,6 +297,7 @@ func (p *DockerProvider) Resources(ctx context.Context) []func() resource.Resour
 func (p *DockerProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewOrgDataSource,
+		NewOrgMembersDataSource,
 		NewOrgTeamMemberDataSource,
 		NewRepositoryDataSource,
 		NewRepositoriesDataSource,

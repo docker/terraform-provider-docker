@@ -67,10 +67,10 @@ type OrgTeamMember struct {
 	PrimaryEmail    string   `json:"primary_email"`
 }
 
-type OrgMembersResponse struct {
+type OrgTeamMembersResponse struct {
 	Count    int             `json:"count"`
-	Next     interface{}     `json:"next"`
-	Previous interface{}     `json:"previous"`
+	Next     string          `json:"next"`
+	Previous string          `json:"previous"`
 	Results  []OrgTeamMember `json:"results"`
 }
 
@@ -122,6 +122,32 @@ type OrgSettingRegistryAccessManagement struct {
 	CustomRegistries   []RegistryAccessManagementCustomRegistry   `json:"custom_registries"`
 }
 
+// OrgMemberList response
+type OrgMemberListResponse struct {
+	Count    int         `json:"count"`    // The total number of items that match with the search.
+	Previous string      `json:"previous"` // The URL or link for the previous page of items.
+	Next     string      `json:"next"`     // The URL or link for the next page of items.
+	Results  []OrgMember `json:"results"`  // List of accounts.
+}
+
+// OrgMember represents each organization member
+type OrgMember struct {
+	Email         string   `json:"email"`          // User's email address
+	Role          string   `json:"role"`           // Enum: "Owner", "Member", "Invitee" - User's role in the Organization
+	Groups        []string `json:"groups"`         // Groups (Teams) that the user is member of
+	IsGuest       bool     `json:"is_guest"`       // If the organization has verified domains
+	ID            string   `json:"id"`             // The UUID trimmed
+	Company       string   `json:"company"`        // Company name
+	DateJoined    string   `json:"date_joined"`    // Date joined
+	FullName      string   `json:"full_name"`      // Full name
+	GravatarEmail string   `json:"gravatar_email"` // Gravatar email
+	GravatarURL   string   `json:"gravatar_url"`   // Gravatar URL
+	Location      string   `json:"location"`       // Location
+	ProfileURL    string   `json:"profile_url"`    // Profile URL
+	Type          string   `json:"type"`           // Enum: "User", "Org"
+	Username      string   `json:"username"`       // Username
+}
+
 const (
 	StandardRegistryDocker = "DockerHub"
 )
@@ -141,6 +167,25 @@ func (c *Client) GetOrg(ctx context.Context, orgName string) (Org, error) {
 	org := Org{}
 	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/orgs/%s/", orgName), nil, &org)
 	return org, err
+}
+
+func (c *Client) ListOrgMembers(ctx context.Context, orgName string) ([]OrgMember, error) {
+	org := OrgMemberListResponse{}
+	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/orgs/%s/members", orgName), nil, &org)
+	if err != nil {
+		return nil, err
+	}
+	members := org.Results
+	for org.Next != "" {
+		nextOrg := OrgMemberListResponse{}
+		err := c.sendRequest(ctx, "GET", org.Next, nil, &org)
+		if err != nil {
+			return nil, err
+		}
+		members = append(members, nextOrg.Results...)
+		org = nextOrg
+	}
+	return members, nil
 }
 
 func (c *Client) GetOrgSettings(ctx context.Context, orgName string) (Org, error) {
@@ -197,8 +242,8 @@ func (c *Client) AddOrgTeamMember(ctx context.Context, orgName string, teamName 
 	return c.sendRequest(ctx, "POST", fmt.Sprintf("/orgs/%s/groups/%s/members/", orgName, teamName), memberRequestJSON, nil)
 }
 
-func (c *Client) ListOrgTeamMembers(ctx context.Context, orgName string, teamName string) (OrgMembersResponse, error) {
-	membersResponse := OrgMembersResponse{}
+func (c *Client) ListOrgTeamMembers(ctx context.Context, orgName string, teamName string) (OrgTeamMembersResponse, error) {
+	membersResponse := OrgTeamMembersResponse{}
 	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/orgs/%s/groups/%s/members/", orgName, teamName), nil, &membersResponse)
 	return membersResponse, err
 }

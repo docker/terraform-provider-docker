@@ -109,9 +109,7 @@ func (r *OrgSettingRegistryAccessManagementResource) Schema(ctx context.Context,
 		` + "```hcl" + `
 		resource "docker_org_setting_registry_access_management" "example" {
 		org_name = "my-organization"
-
 		enabled = true
-
 		custom_registries = [
 			{
 			address       = "registry.example.com"
@@ -124,10 +122,9 @@ func (r *OrgSettingRegistryAccessManagementResource) Schema(ctx context.Context,
 			allowed       = false
 			}
 		]
-
 		standard_registry_docker_hub = {
 			allowed = true
-		}
+		  }
 		}
 		` + "```" + `
 

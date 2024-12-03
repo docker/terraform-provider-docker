@@ -86,9 +86,9 @@ func (r *OrgTeamMemberResource) Schema(ctx context.Context, req resource.SchemaR
 
 	` + "```hcl" + `
 	resource "docker_org_team_member" "example" {
-	org_name  = "my-organization"
-	team_name = "dev-team"
-	user_name = "johndoe"
+		org_name  = "my-organization"
+		team_name = "dev-team"
+		user_name = "johndoe"
 	}
 ` + "```" + `
 `,

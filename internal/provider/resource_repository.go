@@ -185,11 +185,11 @@ func (r *RepositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 
 	` + "```hcl" + `
 	resource "docker_hub_repository" "example" {
-	namespace       = "my-organization"
-	name            = "my-repo"
-	description     = "A repository for storing container images"
-	full_description = "This repository stores container images for the development team."
-	private         = true
+		namespace       = "my-organization"
+		name            = "my-repo"
+		description     = "A repository for storing container images"
+		full_description = "This repository stores container images for the development team."
+		private         = true
 	}
 	` + "```" + `
 

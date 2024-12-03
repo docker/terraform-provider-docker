@@ -76,18 +76,17 @@ func (r *OrgSettingImageAccessManagementResource) Schema(ctx context.Context, re
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Manages the Image Access Management settings for an organization.
 
-	## Example Usage
+## Example Usage
 
-	` + "```hcl" + `
-	resource "docker_org_setting_image_access_management" "example" {
+` + "```hcl" + `
+resource "docker_org_setting_image_access_management" "example" {
 	org_name                  = "my-organization"
 	enabled                   = true
 	allow_official_images     = true
 	allow_verified_publishers = false
-	}
-	` + "```" + `
-
-This configuration enables Image Access Management for the organization ` + "`my-organization`" + `, allowing Docker Official Images but restricting images from Docker Verified Publishers. Adjust the values as needed to fit your organization's requirements.`,
+}
+` + "```" + `
+`,
 
 		Attributes: map[string]schema.Attribute{
 			"org_name": schema.StringAttribute{

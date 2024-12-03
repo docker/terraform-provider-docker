@@ -80,16 +80,16 @@ func (r *OrgTeamMemberResource) Schema(ctx context.Context, req resource.SchemaR
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Manages team members associated with an organization.
 
-	~> **Note**: This resource is only available when authenticated with a username and password as an owner of the org.
+~> **Note**: This resource is only available when authenticated with a username and password as an owner of the org.
 
-	## Example Usage
+## Example Usage
 
-	` + "```hcl" + `
-	resource "docker_org_team_member" "example" {
-		org_name  = "my-organization"
-		team_name = "dev-team"
-		user_name = "johndoe"
-	}
+` + "```hcl" + `
+resource "docker_org_team_member" "example" {
+	org_name  = "my-organization"
+	team_name = "dev-team"
+	user_name = "johndoe"
+}
 ` + "```" + `
 `,
 		Attributes: map[string]schema.Attribute{

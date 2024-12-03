@@ -61,22 +61,22 @@ func (d *AccessTokenDataSource) Schema(ctx context.Context, req datasource.Schem
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Retrieves details of a specific Docker Hub access token by its UUID.
 
-		## Example Usage
+## Example Usage
 
-		` + "```hcl" + `
-		data "docker_hub_access_token" "example" {
-			uuid = "123e4567-e89b-12d3-a456-426614174000"
-		}
+` + "```hcl" + `
+data "docker_hub_access_token" "example" {
+	uuid = "123e4567-e89b-12d3-a456-426614174000"
+}
 
-		output "access_token_details" {
-		  value = {
-			label       = data.docker_hub_access_token.example.token_label
-			scopes      = data.docker_hub_access_token.example.scopes
-			created_at  = data.docker_hub_access_token.example.created_at
-			last_used   = data.docker_hub_access_token.example.last_used
-			is_active   = data.docker_hub_access_token.example.is_active
-		  }
-		}
+output "access_token_details" {
+	value = {
+	label       = data.docker_hub_access_token.example.token_label
+	scopes      = data.docker_hub_access_token.example.scopes
+	created_at  = data.docker_hub_access_token.example.created_at
+	last_used   = data.docker_hub_access_token.example.last_used
+	is_active   = data.docker_hub_access_token.example.is_active
+  }
+}
 ` + "```" + `
 `,
 

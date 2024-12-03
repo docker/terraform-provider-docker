@@ -51,15 +51,15 @@ func (d *LoginDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Reads the current login information.
 
-	## Example Usage
+## Example Usage
 
-	` + "```hcl" + `
-	data "docker_hub_login" "current" {}
+` + "```hcl" + `
+data "docker_hub_login" "current" {}
 
-	output "current_user" {
-		value = data.docker_hub_login.current.username
-	}
-	` + "```" + `
+output "current_user" {
+	value = data.docker_hub_login.current.username
+}
+` + "```" + `
 `,
 		Attributes: map[string]schema.Attribute{
 			"username": schema.StringAttribute{

@@ -72,10 +72,22 @@ func (r *OrgSettingImageAccessManagementResource) Configure(ctx context.Context,
 func (r *OrgSettingImageAccessManagementResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_org_setting_image_access_management"
 }
-
 func (r *OrgSettingImageAccessManagementResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages the Image Access Management settings for an organization.",
+		MarkdownDescription: `Manages the Image Access Management settings for an organization.
+
+	## Example Usage
+
+	` + "```hcl" + `
+	resource "docker_org_setting_image_access_management" "example" {
+	org_name                  = "my-organization"
+	enabled                   = true
+	allow_official_images     = true
+	allow_verified_publishers = false
+	}
+	` + "```" + `
+
+This configuration enables Image Access Management for the organization ` + "`my-organization`" + `, allowing Docker Official Images but restricting images from Docker Verified Publishers. Adjust the values as needed to fit your organization's requirements.`,
 
 		Attributes: map[string]schema.Attribute{
 			"org_name": schema.StringAttribute{
@@ -90,11 +102,11 @@ func (r *OrgSettingImageAccessManagementResource) Schema(ctx context.Context, re
 				Required:            true,
 			},
 			"allow_official_images": schema.BoolAttribute{
-				MarkdownDescription: "Whether or not to allow curated set of Docker Official Images repositories hosted on Docker Hub. Only takes effect when Image Access Management feature is enabled.⁠",
+				MarkdownDescription: "Whether or not to allow a curated set of Docker Official Images repositories hosted on Docker Hub. Only takes effect when the Image Access Management feature is enabled.",
 				Required:            true,
 			},
 			"allow_verified_publishers": schema.BoolAttribute{
-				MarkdownDescription: "Whether or not to allow High-quality images by Docker Verified Publishers. Only takes effect when Image Access Management feature is enabled.⁠",
+				MarkdownDescription: "Whether or not to allow high-quality images by Docker Verified Publishers. Only takes effect when the Image Access Management feature is enabled.",
 				Required:            true,
 			},
 		},

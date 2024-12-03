@@ -49,8 +49,18 @@ func (d *AccessTokensDataSource) Metadata(ctx context.Context, req datasource.Me
 
 func (d *AccessTokensDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Docker Hub Access Token",
+		MarkdownDescription: `Retrieves the list of Docker Hub access tokens associated with the authenticated user.
 
+	## Example Usage
+
+	` + "```hcl" + `
+	data "docker_hub_access_tokens" "example" {}
+
+	output "access_token_uuids" {
+		value = data.docker_hub_access_tokens.example.uuids
+	}
+	` + "```" + `
+`,
 		Attributes: map[string]schema.Attribute{
 			"uuids": schema.ListAttribute{
 				MarkdownDescription: "The UUIDs of the access tokens",

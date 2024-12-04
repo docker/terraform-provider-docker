@@ -56,6 +56,30 @@ func (d *RepositoryDataSource) Metadata(ctx context.Context, req datasource.Meta
 
 func (d *RepositoryDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: `Retrieves information about a Docker Hub repository.
+
+~> **Note**: The repository must already exist in your Docker Hub account or organization.
+
+## Example Usage
+
+` + "```hcl" + `
+data "docker_hub_repository" "example" {
+	namespace = "my-organization"
+	name      = "my-repo"
+}
+
+output "repository_info" {
+	value = {
+	id               = data.docker_hub_repository.example.id
+	description      = data.docker_hub_repository.example.description
+	full_description = data.docker_hub_repository.example.full_description
+	private          = data.docker_hub_repository.example.private
+	pull_count       = data.docker_hub_repository.example.pull_count
+  }
+}
+
+` + "```" + `
+`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "The namespace/name of the repository",

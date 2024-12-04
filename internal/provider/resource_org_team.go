@@ -77,38 +77,46 @@ func (r *OrgTeamResource) Configure(ctx context.Context, req resource.ConfigureR
 func (r *OrgTeamResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_org_team"
 }
-
 func (r *OrgTeamResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Manages teams for an organization.
 
-~> **Note** Only available when authenticated with a username and password as an owner of the org.
+~> **Note**: This resource is only available when authenticated with a username and password as an owner of the org.
+
+## Example Usage
+
+` + "```hcl" + `
+resource "docker_org_team" "example" {
+	org_name         = "my-organization"
+	team_name        = "dev-team"
+	team_description = "Development team responsible for backend services"
+}
+` + "```" + `
 `,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
-				MarkdownDescription: "The numeric id associated to the team",
+				MarkdownDescription: "The numeric ID associated with the team",
 				Computed:            true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
 			"org_name": schema.StringAttribute{
-				MarkdownDescription: "Organization name",
+				MarkdownDescription: "The name of the organization",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"team_name": schema.StringAttribute{
-				MarkdownDescription: "Team name",
+				MarkdownDescription: "The name of the team",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_-]{3,30}$`), "Team name must be 3-30 characters long and can only contain letters, numbers, underscores, or hyphens."),
 				},
 			},
 			"team_description": schema.StringAttribute{
-				MarkdownDescription: "Team description",
-				Required:            false,
+				MarkdownDescription: "A description of the team's purpose or responsibilities",
 				Optional:            true,
 			},
 		},

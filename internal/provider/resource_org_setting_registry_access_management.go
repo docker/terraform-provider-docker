@@ -102,7 +102,33 @@ func (r *OrgSettingRegistryAccessManagementResource) Metadata(ctx context.Contex
 
 func (r *OrgSettingRegistryAccessManagementResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages the Registry Access Management settings for an organization.",
+		MarkdownDescription: `Manages the Registry Access Management settings for an organization.
+
+## Example Usage
+
+` + "```hcl" + `
+resource "docker_org_setting_registry_access_management" "example" {
+org_name = "my-organization"
+enabled = true
+custom_registries = [
+	{
+	address       = "registry.example.com"
+	friendly_name = "Example Registry"
+	allowed       = true
+	},
+	{
+	address       = "another-registry.example.com"
+	friendly_name = "Another Registry"
+	allowed       = false
+	}
+]
+standard_registry_docker_hub = {
+	allowed = true
+	}
+}
+` + "```" + `
+
+`,
 
 		Attributes: map[string]schema.Attribute{
 			"org_name": schema.StringAttribute{

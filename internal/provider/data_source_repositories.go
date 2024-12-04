@@ -62,7 +62,21 @@ func (d *RepositoriesDataSource) Metadata(ctx context.Context, req datasource.Me
 
 func (d *RepositoriesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Docker Hub Repositories",
+		MarkdownDescription: `Retrieves a list of repositories within a specified Docker Hub namespace.
+
+## Example Usage
+
+` + "```hcl" + `
+data "docker_hub_repositories" "example" {
+	namespace          = "my-organization"
+	max_number_results = 10
+}
+output "repositories" {
+	value = data.docker_hub_repositories.example.repository
+}
+
+` + "```" + `
+`,
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

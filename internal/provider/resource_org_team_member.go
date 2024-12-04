@@ -76,11 +76,21 @@ func (r *OrgTeamMemberResource) Configure(ctx context.Context, req resource.Conf
 func (r *OrgTeamMemberResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_org_team_member"
 }
-
 func (r *OrgTeamMemberResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Manages team members associated with an organization.
-~> **Note** Only available when authenticated with a username and password as an owner of the org.
+
+~> **Note**: This resource is only available when authenticated with a username and password as an owner of the org.
+
+## Example Usage
+
+` + "```hcl" + `
+resource "docker_org_team_member" "example" {
+	org_name  = "my-organization"
+	team_name = "dev-team"
+	user_name = "johndoe"
+}
+` + "```" + `
 `,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

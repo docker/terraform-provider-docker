@@ -76,8 +76,18 @@ func (r *AccessTokenResource) Metadata(ctx context.Context, req resource.Metadat
 
 func (r *AccessTokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages access tokens.",
+		MarkdownDescription: `Manages access tokens..
 
+## Example Usage
+
+` + "```hcl" + `
+resource "docker_access_token" "example" {
+	token_label = "my-pat-token"
+	scopes      = ["repo:read", "repo:write"]
+}
+` + "```" + `
+
+	`,
 		Attributes: map[string]schema.Attribute{
 			"uuid": schema.StringAttribute{
 				MarkdownDescription: "UUID of the token",

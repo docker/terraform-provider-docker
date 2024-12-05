@@ -20,10 +20,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
+	"strings"
+	"sync"
 
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -44,12 +46,16 @@ func NewOrgMemberResource() resource.Resource {
 
 type OrgMemberResource struct {
 	client *hubclient.Client
+
+	mu         sync.Mutex
+	orgMembers map[string][]hubclient.OrgMember
+	orgInvites map[string][]hubclient.OrgInvite
 }
 
 type OrgMemberResourceModel struct {
 	OrgName  types.String `tfsdk:"org_name"`
-	TeamName types.String `tfsdk:"team_name"`
 	UserName types.String `tfsdk:"user_name"`
+	Email    types.String `tfsdk:"email"`
 	Role     types.String `tfsdk:"role"`      // New field for role
 	InviteID types.String `tfsdk:"invite_id"` // This is needed for deletion
 }
@@ -67,6 +73,8 @@ func (r *OrgMemberResource) Configure(ctx context.Context, req resource.Configur
 		return
 	}
 
+	r.orgMembers = make(map[string][]hubclient.OrgMember)
+	r.orgInvites = make(map[string][]hubclient.OrgInvite)
 	r.client = client
 }
 
@@ -76,18 +84,39 @@ func (r *OrgMemberResource) Metadata(ctx context.Context, req resource.MetadataR
 
 func (r *OrgMemberResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: `Manages team members associated with an organization.
+		MarkdownDescription: `Manages members associated with an organization.
 
 ~> **Note** Only available when authenticated with a username and password as an owner of the org.
 
+When a member is added to an organization, they don't have access to the
+organization's repositories until they accept the invitation. The invitation is
+sent to the email address associated with the user's Docker ID.
+
 ## Example Usage
-	
+
 ` + "```hcl" + `
 resource "docker_org_member" "example" {
 	org_name = "org_name"
 	role     = "member"
-	username = "orgmember@docker.com"
+	email    = "orgmember@docker.com"
 }
+` + "```" + `
+
+## Import State
+
+` + "```hcl" + `
+
+import {
+  id = "org-name/user-name"
+  to = docker_org_member.example
+}
+
+resource "docker_org_member" "example" {
+	org_name  = "org-name"
+	role      = "member"
+	user_name = "user-name"
+}
+
 ` + "```" + `
 
 	`,
@@ -100,23 +129,17 @@ resource "docker_org_member" "example" {
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"team_name": schema.StringAttribute{
-				MarkdownDescription: "Team name within the organization",
-				Required:            false,
+			"user_name": schema.StringAttribute{
+				MarkdownDescription: "User name of the member. Either user_name or email must be specified.",
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_-]{3,30}$`), "Team name must be 3-30 characters long and can only contain letters, numbers, underscores, or hyphens."),
-				},
 			},
-			"user_name": schema.StringAttribute{
-				MarkdownDescription: "User name (email) of the member being associated with the team",
-				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+			"email": schema.StringAttribute{
+				MarkdownDescription: "Email of the member. Either user_name or email must be specified.",
+				Optional:            true,
+				Computed:            true,
 			},
 			"role": schema.StringAttribute{
 				MarkdownDescription: "Role assigned to the user within the organization (e.g., 'member', 'editor', 'owner').",
@@ -129,7 +152,7 @@ resource "docker_org_member" "example" {
 				},
 			},
 			"invite_id": schema.StringAttribute{
-				MarkdownDescription: "The ID of the invite. Used for managing the , especially for deletion.",
+				MarkdownDescription: "The ID of the invite. Used for managing membership invites that haven't been accepted yet.",
 				Computed:            true,
 			},
 		},
@@ -144,7 +167,17 @@ func (r *OrgMemberResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	inviteResp, err := r.client.InviteOrgMember(ctx, data.OrgName.ValueString(), data.TeamName.ValueString(), data.Role.ValueString(), []string{data.UserName.ValueString()}, false)
+	invitee := data.UserName.ValueString()
+	if invitee == "" {
+		invitee = data.Email.ValueString()
+	}
+	if invitee == "" {
+		errMsg := "Either user_name or email must be specified."
+		resp.Diagnostics.AddError("Missing Required Field", errMsg)
+		return
+	}
+
+	inviteResp, err := r.client.InviteOrgMember(ctx, data.OrgName.ValueString(), data.Role.ValueString(), []string{invitee}, false)
 	if err != nil {
 		errMsg := fmt.Sprintf("Unable to create org_member resource: %v", err)
 		resp.Diagnostics.AddError("Error Creating Resource", errMsg)
@@ -158,16 +191,52 @@ func (r *OrgMemberResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	invite := inviteResp.OrgInvitees[0]
-	data.InviteID = types.StringValue(invite.Invite.ID)
+	if invite.Invite.ID != "" {
+		data.InviteID = types.StringValue(invite.Invite.ID)
+	} else {
+		// If the invite is in a pending state, then InviteOrgMember does not return
+		// the invite ID. We need to get the invite ID from the org invites.
+		member, err := r.orgMember(ctx, data.OrgName.ValueString(), invitee)
+		if err != nil {
+			errMsg := fmt.Sprintf("Could not resolve member status: %v", err)
+			resp.Diagnostics.AddError("Error Creating Resource", errMsg)
+			return
+		}
+		data.InviteID = member.InviteID
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-// TODO: finish read
 func (r *OrgMemberResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state OrgMemberResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	var data OrgMemberResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	invitee := state.UserName.ValueString()
+	if invitee == "" {
+		invitee = state.Email.ValueString()
+	}
+	if invitee == "" {
+		errMsg := "Either user_name or email must be specified."
+		resp.Diagnostics.AddError("Missing Required Field", errMsg)
+		return
+	}
+
+	data, err := r.orgMember(ctx, state.OrgName.ValueString(), invitee)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Reading Resource", err.Error())
+		return
+	}
+
+	if data.Role.ValueString() == "" {
+		data.Role = state.Role
+	}
+
+	diags := resp.State.Set(ctx, &data)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -185,16 +254,33 @@ func (r *OrgMemberResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
+	invitee := data.UserName.ValueString()
+	if invitee == "" {
+		invitee = data.Email.ValueString()
+	}
+	if invitee == "" {
+		errMsg := "Either user_name or email must be specified."
+		resp.Diagnostics.AddError("Missing Required Field", errMsg)
+		return
+	}
+
 	// Deleting an established member (accepted inv) vs deleting an invited member has different API calls
 	// Invited members that have not accepted do not have a recorded username in the org afaik
 	// Attempt to delete by inviteID first
-	err := r.client.DeleteOrgInvite(ctx, data.InviteID.ValueString())
-	if err != nil {
+	deleted := false
+	if data.InviteID.ValueString() != "" {
+		err := r.client.DeleteOrgInvite(ctx, data.InviteID.ValueString())
+		if err == nil {
+			deleted = true
+			return
+		}
+	}
+
+	if !deleted {
 		// If deleting by inviteID fails, try deleting by orgName and userName
-		err = r.client.DeleteOrgMember(ctx, data.OrgName.ValueString(), data.UserName.ValueString())
+		err := r.client.DeleteOrgMember(ctx, data.OrgName.ValueString(), invitee)
 		if err != nil {
 			errMsg := fmt.Sprintf("Unable to delete org_member resource: %v", err)
-			log.Println(errMsg)
 			resp.Diagnostics.AddError("Error Deleting Resource", errMsg)
 			return
 		}
@@ -204,7 +290,73 @@ func (r *OrgMemberResource) Delete(ctx context.Context, req resource.DeleteReque
 	log.Println("Successfully deleted OrgMemberResource.")
 }
 
-// TODO: setup import state
 func (r *OrgMemberResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	return
+	idParts := strings.Split(req.ID, "/")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: org_name/user_name. Got: %q", req.ID),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("org_name"), idParts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("user_name"), idParts[1])...)
+}
+
+// orgMember returns the org member resource model for the given org and user name.
+//
+// Our org_member represents both invited and accepted members, so
+// we need to merge the results from both endpoints.
+func (r *OrgMemberResource) orgMember(ctx context.Context, orgName string, userName string) (OrgMemberResourceModel, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	members, ok := r.orgMembers[orgName]
+	if !ok {
+		var err error
+		members, err = r.client.ListOrgMembers(ctx, orgName)
+		if err != nil {
+			return OrgMemberResourceModel{}, err
+		}
+		r.orgMembers[orgName] = members
+	}
+
+	for _, member := range members {
+		if member.Username == userName || member.Email == userName {
+			return OrgMemberResourceModel{
+				OrgName:  types.StringValue(orgName),
+				UserName: types.StringValue(member.Username),
+				Role:     types.StringValue(strings.ToLower(member.Role)),
+				Email:    types.StringValue(member.Email),
+			}, nil
+		}
+	}
+
+	invites, ok := r.orgInvites[orgName]
+	if !ok {
+		var err error
+		invites, err = r.client.ListOrgInvites(ctx, orgName)
+		if err != nil {
+			return OrgMemberResourceModel{}, err
+		}
+		r.orgInvites[orgName] = invites
+	}
+
+	for _, invite := range invites {
+		if userName == invite.Invitee {
+			result := OrgMemberResourceModel{
+				OrgName:  types.StringValue(orgName),
+				InviteID: types.StringValue(invite.ID),
+			}
+			if strings.Contains(userName, "@") {
+				result.Email = types.StringValue(userName)
+			} else {
+				result.UserName = types.StringValue(userName)
+			}
+			return result, nil
+		}
+	}
+
+	return OrgMemberResourceModel{}, fmt.Errorf("member not found in org. Org: %s, User: %s", orgName, userName)
 }

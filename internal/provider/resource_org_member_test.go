@@ -18,6 +18,7 @@ package provider
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/docker/terraform-provider-docker/internal/envvar"
@@ -26,21 +27,25 @@ import (
 
 func TestAccOrgMemberResource(t *testing.T) {
 	org := envvar.GetWithDefault(envvar.AccTestOrganization)
-	teamName := "test" + randString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testOrgMemberResourceConfig(org, teamName),
+				Config: fmt.Sprintf(`
+resource "docker_org_member" "test" {
+  org_name  = "%[1]s"
+  email = "newtest@example.com"
+  role = "member"
+}`, org),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("docker_org_member.test", "invite_id"),
 					resource.TestCheckResourceAttr("docker_org_member.test", "org_name", org),
-					resource.TestCheckResourceAttr("docker_org_member.test", "team_name", teamName),
-					resource.TestCheckResourceAttr("docker_org_member.test", "user_name", "newtest@example.com"),
+					resource.TestCheckResourceAttr("docker_org_member.test", "email", "newtest@example.com"),
 					resource.TestCheckResourceAttr("docker_org_member.test", "role", "member"),
 				),
 			},
+			// TODO(nicks): Enable this once we support importing invites.
 			// {
 			// 	ResourceName:            "docker_org_member.test",
 			// 	ImportState:             false,
@@ -51,17 +56,33 @@ func TestAccOrgMemberResource(t *testing.T) {
 	})
 }
 
-func testOrgMemberResourceConfig(org string, team string) string {
-	return fmt.Sprintf(`
-resource "docker_org_team" "testing" {
-  org_name         = "%[1]s"
-  team_name        = "%[2]s"
-}
+func TestAccOrgMemberResourceImport(t *testing.T) {
+	username := os.Getenv("DOCKER_USERNAME")
+	org := envvar.GetWithDefault(envvar.AccTestOrganization)
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				PlanOnly: true,
+				Config: fmt.Sprintf(`
+data "docker_login" "_" {}
 
+import {
+  id = "%[1]s/%[2]s"
+  to = docker_org_member.test
+}
 resource "docker_org_member" "test" {
-  org_name  = docker_org_team.testing.org_name
-  team_name = docker_org_team.testing.team_name
-  user_name = "newtest@example.com"
-  role = "member"
-}`, org, team)
+  org_name  = "%[1]s"
+  user_name = "%[2]s"
+  role      = "owner"
+}`, org, username),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("docker_org_member.test", "invite_id"),
+					resource.TestCheckResourceAttr("docker_org_member.test", "org_name", org),
+					resource.TestCheckResourceAttr("docker_org_member.test", "user_name", username),
+				),
+			},
+		},
+	})
 }

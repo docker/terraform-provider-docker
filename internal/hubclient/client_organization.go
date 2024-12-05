@@ -106,6 +106,10 @@ type OrgInvite struct {
 	CreatedAt       string `json:"created_at"`
 }
 
+type OrgInvitesListResponse struct {
+	Data []OrgInvite `json:"data"`
+}
+
 type OrgSettingImageAccessManagement struct {
 	RestrictedImages ImageAccessManagementRestrictedImages `json:"restricted_images"`
 }
@@ -284,10 +288,15 @@ func (c *Client) SetOrgSettingRegistryAccessManagement(ctx context.Context, orgN
 	return c.GetOrgSettingRegistryAccessManagement(ctx, orgName)
 }
 
-func (c *Client) InviteOrgMember(ctx context.Context, orgName, teamName, role string, invitees []string, dryRun bool) (OrgInviteResponse, error) {
+func (c *Client) ListOrgInvites(ctx context.Context, orgName string) ([]OrgInvite, error) {
+	var invites OrgInvitesListResponse
+	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/orgs/%s/invites", orgName), nil, &invites)
+	return invites.Data, err
+}
+
+func (c *Client) InviteOrgMember(ctx context.Context, orgName, role string, invitees []string, dryRun bool) (OrgInviteResponse, error) {
 	inviteRequest := OrgMemberRequest{
 		Org:      orgName,
-		Team:     teamName,
 		Invitees: invitees,
 		Role:     role,
 		DryRun:   dryRun,

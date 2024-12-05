@@ -3,31 +3,69 @@
 page_title: "docker_org_member Resource - docker"
 subcategory: ""
 description: |-
-  Manages team members associated with an organization.
+  Manages members associated with an organization.
   ~> Note Only available when authenticated with a username and password as an owner of the org.
+  When a member is added to an organization, they don't have access to the
+  organization's repositories until they accept the invitation. The invitation is
+  sent to the email address associated with the user's Docker ID.
   Example Usage
   
   resource "docker_org_member" "example" {
   	org_name = "org_name"
   	role     = "member"
-  	username = "orgmember@docker.com"
+  	email    = "orgmember@docker.com"
+  }
+  
+  Import State
+  
+  
+  import {
+    id = "org-name/user-name"
+    to = docker_org_member.example
+  }
+  
+  resource "docker_org_member" "example" {
+  	org_name  = "org-name"
+  	role      = "member"
+  	user_name = "user-name"
   }
 ---
 
 # docker_org_member (Resource)
 
-Manages team members associated with an organization.
+Manages members associated with an organization.
 
 ~> **Note** Only available when authenticated with a username and password as an owner of the org.
 
+When a member is added to an organization, they don't have access to the
+organization's repositories until they accept the invitation. The invitation is
+sent to the email address associated with the user's Docker ID.
+
 ## Example Usage
-	
+
 ```hcl
 resource "docker_org_member" "example" {
 	org_name = "org_name"
 	role     = "member"
-	username = "orgmember@docker.com"
+	email    = "orgmember@docker.com"
 }
+```
+
+## Import State
+
+```hcl
+
+import {
+  id = "org-name/user-name"
+  to = docker_org_member.example
+}
+
+resource "docker_org_member" "example" {
+	org_name  = "org-name"
+	role      = "member"
+	user_name = "user-name"
+}
+
 ```
 
 
@@ -39,12 +77,12 @@ resource "docker_org_member" "example" {
 
 - `org_name` (String) Organization name
 - `role` (String) Role assigned to the user within the organization (e.g., 'member', 'editor', 'owner').
-- `user_name` (String) User name (email) of the member being associated with the team
 
 ### Optional
 
-- `team_name` (String) Team name within the organization
+- `email` (String) Email of the member. Either user_name or email must be specified.
+- `user_name` (String) User name of the member. Either user_name or email must be specified.
 
 ### Read-Only
 
-- `invite_id` (String) The ID of the invite. Used for managing the , especially for deletion.
+- `invite_id` (String) The ID of the invite. Used for managing membership invites that haven't been accepted yet.

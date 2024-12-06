@@ -3,12 +3,27 @@
 page_title: "docker_access_token Resource - docker"
 subcategory: ""
 description: |-
-  Manages access tokens.
+  Manages access tokens..
+  Example Usage
+  
+  resource "docker_access_token" "example" {
+  	token_label = "my-pat-token"
+  	scopes      = ["repo:read", "repo:write"]
+  }
 ---
 
 # docker_access_token (Resource)
 
-Manages access tokens.
+Manages access tokens..
+
+## Example Usage
+
+```hcl
+resource "docker_access_token" "example" {
+	token_label = "my-pat-token"
+	scopes      = ["repo:read", "repo:write"]
+}
+```
 
 
 

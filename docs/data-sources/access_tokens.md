@@ -3,12 +3,29 @@
 page_title: "docker_access_tokens Data Source - docker"
 subcategory: ""
 description: |-
-  Docker Hub Access Token
+  Retrieves the list of Docker Hub access tokens associated with the authenticated user.
+  Example Usage
+  
+  data "docker_hub_access_tokens" "example" {}
+  
+  output "access_token_uuids" {
+  	value = data.docker_hub_access_tokens.example.uuids
+  }
 ---
 
 # docker_access_tokens (Data Source)
 
-Docker Hub Access Token
+Retrieves the list of Docker Hub access tokens associated with the authenticated user.
+
+## Example Usage
+
+```hcl
+data "docker_hub_access_tokens" "example" {}
+
+output "access_token_uuids" {
+	value = data.docker_hub_access_tokens.example.uuids
+}
+```
 
 
 

@@ -4,14 +4,31 @@ page_title: "docker_org_team Resource - docker"
 subcategory: ""
 description: |-
   Manages teams for an organization.
-  ~> Note Only available when authenticated with a username and password as an owner of the org.
+  ~> Note: This resource is only available when authenticated with a username and password as an owner of the org.
+  Example Usage
+  
+  resource "docker_org_team" "example" {
+  	org_name         = "my-organization"
+  	team_name        = "dev-team"
+  	team_description = "Development team responsible for backend services"
+  }
 ---
 
 # docker_org_team (Resource)
 
 Manages teams for an organization.
 
-~> **Note** Only available when authenticated with a username and password as an owner of the org.
+~> **Note**: This resource is only available when authenticated with a username and password as an owner of the org.
+
+## Example Usage
+
+```hcl
+resource "docker_org_team" "example" {
+	org_name         = "my-organization"
+	team_name        = "dev-team"
+	team_description = "Development team responsible for backend services"
+}
+```
 
 
 
@@ -20,13 +37,13 @@ Manages teams for an organization.
 
 ### Required
 
-- `org_name` (String) Organization name
-- `team_name` (String) Team name
+- `org_name` (String) The name of the organization
+- `team_name` (String) The name of the team
 
 ### Optional
 
-- `team_description` (String) Team description
+- `team_description` (String) A description of the team's purpose or responsibilities
 
 ### Read-Only
 
-- `id` (Number) The numeric id associated to the team
+- `id` (Number) The numeric ID associated with the team

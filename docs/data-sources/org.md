@@ -3,15 +3,48 @@
 page_title: "docker_org Data Source - docker"
 subcategory: ""
 description: |-
-  Reads an organization properties.
-  ~> Note Only available when authenticated with a username and password.
+  Reads properties of a Docker Hub organization.
+  ~> Note: This data source is only available when authenticated with a username and password.
+  Example Usage
+  
+  data "docker_hub_org" "example" {
+  	org_name = "my-organization"
+  }
+  
+  output "organization_details" {
+    value = {
+  	id          = data.docker_hub_org.example.id
+  	full_name   = data.docker_hub_org.example.full_name
+  	location    = data.docker_hub_org.example.location
+  	company     = data.docker_hub_org.example.company
+  	date_joined = data.docker_hub_org.example.date_joined
+    }
+  }
 ---
 
 # docker_org (Data Source)
 
-Reads an organization properties.
+Reads properties of a Docker Hub organization.
 
-~> **Note** Only available when authenticated with a username and password.
+~> **Note**: This data source is only available when authenticated with a username and password.
+
+## Example Usage
+
+```hcl
+data "docker_hub_org" "example" {
+	org_name = "my-organization"
+}
+
+output "organization_details" {
+  value = {
+	id          = data.docker_hub_org.example.id
+	full_name   = data.docker_hub_org.example.full_name
+	location    = data.docker_hub_org.example.location
+	company     = data.docker_hub_org.example.company
+	date_joined = data.docker_hub_org.example.date_joined
+  }
+}
+```
 
 
 

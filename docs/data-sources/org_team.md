@@ -3,15 +3,48 @@
 page_title: "docker_org_team Data Source - docker"
 subcategory: ""
 description: |-
-  Reads team in an organization.
-  ~> Note Only available when authenticated with a username and password.
+  Reads team information within a Docker Hub organization.
+  ~> Note: This data source is only available when authenticated with a username and password.
+  Example Usage
+  
+  data "docker_hub_org_team" "example" {
+  	org_name  = "my-organization"
+  	team_name = "dev-team"
+  }
+  
+  output "team_info" {
+  value = {
+  	id           = data.docker_hub_org_team.example.id
+  	uuid         = data.docker_hub_org_team.example.uuid
+  	description  = data.docker_hub_org_team.example.description
+  	member_count = data.docker_hub_org_team.example.member_count
+    }
+  }
 ---
 
 # docker_org_team (Data Source)
 
-Reads team in an organization.
+Reads team information within a Docker Hub organization.
 
-~> **Note** Only available when authenticated with a username and password.
+~> **Note**: This data source is only available when authenticated with a username and password.
+
+## Example Usage
+
+```hcl
+data "docker_hub_org_team" "example" {
+	org_name  = "my-organization"
+	team_name = "dev-team"
+}
+
+output "team_info" {
+value = {
+	id           = data.docker_hub_org_team.example.id
+	uuid         = data.docker_hub_org_team.example.uuid
+	description  = data.docker_hub_org_team.example.description
+	member_count = data.docker_hub_org_team.example.member_count
+  }
+}
+```
 
 
 

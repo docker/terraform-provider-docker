@@ -4,11 +4,30 @@ page_title: "docker_org_setting_image_access_management Resource - docker"
 subcategory: ""
 description: |-
   Manages the Image Access Management settings for an organization.
+  Example Usage
+  
+  resource "docker_org_setting_image_access_management" "example" {
+  	org_name                  = "my-organization"
+  	enabled                   = true
+  	allow_official_images     = true
+  	allow_verified_publishers = false
+  }
 ---
 
 # docker_org_setting_image_access_management (Resource)
 
 Manages the Image Access Management settings for an organization.
+
+## Example Usage
+
+```hcl
+resource "docker_org_setting_image_access_management" "example" {
+	org_name                  = "my-organization"
+	enabled                   = true
+	allow_official_images     = true
+	allow_verified_publishers = false
+}
+```
 
 
 
@@ -17,7 +36,7 @@ Manages the Image Access Management settings for an organization.
 
 ### Required
 
-- `allow_official_images` (Boolean) Whether or not to allow curated set of Docker Official Images repositories hosted on Docker Hub. Only takes effect when Image Access Management feature is enabled.⁠
-- `allow_verified_publishers` (Boolean) Whether or not to allow High-quality images by Docker Verified Publishers. Only takes effect when Image Access Management feature is enabled.⁠
+- `allow_official_images` (Boolean) Whether or not to allow a curated set of Docker Official Images repositories hosted on Docker Hub. Only takes effect when the Image Access Management feature is enabled.
+- `allow_verified_publishers` (Boolean) Whether or not to allow high-quality images by Docker Verified Publishers. Only takes effect when the Image Access Management feature is enabled.
 - `enabled` (Boolean) Whether or not Image Access Management is enabled. When this feature is enabled, only images created by your organization or by Docker Official Images and Docker Verified Publishers are allowed. All community images are restricted.
 - `org_name` (String) Organization name

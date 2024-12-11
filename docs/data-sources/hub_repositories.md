@@ -3,12 +3,34 @@
 page_title: "docker_hub_repositories Data Source - docker"
 subcategory: ""
 description: |-
-  Docker Hub Repositories
+  Retrieves a list of repositories within a specified Docker Hub namespace.
+  Example Usage
+  
+  data "docker_hub_repositories" "example" {
+  	namespace          = "my-organization"
+  	max_number_results = 10
+  }
+  output "repositories" {
+  	value = data.docker_hub_repositories.example.repository
+  }
 ---
 
 # docker_hub_repositories (Data Source)
 
-Docker Hub Repositories
+Retrieves a list of repositories within a specified Docker Hub namespace.
+
+## Example Usage
+
+```hcl
+data "docker_hub_repositories" "example" {
+	namespace          = "my-organization"
+	max_number_results = 10
+}
+output "repositories" {
+	value = data.docker_hub_repositories.example.repository
+}
+
+```
 
 
 

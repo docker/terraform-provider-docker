@@ -3,12 +3,29 @@
 page_title: "docker_login Data Source - docker"
 subcategory: ""
 description: |-
-  Reads current login info.
+  Reads the current login information.
+  Example Usage
+  
+  data "docker_hub_login" "current" {}
+  
+  output "current_user" {
+  	value = data.docker_hub_login.current.username
+  }
 ---
 
 # docker_login (Data Source)
 
-Reads current login info.
+Reads the current login information.
+
+## Example Usage
+
+```hcl
+data "docker_hub_login" "current" {}
+
+output "current_user" {
+	value = data.docker_hub_login.current.username
+}
+```
 
 
 

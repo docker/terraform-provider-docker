@@ -1,3 +1,6 @@
 # Ignore Terraform state files
 *.tfstate
 *.tfstate.backup
+
+# Store acceptance testing secrets in .env
+.env

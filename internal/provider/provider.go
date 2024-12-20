@@ -60,6 +60,7 @@ type DockerProvider struct {
 // DockerProviderModel describes the provider data model.
 type DockerProviderModel struct {
 	Username types.String `tfsdk:"username"`
+	Password types.String `tfsdk:"password"`
 	Host     types.String `tfsdk:"host"`
 }
 
@@ -105,17 +106,43 @@ resource "docker_repository" "example" {
 
 We have multiple ways to set your Docker credentials.
 
-### Setting credentials
+### Setting credentials with ` + "`docker login`" + `
 
-Use ` + "`docker login`" + ` to [log in to a
-registry](https://docs.docker.com/reference/cli/docker/login/). The ` + "`docker`" + ` CLI
-will store your credentials securely in your credential store, such as the
-operating system native keychain. The Docker Terraform provider will
-use these credentials automatically.
+To login in an interactive command-line:
+
+` + "```" + `
+docker login
+` + "```" + `
+
+To login in a non-interactive script:
 
 ` + "```" + `
 cat ~/my_password.txt | docker login --username my-username --password-stdin
 ` + "```" + `
+
+The ` + "`docker`" + ` CLI
+will store your credentials securely in your credential store, such as the
+operating system native keychain. The Docker Terraform provider will
+use these credentials automatically.
+
+### Setting credentials in CI
+
+The Docker Terraform provider will work with your CI provider's
+native Docker login action. For example, in [GitHub Actions](https://github.com/marketplace/actions/docker-login):
+
+` + "```" + `
+jobs:
+  login:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+` + "```" + `
+
+### Setting credentials with environment variables
 
 If you'd like to use a different account for running the provider,
 you can set credentials in the environment:
@@ -124,6 +151,22 @@ you can set credentials in the environment:
 export DOCKER_USERNAME=my-username
 export DOCKER_PASSWORD=my-secret-token
 terraform plan ...
+` + "```" + `
+
+### Setting credentials in Terraform (NOT RECOMMENDED)
+
+> [!WARNING]
+> Hard-coding secrets in Terraform is risky. You risk leaking the secrets
+> if they're committed to version control.
+
+Only pass in a password in Terraform if you're pulling the secret from a secure
+location, or if you're doing local testing.
+
+` + "```" + `hcl
+provider "docker" {
+  username = "my-username"
+  password = "my-secret-token"
+}
 ` + "```" + `
 
 ### Credential types
@@ -153,6 +196,11 @@ this provider to manage organizations and teams, you will need to authenticate
 				MarkdownDescription: "Username for authentication",
 				Optional:            true,
 			},
+			"password": schema.StringAttribute{
+				MarkdownDescription: "Password for authentication",
+				Optional:            true,
+				Sensitive:           true,
+			},
 		},
 	}
 }
@@ -174,12 +222,18 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 				"Either target apply the source of the value first, set the value statically in the configuration, or use the DOCKER_HUB_HOST environment variable.",
 		)
 	}
-
 	if data.Username.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("username"),
 			"Unknown Docker Hub API Username",
 			"The provider cannot create the Docker Hub API client as there is an unknown configuration value for the Docker Hub API username.",
+		)
+	}
+	if data.Password.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Unknown Docker Hub API Password",
+			"The provider cannot create the Docker Hub API client as there is an unknown configuration value for the Docker Hub API password.",
 		)
 	}
 
@@ -203,6 +257,9 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	password := os.Getenv("DOCKER_PASSWORD")
+	if !data.Password.IsNull() {
+		password = data.Password.ValueString()
+	}
 
 	// If DOCKER_USERNAME and DOCKER_PASSWORD are not set, or if they are empty,
 	// retrieve them from the credential store

@@ -28,20 +28,50 @@ description: |-
   
   Authentication
   We have multiple ways to set your Docker credentials.
-  Setting credentials
-  Use docker login to log in to aregistry https://docs.docker.com/reference/cli/docker/login/. The docker CLI
-  will store your credentials securely in your credential store, such as the
-  operating system native keychain. The Docker Terraform provider will
-  use these credentials automatically.
+  Setting credentials with docker login
+  To login in an interactive command-line:
+  
+  docker login
+  
+  To login in a non-interactive script:
   
   cat ~/my_password.txt | docker login --username my-username --password-stdin
   
+  The docker CLI
+  will store your credentials securely in your credential store, such as the
+  operating system native keychain. The Docker Terraform provider will
+  use these credentials automatically.
+  Setting credentials in CI
+  The Docker Terraform provider will work with your CI provider's
+  native Docker login action. For example, in GitHub Actions https://github.com/marketplace/actions/docker-login:
+  
+  jobs:
+    login:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Login to Docker Hub
+          uses: docker/login-action@v3
+          with:
+            username: ${{ vars.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+  
+  Setting credentials with environment variables
   If you'd like to use a different account for running the provider,
   you can set credentials in the environment:
   
   export DOCKER_USERNAME=my-username
   export DOCKER_PASSWORD=my-secret-token
   terraform plan ...
+  
+  Setting credentials in Terraform (NOT RECOMMENDED)
+  [!WARNING]Hard-coding secrets in Terraform is risky. You risk leaking the secretsif they're committed to version control.
+  Only pass in a password in Terraform if you're pulling the secret from a secure
+  location, or if you're doing local testing.
+  
+  provider "docker" {
+    username = "my-username"
+    password = "my-secret-token"
+  }
   
   Credential types
   You can create a personal access token (PAT) to use as an alternative to your
@@ -90,17 +120,43 @@ resource "docker_repository" "example" {
 
 We have multiple ways to set your Docker credentials.
 
-### Setting credentials
+### Setting credentials with `docker login`
 
-Use `docker login` to [log in to a
-registry](https://docs.docker.com/reference/cli/docker/login/). The `docker` CLI
-will store your credentials securely in your credential store, such as the
-operating system native keychain. The Docker Terraform provider will
-use these credentials automatically.
+To login in an interactive command-line:
+
+```
+docker login
+```
+
+To login in a non-interactive script:
 
 ```
 cat ~/my_password.txt | docker login --username my-username --password-stdin
 ```
+
+The `docker` CLI
+will store your credentials securely in your credential store, such as the
+operating system native keychain. The Docker Terraform provider will
+use these credentials automatically.
+
+### Setting credentials in CI
+
+The Docker Terraform provider will work with your CI provider's
+native Docker login action. For example, in [GitHub Actions](https://github.com/marketplace/actions/docker-login):
+
+```
+jobs:
+  login:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+```
+
+### Setting credentials with environment variables
 
 If you'd like to use a different account for running the provider,
 you can set credentials in the environment:
@@ -109,6 +165,22 @@ you can set credentials in the environment:
 export DOCKER_USERNAME=my-username
 export DOCKER_PASSWORD=my-secret-token
 terraform plan ...
+```
+
+### Setting credentials in Terraform (NOT RECOMMENDED)
+
+> [!WARNING]
+> Hard-coding secrets in Terraform is risky. You risk leaking the secrets
+> if they're committed to version control.
+
+Only pass in a password in Terraform if you're pulling the secret from a secure
+location, or if you're doing local testing.
+
+```hcl
+provider "docker" {
+  username = "my-username"
+  password = "my-secret-token"
+}
 ```
 
 ### Credential types
@@ -134,4 +206,5 @@ this provider to manage organizations and teams, you will need to authenticate
 ### Optional
 
 - `host` (String) Docker Hub API Host. Default is `hub.docker.com`.
+- `password` (String, Sensitive) Password for authentication
 - `username` (String) Username for authentication

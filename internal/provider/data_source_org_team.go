@@ -61,17 +61,17 @@ func (d *OrgTeamDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 ## Example Usage
 
 ` + "```hcl" + `
-data "docker_hub_org_team" "example" {
+data "docker_org_team" "example" {
 	org_name  = "my-organization"
 	team_name = "dev-team"
 }
 
 output "team_info" {
 value = {
-	id           = data.docker_hub_org_team.example.id
-	uuid         = data.docker_hub_org_team.example.uuid
-	description  = data.docker_hub_org_team.example.description
-	member_count = data.docker_hub_org_team.example.member_count
+	id           = data.docker_org_team.example.id
+	uuid         = data.docker_org_team.example.uuid
+	description  = data.docker_org_team.example.description
+	member_count = data.docker_org_team.example.member_count
   }
 }
 ` + "```" + `

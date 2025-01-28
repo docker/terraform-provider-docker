@@ -54,10 +54,10 @@ func (d *LoginDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 ## Example Usage
 
 ` + "```hcl" + `
-data "docker_hub_login" "current" {}
+data "docker_login" "current" {}
 
 output "current_user" {
-	value = data.docker_hub_login.current.username
+	value = data.docker_login.current.username
 }
 ` + "```" + `
 `,

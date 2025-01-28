@@ -6,10 +6,10 @@ description: |-
   Reads the current login information.
   Example Usage
   
-  data "docker_hub_login" "current" {}
+  data "docker_login" "current" {}
   
   output "current_user" {
-  	value = data.docker_hub_login.current.username
+  	value = data.docker_login.current.username
   }
 ---
 
@@ -20,10 +20,10 @@ Reads the current login information.
 ## Example Usage
 
 ```hcl
-data "docker_hub_login" "current" {}
+data "docker_login" "current" {}
 
 output "current_user" {
-	value = data.docker_hub_login.current.username
+	value = data.docker_login.current.username
 }
 ```
 

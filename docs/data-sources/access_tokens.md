@@ -6,10 +6,10 @@ description: |-
   Retrieves the list of Docker Hub access tokens associated with the authenticated user.
   Example Usage
   
-  data "docker_hub_access_tokens" "example" {}
+  data "docker_access_tokens" "example" {}
   
   output "access_token_uuids" {
-  	value = data.docker_hub_access_tokens.example.uuids
+  	value = data.docker_access_tokens.example.uuids
   }
 ---
 
@@ -20,10 +20,10 @@ Retrieves the list of Docker Hub access tokens associated with the authenticated
 ## Example Usage
 
 ```hcl
-data "docker_hub_access_tokens" "example" {}
+data "docker_access_tokens" "example" {}
 
 output "access_token_uuids" {
-	value = data.docker_hub_access_tokens.example.uuids
+	value = data.docker_access_tokens.example.uuids
 }
 ```
 

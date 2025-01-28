@@ -54,10 +54,10 @@ func (d *AccessTokensDataSource) Schema(ctx context.Context, req datasource.Sche
 ## Example Usage
 
 ` + "```hcl" + `
-data "docker_hub_access_tokens" "example" {}
+data "docker_access_tokens" "example" {}
 
 output "access_token_uuids" {
-	value = data.docker_hub_access_tokens.example.uuids
+	value = data.docker_access_tokens.example.uuids
 }
 ` + "```" + `
 `,

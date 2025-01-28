@@ -7,17 +7,17 @@ description: |-
   ~> Note: This data source is only available when authenticated with a username and password.
   Example Usage
   
-  data "docker_hub_org_team_member" "example" {
+  data "docker_org_team_member" "example" {
   	org_name  = "my-organization"
   	team_name = "dev-team"
   }
   
   output "team_members" {
-  	value = data.docker_hub_org_team_member.example.members
+  	value = data.docker_org_team_member.example.members
   }
   
   output "team_member_roles" {
-  	value = [for member in data.docker_hub_org_team_member.example.members : { member = member.username, role = member.role }]
+  	value = [for member in data.docker_org_team_member.example.members : { member = member.username, role = member.role }]
   }
   	```
 ---
@@ -31,17 +31,17 @@ Reads team members of a specified team within a Docker Hub organization.
 ## Example Usage
 
 ```hcl
-data "docker_hub_org_team_member" "example" {
+data "docker_org_team_member" "example" {
 	org_name  = "my-organization"
 	team_name = "dev-team"
 }
 
 output "team_members" {
-	value = data.docker_hub_org_team_member.example.members
+	value = data.docker_org_team_member.example.members
 }
 
 output "team_member_roles" {
-	value = [for member in data.docker_hub_org_team_member.example.members : { member = member.username, role = member.role }]
+	value = [for member in data.docker_org_team_member.example.members : { member = member.username, role = member.role }]
 }
 	```
 

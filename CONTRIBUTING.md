@@ -51,7 +51,7 @@ export DOCKER_PASSWORD=$(yourpassword)
 cd examples && terraform plan
 ```
 
-Note, when you run the `terraform plan` you should see a warning, this ensures that you using the locally installed provider and not the publically available provider.
+Note, when you run the `terraform plan` you should see a warning, this ensures that you are using the locally installed provider and not the publicly available provider.
 
 > │ Warning: Provider development overrides are in effect
 
@@ -65,7 +65,7 @@ Run full test suite:
 make testacc
 ```
 
-Run an specific test(s):
+Run a specific test(s):
 
 ```shell
 make testacc TESTS=TestAccXXX
@@ -77,7 +77,7 @@ which is equivalent to:
 TF_ACC=1 go test ./... -v -count 1 -parallel 20 -timeout 120m -run TestAccXXX
 ```
 
-where `TestFuncName` is the testing function within the `_test.go` file.
+where `TestAccXXX` is the testing function within the `_test.go` file.
 
 ## Environment Variables
 
@@ -92,7 +92,7 @@ export ACCTEST_DOCKER_ORG=myorgname
 
 ## Getting Help
 
-If you have any questions or need assistance, please reach out to us through in the DTP Slack Channel (TODO)
+If you have any questions or need assistance, please reach out to us in the DTP Slack Channel (TODO)
 
 ## Thanks for Contributing
 

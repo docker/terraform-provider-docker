@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type Org struct {
@@ -182,7 +183,8 @@ func (c *Client) ListOrgMembers(ctx context.Context, orgName string) ([]OrgMembe
 	members := org.Results
 	for org.Next != "" {
 		nextOrg := OrgMemberListResponse{}
-		err := c.sendRequest(ctx, "GET", org.Next, nil, &org)
+		nextURL := strings.TrimPrefix(org.Next, c.BaseURL)
+		err := c.sendRequest(ctx, "GET", nextURL, nil, &nextOrg)
 		if err != nil {
 			return nil, err
 		}

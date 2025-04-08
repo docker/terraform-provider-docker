@@ -251,7 +251,24 @@ func (c *Client) AddOrgTeamMember(ctx context.Context, orgName string, teamName 
 func (c *Client) ListOrgTeamMembers(ctx context.Context, orgName string, teamName string) (OrgTeamMembersResponse, error) {
 	membersResponse := OrgTeamMembersResponse{}
 	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/orgs/%s/groups/%s/members/", orgName, teamName), nil, &membersResponse)
-	return membersResponse, err
+	if err != nil {
+		return membersResponse, err
+	}
+	
+	members := membersResponse.Results
+	for membersResponse.Next != "" {
+		nextResponse := OrgTeamMembersResponse{}
+		nextURL := strings.TrimPrefix(membersResponse.Next, c.BaseURL)
+		err := c.sendRequest(ctx, "GET", nextURL, nil, &nextResponse)
+		if err != nil {
+			return membersResponse, err
+		}
+		members = append(members, nextResponse.Results...)
+		membersResponse = nextResponse
+	}
+	
+	membersResponse.Results = members
+	return membersResponse, nil
 }
 
 func (c *Client) GetOrgSettingImageAccessManagement(ctx context.Context, orgName string) (OrgSettingImageAccessManagement, error) {

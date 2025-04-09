@@ -27,13 +27,13 @@ docs:
 # Generate headers.
 .PHONY: ltag
 ltag:
-	go install github.com/kunalkushwaha/ltag@latest
+	go install github.com/containerd/ltag@v0.3.0
 	ltag
 
 # Generate headers.
 .PHONY: ltag-validate
 ltag-validate:
-	go install github.com/kunalkushwaha/ltag@latest
+	go install github.com/containerd/ltag@v0.3.0
 	ltag -check
 
 # Setup local development environment

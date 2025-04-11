@@ -90,9 +90,17 @@ export ACCTEST_DOCKER_ORG=myorgname
 ...
 ```
 
-## Getting Help
+## Releasing
 
-If you have any questions or need assistance, please reach out to us in the DTP Slack Channel (TODO)
+To release version `v0.x.y` of the provider, run:
+
+```
+git fetch --tags
+git tag -a v0.x.y -m "v0.x.y"
+git push origin v0.x.y
+```
+
+Github Actions will build and publish to the Terraform registry.
 
 ## Thanks for Contributing
 

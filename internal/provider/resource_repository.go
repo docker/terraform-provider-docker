@@ -177,7 +177,7 @@ func (r *RepositoryResource) Schema(_ context.Context, _ resource.SchemaRequest,
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Manages an image repository in your account or organization.
 
-~> **Note** When used with a Personal Access Token authentication (PAT), the PAT should
+-> **Note** When used with a Personal Access Token authentication (PAT), the PAT should
 have the "Read, Write, and Delete" scope to create and delete repositories. The
 owner of the PAT must be an editor of the org.
 

@@ -4,7 +4,7 @@ page_title: "docker_org_members Data Source - docker"
 subcategory: ""
 description: |-
   Reads members of an organization.
-  ~> Note Only available when authenticated with a username and password.
+  -> Note Only available when authenticated with a username and password.
   Example Usage
   
   data "docker_org_members" "_" {
@@ -20,7 +20,7 @@ description: |-
 
 Reads members of an organization.
 
-~> **Note** Only available when authenticated with a username and password.
+-> **Note** Only available when authenticated with a username and password.
 
 ## Example Usage
 

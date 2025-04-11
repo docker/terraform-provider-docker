@@ -4,7 +4,7 @@ page_title: "docker_hub_repository Data Source - docker"
 subcategory: ""
 description: |-
   Retrieves information about a Docker Hub repository.
-  ~> Note: The repository must already exist in your Docker Hub account or organization.
+  -> Note: The repository must already exist in your Docker Hub account or organization.
   Example Usage
   
   data "docker_hub_repository" "example" {
@@ -27,7 +27,7 @@ description: |-
 
 Retrieves information about a Docker Hub repository.
 
-~> **Note**: The repository must already exist in your Docker Hub account or organization.
+-> **Note**: The repository must already exist in your Docker Hub account or organization.
 
 ## Example Usage
 

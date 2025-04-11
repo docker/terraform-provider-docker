@@ -16,6 +16,19 @@ description: |-
   	full_description = "This repository stores container images for the development team."
   	private         = true
   }
+  
+  Import
+  Use an import block to import a repository into your Terraform state, using
+  an id in the format of <namespace>/<repository>.
+  
+  import {
+    to = docker_hub_repository.docker-repo
+    id = 'docker-namespace/docker-repo'
+  }
+  
+  Or using the terraform import command:
+  
+  terraform import docker_hub_repository.docker-repo docker-namespace/docker-repo
 ---
 
 # docker_hub_repository (Resource)
@@ -36,6 +49,24 @@ resource "docker_hub_repository" "example" {
 	full_description = "This repository stores container images for the development team."
 	private         = true
 }
+```
+
+## Import
+
+Use an import block to import a repository into your Terraform state, using
+an id in the format of `<namespace>/<repository>`.
+
+```hcl
+import {
+  to = docker_hub_repository.docker-repo
+  id = 'docker-namespace/docker-repo'
+}
+```
+
+Or using the `terraform import` command:
+
+```bash
+terraform import docker_hub_repository.docker-repo docker-namespace/docker-repo
 ```
 
 

@@ -4,7 +4,7 @@ page_title: "docker_org_team_member Resource - docker"
 subcategory: ""
 description: |-
   Manages team members associated with an organization.
-  ~> Note: This resource is only available when authenticated with a username and password as an owner of the org.
+  -> Note: This resource is only available when authenticated with a username and password as an owner of the org.
   Example Usage
   
   resource "docker_org_team_member" "example" {
@@ -18,7 +18,7 @@ description: |-
 
 Manages team members associated with an organization.
 
-~> **Note**: This resource is only available when authenticated with a username and password as an owner of the org.
+-> **Note**: This resource is only available when authenticated with a username and password as an owner of the org.
 
 ## Example Usage
 

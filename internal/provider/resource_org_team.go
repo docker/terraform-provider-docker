@@ -81,7 +81,7 @@ func (r *OrgTeamResource) Schema(ctx context.Context, req resource.SchemaRequest
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Manages teams for an organization.
 
-~> **Note**: This resource is only available when authenticated with a username and password as an owner of the org.
+-> **Note**: This resource is only available when authenticated with a username and password as an owner of the org.
 
 ## Example Usage
 

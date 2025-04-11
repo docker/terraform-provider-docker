@@ -56,7 +56,7 @@ func (d *OrgDataSource) Schema(ctx context.Context, req datasource.SchemaRequest
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Reads properties of a Docker Hub organization.
 
-~> **Note**: This data source is only available when authenticated with a username and password.
+-> **Note**: This data source is only available when authenticated with a username and password.
 
 ## Example Usage
 

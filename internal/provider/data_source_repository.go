@@ -58,7 +58,7 @@ func (d *RepositoryDataSource) Schema(ctx context.Context, req datasource.Schema
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Retrieves information about a Docker Hub repository.
 
-~> **Note**: The repository must already exist in your Docker Hub account or organization.
+-> **Note**: The repository must already exist in your Docker Hub account or organization.
 
 ## Example Usage
 

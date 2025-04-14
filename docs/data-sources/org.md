@@ -4,7 +4,7 @@ page_title: "docker_org Data Source - docker"
 subcategory: ""
 description: |-
   Reads properties of a Docker Hub organization.
-  ~> Note: This data source is only available when authenticated with a username and password.
+  -> Note: This data source is only available when authenticated with a username and password.
   Example Usage
   
   data "docker_org" "example" {
@@ -26,7 +26,7 @@ description: |-
 
 Reads properties of a Docker Hub organization.
 
-~> **Note**: This data source is only available when authenticated with a username and password.
+-> **Note**: This data source is only available when authenticated with a username and password.
 
 ## Example Usage
 

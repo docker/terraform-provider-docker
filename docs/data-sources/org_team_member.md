@@ -4,7 +4,7 @@ page_title: "docker_org_team_member Data Source - docker"
 subcategory: ""
 description: |-
   Reads team members of a specified team within a Docker Hub organization.
-  ~> Note: This data source is only available when authenticated with a username and password.
+  -> Note: This data source is only available when authenticated with a username and password.
   Example Usage
   
   data "docker_org_team_member" "example" {
@@ -19,14 +19,13 @@ description: |-
   output "team_member_roles" {
   	value = [for member in data.docker_org_team_member.example.members : { member = member.username, role = member.role }]
   }
-  	```
 ---
 
 # docker_org_team_member (Data Source)
 
 Reads team members of a specified team within a Docker Hub organization.
 
-~> **Note**: This data source is only available when authenticated with a username and password.
+-> **Note**: This data source is only available when authenticated with a username and password.
 
 ## Example Usage
 
@@ -43,7 +42,7 @@ output "team_members" {
 output "team_member_roles" {
 	value = [for member in data.docker_org_team_member.example.members : { member = member.username, role = member.role }]
 }
-	```
+```
 
 
 

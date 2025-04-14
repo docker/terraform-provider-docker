@@ -193,6 +193,23 @@ resource "docker_hub_repository" "example" {
 }
 ` + "```" + `
 
+## Import
+
+Use an import block to import a repository into your Terraform state, using
+an id in the format of ` + "`<namespace>/<repository>`" + `.
+
+` + "```hcl" + `
+import {
+  to = docker_hub_repository.docker-repo
+  id = 'docker-namespace/docker-repo'
+}
+` + "```" + `
+
+Or using the ` + "`terraform import`" + ` command:
+
+` + "```bash" + `
+terraform import docker_hub_repository.docker-repo docker-namespace/docker-repo
+` + "```" + `
 `,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

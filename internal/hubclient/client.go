@@ -179,6 +179,16 @@ func (c *Client) sendRequest(ctx context.Context, method string, url string, bod
 		if readErr != nil {
 			return readErr
 		}
+		if res.StatusCode == http.StatusTooManyRequests {
+			bodyBytes, _ := io.ReadAll(res.Body)
+			var errorResponse map[string]interface{}
+			if err := json.Unmarshal(bodyBytes, &errorResponse); err == nil {
+				if detail, ok := errorResponse["detail"].(string); ok && strings.ToLower(detail) == "rate limit exceeded" {
+					time.Sleep(3 * time.Second) // Retry after a short delay
+					return c.sendRequest(ctx, method, url, body, result)
+				}
+			}
+		}		
 		return fmt.Errorf("server response %s: %s", path, string(bodyBytes))
 	}
 

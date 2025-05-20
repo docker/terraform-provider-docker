@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 type Auth struct {
@@ -69,18 +70,22 @@ func NewClient(config Config) *Client {
 		version = "dev"
 	}
 
+	baseClient := &http.Client{
+		Timeout: time.Minute,
+		Transport: &roundTripper{
+			userAgent: fmt.Sprintf("terraform-provider-docker/%s", version),
+		},
+	}
+	retryClient := retryablehttp.NewClient()
+	retryClient.HTTPClient = baseClient
+
 	return &Client{
 		BaseURL: config.BaseURL,
 		auth: Auth{
 			Username: config.Username,
 			Password: config.Password,
 		},
-		HTTPClient: &http.Client{
-			Timeout: time.Minute,
-			Transport: &roundTripper{
-				userAgent: fmt.Sprintf("terraform-provider-docker/%s", version),
-			},
-		},
+		HTTPClient: retryClient.StandardClient(),
 	}
 }
 

@@ -29,8 +29,9 @@ terraform {
 
 provider "docker" { }
 
-resource "docker_repository" "example" {
+resource "docker_hub_repository" "example" {
   name        = "example-repo"
+  namespace   = "example-namespace"
   description = "This is an example Docker repository"
   private     = true
 }

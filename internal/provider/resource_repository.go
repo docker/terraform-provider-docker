@@ -185,11 +185,11 @@ owner of the PAT must be an editor of the org.
 
 ` + "```hcl" + `
 resource "docker_hub_repository" "example" {
-	namespace       = "my-organization"
-	name            = "my-repo"
-	description     = "A repository for storing container images"
+	namespace        = "my-organization"
+	name             = "my-repo"
+	description      = "A repository for storing container images"
 	full_description = "This repository stores container images for the development team."
-	private         = true
+	private          = true
 }
 ` + "```" + `
 

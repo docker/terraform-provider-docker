@@ -38,10 +38,12 @@ import (
 
 var hostRegexp = regexp.MustCompile(`^[a-zA-Z0-9:.-]+$`)
 
-const dockerHubConfigfileKey = "https://index.docker.io/v1/"
-const dockerHubStageConfigfileKey = "index-stage.docker.io"
-const dockerHubHost = "hub.docker.com"
-const dockerHubStageHost = "hub-stage.docker.com"
+const (
+	dockerHubConfigfileKey      = "https://index.docker.io/v1/"
+	dockerHubStageConfigfileKey = "index-stage.docker.io"
+	dockerHubHost               = "hub.docker.com"
+	dockerHubStageHost          = "hub-stage.docker.com"
+)
 
 // Ensure DockerProvider satisfies various provider interfaces.
 var (
@@ -359,6 +361,7 @@ func (p *DockerProvider) DataSources(ctx context.Context) []func() datasource.Da
 		NewOrgTeamMemberDataSource,
 		NewRepositoryDataSource,
 		NewRepositoriesDataSource,
+		NewRepositoryTagsDataSource,
 		NewAccessTokenDataSource,
 		NewAccessTokensDataSource,
 		NewOrgTeamDataSource,

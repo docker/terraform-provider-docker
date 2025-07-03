@@ -59,21 +59,72 @@ resource "docker_access_token" "access_token" {
   scopes      = local.token_scopes
 }
 
+# === Repository Tags Data Source Example ===
+# This demonstrates the key security use case: converting human-friendly tags to digest-pinned references
 
-# Output Demos
+# Get Alpine tags for our deployment
+data "docker_hub_repository_tags" "alpine_tags" {
+  namespace = "library"
+  name      = "alpine"
+  page_size = 20
+}
+
+# === Security-Hardened Image Reference ===
+locals {
+  # Define the human-friendly tag we want to use
+  desired_tag = "latest"
+
+  # Create fully qualified image reference with digest
+  # This converts: alpine:latest → alpine@sha256:abc123...
+  secure_image_ref = try(
+    "${data.docker_hub_repository_tags.alpine_tags.tags[local.desired_tag].digest != "" ?
+      "alpine@${data.docker_hub_repository_tags.alpine_tags.tags[local.desired_tag].digest}" :
+      "alpine:${local.desired_tag}"
+    }",
+    "alpine:${local.desired_tag}"
+  )
+}
+
+# === Outputs ===
+
+# Repository outputs
 output "repo_output" {
-  value = resource.docker_hub_repository.org_hub_repo
+  description = "Created repository information"
+  value = {
+    id          = docker_hub_repository.org_hub_repo.id
+    name        = docker_hub_repository.org_hub_repo.name
+    namespace   = docker_hub_repository.org_hub_repo.namespace
+    description = docker_hub_repository.org_hub_repo.description
+  }
 }
 
+# Team outputs
 output "org_team_output" {
-  value = resource.docker_org_team.team
+  description = "Created team information"
+  value = {
+    id   = docker_org_team.team.id
+    name = docker_org_team.team.team_name
+  }
 }
 
-output "org_team_association_output" {
-  value = resource.docker_org_team_member.team_membership
+# Access token output
+output "access_token_uuid" {
+  description = "Created access token UUID"
+  value       = docker_access_token.access_token.uuid
+  sensitive   = true
 }
 
-output "access_tokens_uuids_output" {
-  value = resource.docker_access_token.access_token.uuid
+# === Security-Hardened Image Reference Output ===
+output "secure_image_example" {
+  description = "Demonstration of converting human-friendly tag to digest-pinned reference"
+  value = {
+    human_friendly = "alpine:${local.desired_tag}"
+    digest_pinned  = local.secure_image_ref
+    tag_details    = data.docker_hub_repository_tags.alpine_tags.tags[local.desired_tag]
+    available_arches = [
+      for image in data.docker_hub_repository_tags.alpine_tags.tags[local.desired_tag].images :
+      image.architecture
+    ]
+  }
 }
 

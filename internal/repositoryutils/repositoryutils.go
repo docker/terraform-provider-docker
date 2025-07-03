@@ -16,8 +16,20 @@
 
 package repositoryutils
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func NewID(namespace, name string) string {
 	return fmt.Sprintf("%s/%s", namespace, name)
+}
+
+func SplitID(id string) (namespace, name string) {
+	parts := strings.SplitN(id, "/", 2)
+	if len(parts) == 2 {
+		return parts[0], parts[1]
+	}
+	// If split fails, return empty strings (this should not happen with valid IDs)
+	return "", ""
 }

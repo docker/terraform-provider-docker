@@ -63,26 +63,14 @@ resource "docker_access_token" "access_token" {
 # This demonstrates the key security use case: converting human-friendly tags to digest-pinned references
 
 # Get Alpine tags for our deployment
-data "docker_hub_repository_tags" "alpine_tags" {
+data "docker_hub_repository_tags" "example" {
   namespace = "library"
   name      = "alpine"
-  page_size = 20
 }
 
-# === Security-Hardened Image Reference ===
+# Get digest-pinned reference
 locals {
-  # Define the human-friendly tag we want to use
-  desired_tag = "latest"
-
-  # Create fully qualified image reference with digest
-  # This converts: alpine:latest → alpine@sha256:abc123...
-  secure_image_ref = try(
-    "${data.docker_hub_repository_tags.alpine_tags.tags[local.desired_tag].digest != "" ?
-      "alpine@${data.docker_hub_repository_tags.alpine_tags.tags[local.desired_tag].digest}" :
-      "alpine:${local.desired_tag}"
-    }",
-    "alpine:${local.desired_tag}"
-  )
+  secure_image = "alpine@${data.docker_hub_repository_tags.example.tags["latest"].digest}"
 }
 
 # === Outputs ===
@@ -118,11 +106,11 @@ output "access_token_uuid" {
 output "secure_image_example" {
   description = "Demonstration of converting human-friendly tag to digest-pinned reference"
   value = {
-    human_friendly = "alpine:${local.desired_tag}"
-    digest_pinned  = local.secure_image_ref
-    tag_details    = data.docker_hub_repository_tags.alpine_tags.tags[local.desired_tag]
+    human_friendly = "alpine:latest"
+    digest_pinned  = local.secure_image
+    tag_details    = data.docker_hub_repository_tags.example.tags["latest"]
     available_arches = [
-      for image in data.docker_hub_repository_tags.alpine_tags.tags[local.desired_tag].images :
+      for image in data.docker_hub_repository_tags.example.tags["latest"].images :
       image.architecture
     ]
   }

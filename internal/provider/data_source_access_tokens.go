@@ -96,10 +96,7 @@ func (d *AccessTokensDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
-	atPage, err := d.client.GetAccessTokens(ctx, hubclient.AccessTokenListParams{
-		Page:     1,
-		PageSize: 100,
-	})
+	atPage, err := d.client.GetAccessTokens(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Docker Hub API error reading access token list", fmt.Sprintf("%v", err))
 		return

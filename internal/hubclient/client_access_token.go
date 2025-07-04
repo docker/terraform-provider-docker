@@ -47,14 +47,11 @@ type AccessTokenUpdateParams struct {
 	IsActive   bool   `json:"is_active"`
 }
 
-type AccessTokenListParams struct {
-	Page     int `json:"page"`
-	PageSize int `json:"page_size"`
-}
-
 type AccessTokenPage struct {
-	Count   int           `json:"count"`
-	Results []AccessToken `json:"results"`
+	Count    int           `json:"count"`
+	Next     interface{}   `json:"next,omitempty"`
+	Previous interface{}   `json:"previous,omitempty"`
+	Results  []AccessToken `json:"results"`
 }
 
 func (c *Client) GetAccessToken(ctx context.Context, accessTokenID string) (AccessToken, error) {
@@ -66,11 +63,27 @@ func (c *Client) GetAccessToken(ctx context.Context, accessTokenID string) (Acce
 	return accessToken, err
 }
 
-func (c *Client) GetAccessTokens(ctx context.Context, params AccessTokenListParams) (AccessTokenPage, error) {
-	accessTokenPage := AccessTokenPage{}
-	err := c.sendRequest(ctx, "GET",
-		fmt.Sprintf("/access-tokens?page=%d&page_size=%d", params.Page, params.PageSize), nil, &accessTokenPage)
-	return accessTokenPage, err
+func (c *Client) GetAccessTokens(ctx context.Context) (AccessTokenPage, error) {
+	var allTokens []AccessToken
+	initialURL := "/access-tokens"
+
+	err := c.paginate(ctx, initialURL, func(url string) (interface{}, error) {
+		var page AccessTokenPage
+		if err := c.sendRequest(ctx, "GET", url, nil, &page); err != nil {
+			return nil, err
+		}
+
+		allTokens = append(allTokens, page.Results...)
+		return page.Next, nil
+	})
+	if err != nil {
+		return AccessTokenPage{}, err
+	}
+
+	return AccessTokenPage{
+		Count:   len(allTokens),
+		Results: allTokens,
+	}, nil
 }
 
 func (c *Client) UpdateAccessToken(ctx context.Context, accessTokenID string, accessTokenUpdate AccessTokenUpdateParams) (AccessToken, error) {

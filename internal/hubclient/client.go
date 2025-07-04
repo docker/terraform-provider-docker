@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -40,12 +41,13 @@ type Token struct {
 }
 
 type Client struct {
-	BaseURL     string
-	auth        Auth
-	HTTPClient  *http.Client
-	token       string
-	tokenExpiry time.Time
-	mu          sync.Mutex
+	BaseURL        string
+	auth           Auth
+	HTTPClient     *http.Client
+	token          string
+	tokenExpiry    time.Time
+	mu             sync.Mutex
+	maxPageResults int64
 }
 
 type roundTripper struct {
@@ -62,6 +64,7 @@ type Config struct {
 	Username         string
 	Password         string
 	UserAgentVersion string
+	MaxPageResults   int64
 }
 
 func NewClient(config Config) *Client {
@@ -85,7 +88,8 @@ func NewClient(config Config) *Client {
 			Username: config.Username,
 			Password: config.Password,
 		},
-		HTTPClient: retryClient.StandardClient(),
+		HTTPClient:     retryClient.StandardClient(),
+		maxPageResults: config.MaxPageResults,
 	}
 }
 
@@ -196,6 +200,48 @@ func (c *Client) sendRequest(ctx context.Context, method string, url string, bod
 	return nil
 }
 
+// convertToRelativeURL converts full URLs to relative paths for sendRequest
+func (c *Client) convertToRelativeURL(url string) string {
+	if strings.HasPrefix(url, "https://") {
+		return strings.TrimPrefix(url, c.BaseURL)
+	}
+	return url
+}
+
+func (c *Client) paginate(ctx context.Context, initialURL string, processPage func(string) (interface{}, error)) error {
+	nextURL := initialURL
+	pagesFetched := 0
+
+	for nextURL != "" {
+		relativeURL := c.convertToRelativeURL(nextURL)
+
+		next, err := processPage(relativeURL)
+		if err != nil {
+			return err
+		}
+
+		pagesFetched++
+
+		// If maxPageResults is set to 0, we will fetch all pages
+		if c.maxPageResults > 0 && int64(pagesFetched) >= c.maxPageResults {
+			break
+		}
+
+		nextURL = ""
+		if next != nil {
+			if nextStr, ok := next.(string); ok {
+				nextURL = nextStr
+			}
+		}
+	}
+
+	return nil
+}
+
 func (c *Client) Username() string {
 	return c.auth.Username
+}
+
+func (c *Client) MaxPageResults() int64 {
+	return c.maxPageResults
 }

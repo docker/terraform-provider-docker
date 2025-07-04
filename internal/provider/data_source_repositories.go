@@ -40,10 +40,9 @@ type RepositoriesDataSource struct {
 }
 
 type RepositoriesDataSourceModel struct {
-	ID               types.String `tfsdk:"id"`
-	Namespace        types.String `tfsdk:"namespace"`
-	MaxNumberResults types.Int64  `tfsdk:"max_number_results"`
-	Repository       []Repository `tfsdk:"repository"`
+	ID         types.String `tfsdk:"id"`
+	Namespace  types.String `tfsdk:"namespace"`
+	Repository []Repository `tfsdk:"repository"`
 }
 
 type Repository struct {
@@ -62,14 +61,13 @@ func (d *RepositoriesDataSource) Metadata(ctx context.Context, req datasource.Me
 
 func (d *RepositoriesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: `Retrieves a list of repositories within a specified Docker Hub namespace.
+		MarkdownDescription: `Retrieves a list of repositories within a specified Docker Hub namespace. All available repositories are automatically fetched using internal pagination (similar to AWS provider pattern).
 
 ## Example Usage
 
 ` + "```hcl" + `
 data "docker_hub_repositories" "example" {
-	namespace          = "my-organization"
-	max_number_results = 10
+	namespace = "my-organization"
 }
 output "repositories" {
 	value = data.docker_hub_repositories.example.repository
@@ -86,11 +84,6 @@ output "repositories" {
 			"namespace": schema.StringAttribute{
 				MarkdownDescription: "Repository namespace",
 				Required:            true,
-			},
-			"max_number_results": schema.Int64Attribute{
-				MarkdownDescription: "Maximum number of results",
-				Optional:            true,
-				// Default:             100,
 			},
 			"repository": schema.ListNestedAttribute{
 				MarkdownDescription: "List of repositories",
@@ -150,7 +143,7 @@ func (d *RepositoriesDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
-	repositories, err := d.client.GetRepositories(ctx, data.Namespace.ValueString(), int(data.MaxNumberResults.ValueInt64()))
+	repositories, err := d.client.GetRepositories(ctx, data.Namespace.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Docker Hub API error reading repositories", fmt.Sprintf("%v", err))
 		return

@@ -46,7 +46,6 @@ type RepositoryTagsDataSourceModel struct {
 	Repository types.String `tfsdk:"repository"`
 	Namespace  types.String `tfsdk:"namespace"`
 	Name       types.String `tfsdk:"name"`
-	PageSize   types.Int64  `tfsdk:"page_size"`
 	Tags       types.Map    `tfsdk:"tags"`
 }
 
@@ -90,7 +89,9 @@ func (d *RepositoryTagsDataSource) Metadata(ctx context.Context, req datasource.
 
 func (d *RepositoryTagsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: `Retrieves tags for a Docker Hub repository.
+		MarkdownDescription: `Retrieves tags for a Docker Hub repository. All available tags are automatically fetched using internal pagination (similar to AWS provider pattern).
+
+-> **Note**: The repository must already exist in your Docker Hub account or organization.
 
 ## Key Security Use Case: Digest-Pinned Image References
 
@@ -98,6 +99,8 @@ This data source enables converting human-friendly tags to digest-pinned referen
 
 - **Risky**: ` + "`image: alpine:latest`" + ` (mutable tag)
 - **Secure**: ` + "`image: alpine@sha256:5c16ec53d312df1867044cc90abd951bf37fdad32cc9b4a1e1e25d2f8eaf343c`" + ` (immutable digest)
+
+Perfect for Nomad and Kubernetes deployments where you want human-friendly configuration with supply chain security.
 
 ## Example Usage
 
@@ -155,10 +158,6 @@ data "docker_hub_repository_tags" "main" {
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "Repository name",
-				Optional:            true,
-			},
-			"page_size": schema.Int64Attribute{
-				MarkdownDescription: "Number of tags to retrieve (default: 100)",
 				Optional:            true,
 			},
 			"tags": schema.MapNestedAttribute{
@@ -310,13 +309,7 @@ func (d *RepositoryTagsDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	// Set default page size if not provided
-	pageSize := 100
-	if !data.PageSize.IsNull() && !data.PageSize.IsUnknown() {
-		pageSize = int(data.PageSize.ValueInt64())
-	}
-
-	tags, err := d.client.GetRepositoryTags(ctx, namespace, name, pageSize)
+	tags, err := d.client.GetRepositoryTags(ctx, namespace, name)
 	if err != nil {
 		resp.Diagnostics.AddError("Docker Hub API error reading repository tags", "Could not read repository tags, unexpected error: "+err.Error())
 		return

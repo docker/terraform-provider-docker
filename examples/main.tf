@@ -8,7 +8,9 @@ terraform {
 }
 
 # Initialize provider
-provider "docker" {}
+provider "docker" {
+  max_page_results = 5
+}
 
 # Define local variables for customization
 locals {
@@ -59,9 +61,11 @@ resource "docker_access_token" "access_token" {
   scopes      = local.token_scopes
 }
 
+# Access tokens data source
+data "docker_access_tokens" "access_tokens" {}
+
 # === Repository Tags Data Source Example ===
 # This demonstrates the key security use case: converting human-friendly tags to digest-pinned references
-
 # Get Alpine tags for our deployment
 data "docker_hub_repository_tags" "example" {
   namespace = "library"
@@ -70,7 +74,7 @@ data "docker_hub_repository_tags" "example" {
 
 # Get digest-pinned reference
 locals {
-  secure_image = "alpine@${data.docker_hub_repository_tags.example.tags["latest"].digest}"
+  secure_image = "${data.docker_hub_repository_tags.example.name}@${data.docker_hub_repository_tags.example.tags["latest"].digest}"
 }
 
 # === Outputs ===
@@ -101,12 +105,15 @@ output "access_token_uuid" {
   value       = docker_access_token.access_token.uuid
   sensitive   = true
 }
+output "access_tokens" {
+  value = data.docker_access_tokens.access_tokens
+}
 
-# === Security-Hardened Image Reference Output ===
+# Security-Hardened Image Reference Output
 output "secure_image_example" {
   description = "Demonstration of converting human-friendly tag to digest-pinned reference"
   value = {
-    human_friendly = "alpine:latest"
+    human_friendly = "${data.docker_hub_repository_tags.example.name}:latest"
     digest_pinned  = local.secure_image
     tag_details    = data.docker_hub_repository_tags.example.tags["latest"]
     available_arches = [

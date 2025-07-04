@@ -46,6 +46,5 @@ const testAccRepositoryTagsDataSourceConfig = `
 data "docker_hub_repository_tags" "test" {
   namespace = "library"
   name      = "hello-world"
-  page_size = 10
 }
 `

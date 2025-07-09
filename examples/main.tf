@@ -8,7 +8,9 @@ terraform {
 }
 
 # Initialize provider
-provider "docker" {}
+provider "docker" {
+  max_page_results = 5
+}
 
 # Define local variables for customization
 locals {
@@ -59,21 +61,65 @@ resource "docker_access_token" "access_token" {
   scopes      = local.token_scopes
 }
 
+# Access tokens data source
+data "docker_access_tokens" "access_tokens" {}
 
-# Output Demos
+# === Repository Tags Data Source Example ===
+# This demonstrates the key security use case: converting human-friendly tags to digest-pinned references
+# Get Alpine tags for our deployment
+data "docker_hub_repository_tags" "example" {
+  namespace = "library"
+  name      = "alpine"
+}
+
+# Get digest-pinned reference
+locals {
+  secure_image = "${data.docker_hub_repository_tags.example.name}@${data.docker_hub_repository_tags.example.tags["latest"].digest}"
+}
+
+# === Outputs ===
+
+# Repository outputs
 output "repo_output" {
-  value = resource.docker_hub_repository.org_hub_repo
+  description = "Created repository information"
+  value = {
+    id          = docker_hub_repository.org_hub_repo.id
+    name        = docker_hub_repository.org_hub_repo.name
+    namespace   = docker_hub_repository.org_hub_repo.namespace
+    description = docker_hub_repository.org_hub_repo.description
+  }
 }
 
+# Team outputs
 output "org_team_output" {
-  value = resource.docker_org_team.team
+  description = "Created team information"
+  value = {
+    id   = docker_org_team.team.id
+    name = docker_org_team.team.team_name
+  }
 }
 
-output "org_team_association_output" {
-  value = resource.docker_org_team_member.team_membership
+# Access token output
+output "access_token_uuid" {
+  description = "Created access token UUID"
+  value       = docker_access_token.access_token.uuid
+  sensitive   = true
+}
+output "access_tokens" {
+  value = data.docker_access_tokens.access_tokens
 }
 
-output "access_tokens_uuids_output" {
-  value = resource.docker_access_token.access_token.uuid
+# Security-Hardened Image Reference Output
+output "secure_image_example" {
+  description = "Demonstration of converting human-friendly tag to digest-pinned reference"
+  value = {
+    human_friendly = "${data.docker_hub_repository_tags.example.name}:latest"
+    digest_pinned  = local.secure_image
+    tag_details    = data.docker_hub_repository_tags.example.tags["latest"]
+    available_arches = [
+      for image in data.docker_hub_repository_tags.example.tags["latest"].images :
+      image.architecture
+    ]
+  }
 }
 

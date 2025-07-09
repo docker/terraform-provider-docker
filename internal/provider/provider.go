@@ -38,10 +38,12 @@ import (
 
 var hostRegexp = regexp.MustCompile(`^[a-zA-Z0-9:.-]+$`)
 
-const dockerHubConfigfileKey = "https://index.docker.io/v1/"
-const dockerHubStageConfigfileKey = "index-stage.docker.io"
-const dockerHubHost = "hub.docker.com"
-const dockerHubStageHost = "hub-stage.docker.com"
+const (
+	dockerHubConfigfileKey      = "https://index.docker.io/v1/"
+	dockerHubStageConfigfileKey = "index-stage.docker.io"
+	dockerHubHost               = "hub.docker.com"
+	dockerHubStageHost          = "hub-stage.docker.com"
+)
 
 // Ensure DockerProvider satisfies various provider interfaces.
 var (
@@ -59,9 +61,10 @@ type DockerProvider struct {
 
 // DockerProviderModel describes the provider data model.
 type DockerProviderModel struct {
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
-	Host     types.String `tfsdk:"host"`
+	Username       types.String `tfsdk:"username"`
+	Password       types.String `tfsdk:"password"`
+	Host           types.String `tfsdk:"host"`
+	MaxPageResults types.Int64  `tfsdk:"max_page_results"`
 }
 
 func (p *DockerProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -170,6 +173,18 @@ provider "docker" {
 }
 ` + "```" + `
 
+### Pagination Limits
+
+You can control the number of pages fetched when retrieving paginated data:
+
+` + "```" + `hcl
+provider "docker" {
+  max_page_results = 100  # Fetch up to 100 pages (default: 50)
+}
+` + "```" + `
+
+Setting ` + "`max_page_results`" + ` to 0 disables pagination limits and fetches all available data.
+
 ### Credential types
 
 You can create a personal access token (PAT) to use as an alternative to your
@@ -201,6 +216,10 @@ this provider to manage organizations and teams, you will need to authenticate
 				MarkdownDescription: "Password for authentication",
 				Optional:            true,
 				Sensitive:           true,
+			},
+			"max_page_results": schema.Int64Attribute{
+				MarkdownDescription: "Maximum number of pages to fetch when retrieving paginated data. Default is 50. Set to 0 for unlimited pages.",
+				Optional:            true,
 			},
 		},
 	}
@@ -261,6 +280,14 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	if !data.Password.IsNull() {
 		password = data.Password.ValueString()
 	}
+
+	maxPageResults := int64(50) // Default value
+	if !data.MaxPageResults.IsNull() {
+		maxPageResults = data.MaxPageResults.ValueInt64()
+	}
+
+	// Debug logging to see what value is being set
+	fmt.Printf("[DEBUG] Provider Configure: maxPageResults = %d\n", maxPageResults)
 
 	// If DOCKER_USERNAME and DOCKER_PASSWORD are not set, or if they are empty,
 	// retrieve them from the credential store
@@ -334,7 +361,9 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		Username:         username,
 		Password:         password,
 		UserAgentVersion: p.version,
+		MaxPageResults:   maxPageResults,
 	})
+
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
@@ -359,6 +388,7 @@ func (p *DockerProvider) DataSources(ctx context.Context) []func() datasource.Da
 		NewOrgTeamMemberDataSource,
 		NewRepositoryDataSource,
 		NewRepositoriesDataSource,
+		NewRepositoryTagsDataSource,
 		NewAccessTokenDataSource,
 		NewAccessTokensDataSource,
 		NewOrgTeamDataSource,

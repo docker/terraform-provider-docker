@@ -73,6 +73,47 @@ type TeamRepoPermission struct {
 	Permission string `json:"permission"`
 }
 
+type Tag struct {
+	Name            string     `json:"name"`
+	FullSize        int64      `json:"full_size"`
+	ID              int64      `json:"id"`
+	Repository      int64      `json:"repository"`
+	Creator         int64      `json:"creator"`
+	LastUpdated     string     `json:"last_updated"`
+	LastUpdater     int64      `json:"last_updater"`
+	LastUpdaterName string     `json:"last_updater_username"`
+	ImageID         string     `json:"image_id"`
+	V2              bool       `json:"v2"`
+	TagStatus       string     `json:"tag_status"`
+	TagLastPulled   string     `json:"tag_last_pulled"`
+	TagLastPushed   string     `json:"tag_last_pushed"`
+	MediaType       string     `json:"media_type"`
+	ContentType     string     `json:"content_type"`
+	Digest          string     `json:"digest"`
+	Images          []TagImage `json:"images"`
+}
+
+type TagImage struct {
+	Architecture string `json:"architecture"`
+	Features     string `json:"features"`
+	Variant      string `json:"variant"`
+	Digest       string `json:"digest"`
+	OS           string `json:"os"`
+	OSFeatures   string `json:"os_features"`
+	OSVersion    string `json:"os_version"`
+	Size         int64  `json:"size"`
+	Status       string `json:"status"`
+	LastPulled   string `json:"last_pulled"`
+	LastPushed   string `json:"last_pushed"`
+}
+
+type Tags struct {
+	Count    int         `json:"count"`
+	Next     interface{} `json:"next,omitempty"`
+	Previous interface{} `json:"previous,omitempty"`
+	Results  []Tag       `json:"results"`
+}
+
 type CreateRepostoryRequest struct {
 	Name            string `json:"name"`
 	Description     string `json:"description"`
@@ -135,10 +176,57 @@ func (c *Client) DeleteRepository(ctx context.Context, id string) error {
 	return c.sendRequest(ctx, "DELETE", fmt.Sprintf("/repositories/%s/", id), nil, nil)
 }
 
-func (c *Client) GetRepositories(ctx context.Context, namespace string, maxResults int) (Repositories, error) {
-	repositories := Repositories{} // Initialize an empty Repositories struct
-	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/repositories/%s/?page_size=%d", namespace, maxResults), nil, &repositories)
-	return repositories, err
+func (c *Client) GetRepositoryTags(ctx context.Context, namespace, name string) (*Tags, error) {
+	var allTags []Tag
+	initialURL := fmt.Sprintf("/namespaces/%s/repositories/%s/tags", namespace, name)
+
+	err := c.paginate(ctx, initialURL, func(url string) (interface{}, error) {
+		var page Tags
+		if err := c.sendRequest(ctx, "GET", url, nil, &page); err != nil {
+			return nil, err
+		}
+
+		allTags = append(allTags, page.Results...)
+		return page.Next, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &Tags{
+		Count:   len(allTags),
+		Results: allTags,
+	}, nil
+}
+
+func (c *Client) GetRepositoryTag(ctx context.Context, namespace string, repository string, tag string) (Tag, error) {
+	tagInfo := Tag{}
+	url := fmt.Sprintf("/repositories/%s/%s/tags/%s", namespace, repository, tag)
+	err := c.sendRequest(ctx, "GET", url, nil, &tagInfo)
+	return tagInfo, err
+}
+
+func (c *Client) GetRepositories(ctx context.Context, namespace string) (Repositories, error) {
+	var allRepos []Repository
+	initialURL := fmt.Sprintf("/repositories/%s/", namespace)
+
+	err := c.paginate(ctx, initialURL, func(url string) (interface{}, error) {
+		var page Repositories
+		if err := c.sendRequest(ctx, "GET", url, nil, &page); err != nil {
+			return nil, err
+		}
+
+		allRepos = append(allRepos, page.Results...)
+		return page.Next, nil
+	})
+	if err != nil {
+		return Repositories{}, err
+	}
+
+	return Repositories{
+		Count:   len(allRepos),
+		Results: allRepos,
+	}, nil
 }
 
 func (c *Client) CreatePermissionForTeamAndRepo(ctx context.Context, repository string, teamID int64, permission string) (TeamRepoPermission, error) {

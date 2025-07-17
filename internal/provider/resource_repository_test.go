@@ -84,3 +84,84 @@ resource "docker_hub_repository" "test" {
   private         = true
 }`, namespace, name)
 }
+
+func TestAccRepositoryResourceImmutableTags(t *testing.T) {
+	namespace := os.Getenv("DOCKER_USERNAME")
+	name := "immutable-repo" + randString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testRepositoryResourceConfigImmutableTags(namespace, name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("docker_hub_repository.test", "id"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "name", name),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "namespace", namespace),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.enabled", "true"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.#", "2"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.0", "v*"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.1", "latest"),
+				),
+			},
+			{
+				Config: testRepositoryResourceConfigImmutableTagsUpdated(namespace, name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.enabled", "true"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.#", "1"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.0", "prod-*"),
+				),
+			},
+			{
+				Config: testRepositoryResourceConfigImmutableTagsDisabled(namespace, name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func testRepositoryResourceConfigImmutableTags(namespace, name string) string {
+	return fmt.Sprintf(`
+resource "docker_hub_repository" "test" {
+  name            = "%[2]s"
+  namespace       = "%[1]s"
+  description     = "Repository with immutable tags"
+  private         = false
+
+  immutable_tags_settings = {
+    enabled = true
+    rules   = ["v*", "latest"]
+  }
+}`, namespace, name)
+}
+
+func testRepositoryResourceConfigImmutableTagsUpdated(namespace, name string) string {
+	return fmt.Sprintf(`
+resource "docker_hub_repository" "test" {
+  name            = "%[2]s"
+  namespace       = "%[1]s"
+  description     = "Repository with immutable tags"
+  private         = false
+
+  immutable_tags_settings = {
+    enabled = true
+    rules   = ["prod-*"]
+  }
+}`, namespace, name)
+}
+
+func testRepositoryResourceConfigImmutableTagsDisabled(namespace, name string) string {
+	return fmt.Sprintf(`
+resource "docker_hub_repository" "test" {
+  name            = "%[2]s"
+  namespace       = "%[1]s"
+  description     = "Repository with immutable tags disabled"
+  private         = false
+
+  immutable_tags_settings = {
+    enabled = false
+  }
+}`, namespace, name)
+}

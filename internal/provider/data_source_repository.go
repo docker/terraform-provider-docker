@@ -41,13 +41,14 @@ type RepositoryDataSource struct {
 }
 
 type RepositoryDataSourceModel struct {
-	ID              types.String `tfsdk:"id"`
-	Namespace       types.String `tfsdk:"namespace"`
-	Name            types.String `tfsdk:"name"`
-	Description     types.String `tfsdk:"description"`
-	FullDescription types.String `tfsdk:"full_description"`
-	Private         types.Bool   `tfsdk:"private"`
-	PullCount       types.Int64  `tfsdk:"pull_count"`
+	ID                    types.String           `tfsdk:"id"`
+	Namespace             types.String           `tfsdk:"namespace"`
+	Name                  types.String           `tfsdk:"name"`
+	Description           types.String           `tfsdk:"description"`
+	FullDescription       types.String           `tfsdk:"full_description"`
+	Private               types.Bool             `tfsdk:"private"`
+	PullCount             types.Int64            `tfsdk:"pull_count"`
+	ImmutableTagsSettings *ImmutableTagsSettings `tfsdk:"immutable_tags_settings"`
 }
 
 func (d *RepositoryDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -112,6 +113,24 @@ output "repository_info" {
 				Required: false,
 				Optional: true,
 			},
+			"immutable_tags_settings": schema.SingleNestedAttribute{
+				MarkdownDescription: "Immutable tags settings for the repository",
+				Required:            false,
+				Optional:            true,
+				Attributes: map[string]schema.Attribute{
+					"enabled": schema.BoolAttribute{
+						MarkdownDescription: "Whether immutable tags are enabled for the repository",
+						Required:            false,
+						Optional:            true,
+					},
+					"rules": schema.ListAttribute{
+						MarkdownDescription: "List of immutable tag rules for the repository",
+						Required:            false,
+						Optional:            true,
+						ElementType:         types.StringType,
+					},
+				},
+			},
 		},
 	}
 }
@@ -138,7 +157,6 @@ func (d *RepositoryDataSource) Configure(ctx context.Context, req datasource.Con
 
 func (d *RepositoryDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data RepositoryDataSourceModel
-
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
 	id := repositoryutils.NewID(data.Namespace.ValueString(), data.Name.ValueString())
@@ -156,6 +174,11 @@ func (d *RepositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.FullDescription = types.StringValue(repository.FullDescription)
 	data.Private = types.BoolValue(repository.IsPrivate)
 	data.PullCount = types.Int64Value(repository.PullCount)
+
+	data.ImmutableTagsSettings = &ImmutableTagsSettings{
+		Enabled: types.BoolValue(repository.ImmutableTagsSettings.Enabled),
+		Rules:   typesStringsFromStringSlice(repository.ImmutableTagsSettings.Rules),
+	}
 
 	diags := resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)

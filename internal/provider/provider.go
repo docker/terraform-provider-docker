@@ -286,8 +286,9 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		maxPageResults = data.MaxPageResults.ValueInt64()
 	}
 
-	// Debug logging to see what value is being set
-	fmt.Printf("[DEBUG] Provider Configure: maxPageResults = %d\n", maxPageResults)
+	tflog.Debug(ctx, "Provider Configure", map[string]interface{}{
+		"maxPageResults": maxPageResults,
+	})
 
 	// If DOCKER_USERNAME and DOCKER_PASSWORD are not set, or if they are empty,
 	// retrieve them from the credential store

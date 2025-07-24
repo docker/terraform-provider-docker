@@ -32,6 +32,7 @@ func TestAccRepositoryDataSource(t *testing.T) {
 				Config: testAccExampleDataSourceConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.docker_hub_repository.test", "id", "ryanhristovski/data-source-example"),
+					resource.TestCheckResourceAttr("data.docker_hub_repository.test", "immutable_tags_settings.enabled", "false"),
 				),
 			},
 		},

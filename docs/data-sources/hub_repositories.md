@@ -3,12 +3,11 @@
 page_title: "docker_hub_repositories Data Source - docker"
 subcategory: ""
 description: |-
-  Retrieves a list of repositories within a specified Docker Hub namespace.
+  Retrieves a list of repositories within a specified Docker Hub namespace. All available repositories are automatically fetched using internal pagination (similar to AWS provider pattern).
   Example Usage
   
   data "docker_hub_repositories" "example" {
-  	namespace          = "my-organization"
-  	max_number_results = 10
+  	namespace = "my-organization"
   }
   output "repositories" {
   	value = data.docker_hub_repositories.example.repository
@@ -17,14 +16,13 @@ description: |-
 
 # docker_hub_repositories (Data Source)
 
-Retrieves a list of repositories within a specified Docker Hub namespace.
+Retrieves a list of repositories within a specified Docker Hub namespace. All available repositories are automatically fetched using internal pagination (similar to AWS provider pattern).
 
 ## Example Usage
 
 ```hcl
 data "docker_hub_repositories" "example" {
-	namespace          = "my-organization"
-	max_number_results = 10
+	namespace = "my-organization"
 }
 output "repositories" {
 	value = data.docker_hub_repositories.example.repository
@@ -40,10 +38,6 @@ output "repositories" {
 ### Required
 
 - `namespace` (String) Repository namespace
-
-### Optional
-
-- `max_number_results` (Number) Maximum number of results
 
 ### Read-Only
 

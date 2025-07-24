@@ -74,6 +74,14 @@ description: |-
     password = "my-secret-token"
   }
   
+  Pagination Limits
+  You can control the number of pages fetched when retrieving paginated data:
+  
+  provider "docker" {
+    max_page_results = 100  # Fetch up to 100 pages (default: 50)
+  }
+  
+  Setting max_page_results to 0 disables pagination limits and fetches all available data.
   Credential types
   You can create a personal access token (PAT) to use as an alternative to your
   password for Docker CLI authentication.
@@ -185,6 +193,18 @@ provider "docker" {
 }
 ```
 
+### Pagination Limits
+
+You can control the number of pages fetched when retrieving paginated data:
+
+```hcl
+provider "docker" {
+  max_page_results = 100  # Fetch up to 100 pages (default: 50)
+}
+```
+
+Setting `max_page_results` to 0 disables pagination limits and fetches all available data.
+
 ### Credential types
 
 You can create a personal access token (PAT) to use as an alternative to your
@@ -208,5 +228,6 @@ this provider to manage organizations and teams, you will need to authenticate
 ### Optional
 
 - `host` (String) Docker Hub API Host. Default is `hub.docker.com`.
+- `max_page_results` (Number) Maximum number of pages to fetch when retrieving paginated data. Default is 50. Set to 0 for unlimited pages.
 - `password` (String, Sensitive) Password for authentication
 - `username` (String) Username for authentication

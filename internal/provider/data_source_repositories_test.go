@@ -43,7 +43,6 @@ func testReposExampleDataSourceConfig() string {
 	return `
 data "docker_hub_repositories" "test" {
   namespace         = "` + os.Getenv("DOCKER_USERNAME") + `"
-  max_number_results = 10
 }
 `
 }

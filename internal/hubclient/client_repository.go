@@ -22,28 +22,36 @@ import (
 	"fmt"
 )
 
+const ImmutableTagRulesSeparator = ","
+
+type ImmutableTagsSettings struct {
+	Enabled bool     `json:"enabled"`
+	Rules   []string `json:"rules"`
+}
+
 type Repository struct {
-	Name              string      `json:"name"`
-	Namespace         string      `json:"namespace"`
-	RepositoryType    string      `json:"repository_type,omitempty"`
-	IsPrivate         bool        `json:"is_private"`
-	Status            int         `json:"status"`
-	StatusDescription string      `json:"status_description"`
-	Description       string      `json:"description"`
-	StarCount         int64       `json:"star_count"`
-	PullCount         int64       `json:"pull_count"`
-	LastUpdated       string      `json:"last_updated"`
-	DateRegistered    string      `json:"date_registered"`
-	Affiliation       string      `json:"affiliation"`
-	MediaTypes        []string    `json:"media_types,omitempty"`
-	ContentTypes      []string    `json:"content_types,omitempty"`
-	User              string      `json:"use"`
-	IsAutomated       bool        `json:"is_automated"`
-	CollaboratorCount int64       `json:"collaborator_count"`
-	HubUser           string      `json:"hub_user"`
-	HasStarred        bool        `json:"has_starred"`
-	FullDescription   string      `json:"full_description"`
-	Permissions       Permissions `json:"permissions"`
+	Name                  string                `json:"name"`
+	Namespace             string                `json:"namespace"`
+	RepositoryType        string                `json:"repository_type,omitempty"`
+	IsPrivate             bool                  `json:"is_private"`
+	Status                int                   `json:"status"`
+	StatusDescription     string                `json:"status_description"`
+	Description           string                `json:"description"`
+	StarCount             int64                 `json:"star_count"`
+	PullCount             int64                 `json:"pull_count"`
+	LastUpdated           string                `json:"last_updated"`
+	DateRegistered        string                `json:"date_registered"`
+	Affiliation           string                `json:"affiliation"`
+	MediaTypes            []string              `json:"media_types,omitempty"`
+	ContentTypes          []string              `json:"content_types,omitempty"`
+	User                  string                `json:"use"`
+	IsAutomated           bool                  `json:"is_automated"`
+	CollaboratorCount     int64                 `json:"collaborator_count"`
+	HubUser               string                `json:"hub_user"`
+	HasStarred            bool                  `json:"has_starred"`
+	FullDescription       string                `json:"full_description"`
+	Permissions           Permissions           `json:"permissions"`
+	ImmutableTagsSettings ImmutableTagsSettings `json:"immutable_tags_settings"`
 }
 
 type Permissions struct {
@@ -114,7 +122,7 @@ type Tags struct {
 	Results  []Tag       `json:"results"`
 }
 
-type CreateRepostoryRequest struct {
+type CreateRepositoryRequest struct {
 	Name            string `json:"name"`
 	Description     string `json:"description"`
 	FullDescription string `json:"full_description"`
@@ -122,7 +130,7 @@ type CreateRepostoryRequest struct {
 	IsPrivate       bool   `json:"is_private"`
 }
 
-func (c *Client) CreateRepository(ctx context.Context, namespace string, req CreateRepostoryRequest) (Repository, error) {
+func (c *Client) CreateRepository(ctx context.Context, namespace string, req CreateRepositoryRequest) (Repository, error) {
 	repository := Repository{}
 	reqJSON, err := json.Marshal(req)
 	if err != nil {
@@ -135,8 +143,10 @@ func (c *Client) CreateRepository(ctx context.Context, namespace string, req Cre
 }
 
 type UpdateRepositoryRequest struct {
-	Description     string `json:"description"`
-	FullDescription string `json:"full_description"`
+	Description        string `json:"description"`
+	FullDescription    string `json:"full_description"`
+	ImmutableTags      bool   `json:"immutable_tags"`
+	ImmutableTagsRules string `json:"immutable_tags_rules,omitempty"`
 }
 
 func (c *Client) UpdateRepository(ctx context.Context, id string, req UpdateRepositoryRequest) (Repository, error) {

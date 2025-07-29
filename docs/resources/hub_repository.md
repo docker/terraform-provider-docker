@@ -83,9 +83,18 @@ terraform import docker_hub_repository.docker-repo docker-namespace/docker-repo
 
 - `description` (String) Repository description
 - `full_description` (String) Repository full description
+- `immutable_tags_settings` (Attributes) Immutable tags settings for the repository (see [below for nested schema](#nestedatt--immutable_tags_settings))
 - `private` (Boolean) Is the repository private
 
 ### Read-Only
 
 - `id` (String) The namespace/name of the repository
 - `pull_count` (Number)
+
+<a id="nestedatt--immutable_tags_settings"></a>
+### Nested Schema for `immutable_tags_settings`
+
+Optional:
+
+- `enabled` (Boolean) Whether immutable tags are enabled for the repository
+- `rules` (List of String) List of immutable tag rules for the repository

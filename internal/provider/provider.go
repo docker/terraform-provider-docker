@@ -22,8 +22,8 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/docker/terraform-provider-docker/internal/auth"
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
-	"github.com/docker/terraform-provider-docker/tools"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
@@ -284,33 +284,38 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	maxPageResults := int64(50) // Default value
 	if !data.MaxPageResults.IsNull() {
 		maxPageResults = data.MaxPageResults.ValueInt64()
+		tflog.Info(ctx, "Adjusting pagination", map[string]interface{}{
+			"maxPageResults": maxPageResults,
+		})
 	}
 
-	tflog.Debug(ctx, "Provider Configure", map[string]interface{}{
-		"maxPageResults": maxPageResults,
-	})
+	// Determine the authentication method
+	var tokenProvider hubclient.TokenProvider
+	var err error
+	baseURL := fmt.Sprintf("https://%s/v2", host)
 
-	// If DOCKER_USERNAME and DOCKER_PASSWORD are not set, or if they are empty,
-	// retrieve them from the credential store
-	if username == "" || password == "" {
-		// Loosely adapted from
-		// https://github.com/moby/buildkit/blob/b9a3e7b31958b83f9ab1850a8c2ab1c66bf21f1f/session/auth/authprovider/authprovider.go#L243
-		//
-		// The Docker Hub host is a special case
-		// that stores its credentials differently in the store.
-		configfileKey := host
-		if host == dockerHubHost {
-			configfileKey = dockerHubConfigfileKey
-		} else if host == dockerHubStageHost {
-			configfileKey = dockerHubStageConfigfileKey
-		}
+	// If username and password are provided, use login auth
+	if username != "" && password != "" {
+		tflog.Info(ctx, "Using login authentication from configuration")
+		tokenProvider = auth.NewLoginTokenProvider(username, password, baseURL)
+	} else {
+		// Try credential store - prefer access tokens, fallback to pull credentials
+		configfileKey := getConfigfileKey(host)
+		configStore := auth.NewConfigStore()
 
-		// Use the getUserCreds function to retrieve credentials from Docker config
-		var err error
-		username, password, err = tools.GetUserCreds(configfileKey)
+		// First try to use access tokens if available
+		tokenProvider, err = auth.NewAccessTokenProviderFromStore(configStore, configfileKey)
 		if err != nil {
-			resp.Diagnostics.AddError("Credential Store Error",
-				fmt.Sprintf("Failed to retrieve credentials from the Docker config file: %v", err))
+			// Fallback to pull credentials (username/password or PAT)
+			tokenProvider, err = auth.NewLoginTokenProviderFromStore(configStore, configfileKey, baseURL)
+			if err != nil {
+				resp.Diagnostics.AddError("Credential Store Error",
+					fmt.Sprintf("Failed to retrieve valid credentials from the Docker config file: %v", err))
+			} else {
+				tflog.Info(ctx, "Using login authentication from credential store")
+			}
+		} else {
+			tflog.Info(ctx, "Using access token authentication from credential store")
 		}
 	}
 
@@ -331,19 +336,11 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 			"DOCKER_HUB_HOST must be a valid host (of the form 'hub.docker.com').")
 	}
 
-	if username == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("username"),
-			"Missing Docker Hub API Username",
-			"Missing valid login credentials. More details: https://github.com/docker/terraform-provider-docker#authentication.",
-		)
-	}
-
-	if password == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("password"),
-			"Missing Docker Hub API Password",
-			"Missing valid login credentials. More details: https://github.com/docker/terraform-provider-docker#authentication.",
+	// Verify we have a token provider
+	if tokenProvider == nil {
+		resp.Diagnostics.AddError(
+			"Authentication Error",
+			"No authentication method available. Please provide username/password or ensure Docker credentials are available in the credential store.",
 		)
 	}
 
@@ -352,21 +349,30 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	ctx = tflog.SetField(ctx, "docker_hub_host", host)
-	ctx = tflog.SetField(ctx, "docker_username", username)
-	ctx = tflog.SetField(ctx, "docker_password", password)
 
 	tflog.Debug(ctx, "Creating Docker Hub client")
 
 	client := hubclient.NewClient(hubclient.Config{
-		BaseURL:          fmt.Sprintf("https://%s/v2", host),
-		Username:         username,
-		Password:         password,
+		BaseURL:          baseURL,
+		TokenProvider:    tokenProvider,
 		UserAgentVersion: p.version,
 		MaxPageResults:   maxPageResults,
 	})
 
 	resp.DataSourceData = client
 	resp.ResourceData = client
+}
+
+func getConfigfileKey(host string) string {
+	// The Docker Hub host is a special case that stores its credentials differently in the store.
+	configfileKey := host
+	switch host {
+	case dockerHubHost:
+		configfileKey = dockerHubConfigfileKey
+	case dockerHubStageHost:
+		configfileKey = dockerHubStageConfigfileKey
+	}
+	return configfileKey
 }
 
 func (p *DockerProvider) Resources(ctx context.Context) []func() resource.Resource {

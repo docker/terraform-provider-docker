@@ -14,11 +14,11 @@ description: |-
   
   output "repository_info" {
   	value = {
-  	id               = data.docker_hub_repository.example.id
-  	description      = data.docker_hub_repository.example.description
-  	full_description = data.docker_hub_repository.example.full_description
-  	private          = data.docker_hub_repository.example.private
-  	pull_count       = data.docker_hub_repository.example.pull_count
+  		id               = data.docker_hub_repository.example.id
+  		description      = data.docker_hub_repository.example.description
+  		full_description = data.docker_hub_repository.example.full_description
+  		private          = data.docker_hub_repository.example.private
+  		pull_count       = data.docker_hub_repository.example.pull_count
     }
   }
 ---
@@ -39,11 +39,11 @@ data "docker_hub_repository" "example" {
 
 output "repository_info" {
 	value = {
-	id               = data.docker_hub_repository.example.id
-	description      = data.docker_hub_repository.example.description
-	full_description = data.docker_hub_repository.example.full_description
-	private          = data.docker_hub_repository.example.private
-	pull_count       = data.docker_hub_repository.example.pull_count
+		id               = data.docker_hub_repository.example.id
+		description      = data.docker_hub_repository.example.description
+		full_description = data.docker_hub_repository.example.full_description
+		private          = data.docker_hub_repository.example.private
+		pull_count       = data.docker_hub_repository.example.pull_count
   }
 }
 
@@ -63,9 +63,18 @@ output "repository_info" {
 
 - `description` (String) Repository description
 - `full_description` (String) Repository name
+- `immutable_tags_settings` (Attributes) Immutable tags settings for the repository (see [below for nested schema](#nestedatt--immutable_tags_settings))
 - `private` (Boolean) Is the repository private
 - `pull_count` (Number)
 
 ### Read-Only
 
 - `id` (String) The namespace/name of the repository
+
+<a id="nestedatt--immutable_tags_settings"></a>
+### Nested Schema for `immutable_tags_settings`
+
+Optional:
+
+- `enabled` (Boolean) Whether immutable tags are enabled for the repository
+- `rules` (List of String) List of immutable tag rules for the repository

@@ -71,11 +71,11 @@ data "docker_hub_repository" "example" {
 
 output "repository_info" {
 	value = {
-	id               = data.docker_hub_repository.example.id
-	description      = data.docker_hub_repository.example.description
-	full_description = data.docker_hub_repository.example.full_description
-	private          = data.docker_hub_repository.example.private
-	pull_count       = data.docker_hub_repository.example.pull_count
+		id               = data.docker_hub_repository.example.id
+		description      = data.docker_hub_repository.example.description
+		full_description = data.docker_hub_repository.example.full_description
+		private          = data.docker_hub_repository.example.private
+		pull_count       = data.docker_hub_repository.example.pull_count
   }
 }
 

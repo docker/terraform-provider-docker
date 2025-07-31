@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -40,12 +41,15 @@ type LoginTokenProvider struct {
 }
 
 // NewLoginTokenProvider creates a token provider that uses username/password
-func NewLoginTokenProvider(username, password, baseURL string) *LoginTokenProvider {
+func NewLoginTokenProvider(username, password, baseURL string, transport http.RoundTripper) *LoginTokenProvider {
 	return &LoginTokenProvider{
-		username:   username,
-		password:   password,
-		baseURL:    baseURL,
-		httpClient: http.DefaultClient,
+		username: username,
+		password: password,
+		baseURL:  baseURL,
+		httpClient: &http.Client{
+			Timeout:   10 * time.Second,
+			Transport: transport,
+		},
 	}
 }
 
@@ -87,6 +91,12 @@ func (p *LoginTokenProvider) EnsureToken(ctx context.Context) (string, error) {
 	defer res.Body.Close()
 
 	if res.StatusCode < http.StatusOK || res.StatusCode >= http.StatusBadRequest {
+		// Read the response body to get more details on the error
+		body, _ := io.ReadAll(res.Body)
+		if len(body) > 0 {
+			return "", fmt.Errorf("login failed: %s - %s", res.Status, string(body))
+		}
+
 		return "", fmt.Errorf("login failed: %s", res.Status)
 	}
 
@@ -170,7 +180,7 @@ func NewAccessTokenProviderFromStore(configStore *ConfigStore, configKey string)
 }
 
 // NewLoginTokenProviderFromStore creates a LoginTokenProvider from pull credentials in the ConfigStore
-func NewLoginTokenProviderFromStore(configStore *ConfigStore, configKey, baseURL string) (*LoginTokenProvider, error) {
+func NewLoginTokenProviderFromStore(configStore *ConfigStore, configKey, baseURL string, transport http.RoundTripper) (*LoginTokenProvider, error) {
 	username, password, err := configStore.GetCredentialStorePullTokens(configKey)
 	if err != nil {
 		return nil, fmt.Errorf("no pull credentials available: %v", err)
@@ -184,5 +194,5 @@ func NewLoginTokenProviderFromStore(configStore *ConfigStore, configKey, baseURL
 		return nil, fmt.Errorf("empty password found in store")
 	}
 
-	return NewLoginTokenProvider(username, password, baseURL), nil
+	return NewLoginTokenProvider(username, password, baseURL, transport), nil
 }

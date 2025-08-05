@@ -24,6 +24,7 @@ import (
 
 	"github.com/docker/terraform-provider-docker/internal/auth"
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
+	"github.com/docker/terraform-provider-docker/internal/hubhttp"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
@@ -289,6 +290,9 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		})
 	}
 
+	// Create a shared transport with user agent
+	sharedTransport := hubhttp.NewUserAgentTransport(p.version)
+
 	// Determine the authentication method
 	var tokenProvider hubclient.TokenProvider
 	var err error
@@ -297,7 +301,7 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	// If username and password are provided, use login auth
 	if username != "" && password != "" {
 		tflog.Info(ctx, "Using login authentication from configuration")
-		tokenProvider = auth.NewLoginTokenProvider(username, password, baseURL)
+		tokenProvider = auth.NewLoginTokenProvider(username, password, baseURL, sharedTransport)
 	} else {
 		// Try credential store - prefer access tokens, fallback to pull credentials
 		configfileKey := getConfigfileKey(host)
@@ -307,7 +311,7 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		tokenProvider, err = auth.NewAccessTokenProviderFromStore(configStore, configfileKey)
 		if err != nil {
 			// Fallback to pull credentials (username/password or PAT)
-			tokenProvider, err = auth.NewLoginTokenProviderFromStore(configStore, configfileKey, baseURL)
+			tokenProvider, err = auth.NewLoginTokenProviderFromStore(configStore, configfileKey, baseURL, sharedTransport)
 			if err != nil {
 				resp.Diagnostics.AddError("Credential Store Error",
 					fmt.Sprintf("Failed to retrieve valid credentials from the Docker config file: %v", err))
@@ -353,10 +357,10 @@ func (p *DockerProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	tflog.Debug(ctx, "Creating Docker Hub client")
 
 	client := hubclient.NewClient(hubclient.Config{
-		BaseURL:          baseURL,
-		TokenProvider:    tokenProvider,
-		UserAgentVersion: p.version,
-		MaxPageResults:   maxPageResults,
+		BaseURL:        baseURL,
+		TokenProvider:  tokenProvider,
+		Transport:      sharedTransport,
+		MaxPageResults: maxPageResults,
 	})
 
 	resp.DataSourceData = client

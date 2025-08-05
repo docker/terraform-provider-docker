@@ -44,37 +44,17 @@ type Client struct {
 	maxPageResults int64
 }
 
-type userAgentTransport struct {
-	userAgent string
-	transport http.RoundTripper
-}
-
-func (uat *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Set("User-Agent", uat.userAgent)
-	return uat.transport.RoundTrip(req)
-}
-
 type Config struct {
-	BaseURL          string
-	TokenProvider    TokenProvider
-	UserAgentVersion string
-	MaxPageResults   int64
+	BaseURL        string
+	TokenProvider  TokenProvider
+	Transport      http.RoundTripper
+	MaxPageResults int64
 }
 
 func NewClient(config Config) *Client {
-	version := config.UserAgentVersion
-	if version == "" {
-		version = "dev"
-	}
-
-	userAgentTransport := &userAgentTransport{
-		userAgent: fmt.Sprintf("terraform-provider-docker/%s", version),
-		transport: http.DefaultTransport,
-	}
-
 	baseClient := &http.Client{
 		Timeout:   time.Minute,
-		Transport: userAgentTransport,
+		Transport: config.Transport,
 	}
 	retryClient := retryablehttp.NewClient()
 	retryClient.HTTPClient = baseClient

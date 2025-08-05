@@ -160,11 +160,9 @@ func (d *RepositoryDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	data.FullDescription = types.StringValue(repository.FullDescription)
 	data.Private = types.BoolValue(repository.IsPrivate)
 	data.PullCount = types.Int64Value(repository.PullCount)
-
-	immutableTagsSettings := deserializeImmutableTagsSettings(
+	data.ImmutableTagsSettings = deserializeImmutableTagsSettings(
 		repository.ImmutableTagsSettings.Enabled,
 		repository.ImmutableTagsSettings.Rules)
-	data.ImmutableTagsSettings = &immutableTagsSettings
 
 	diags := resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)

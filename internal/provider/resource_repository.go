@@ -58,14 +58,14 @@ type ImmutableTagsSettings struct {
 }
 
 type RepositoryResourceModel struct {
-	ID                    types.String          `tfsdk:"id"`
-	Namespace             types.String          `tfsdk:"namespace"`
-	Name                  types.String          `tfsdk:"name"`
-	Description           types.String          `tfsdk:"description"`
-	FullDescription       types.String          `tfsdk:"full_description"`
-	Private               types.Bool            `tfsdk:"private"`
-	PullCount             types.Int64           `tfsdk:"pull_count"`
-	ImmutableTagsSettings ImmutableTagsSettings `tfsdk:"immutable_tags_settings"`
+	ID                    types.String           `tfsdk:"id"`
+	Namespace             types.String           `tfsdk:"namespace"`
+	Name                  types.String           `tfsdk:"name"`
+	Description           types.String           `tfsdk:"description"`
+	FullDescription       types.String           `tfsdk:"full_description"`
+	Private               types.Bool             `tfsdk:"private"`
+	PullCount             types.Int64            `tfsdk:"pull_count"`
+	ImmutableTagsSettings *ImmutableTagsSettings `tfsdk:"immutable_tags_settings"`
 }
 
 func immutableTagsSettingsSchema() schema.SingleNestedAttribute {
@@ -435,14 +435,14 @@ func serializeImmutableTagsRules(plan RepositoryResourceModel) string {
 		hubclient.ImmutableTagRulesSeparator)
 }
 
-func deserializeImmutableTagsSettings(enabled bool, rules []string) ImmutableTagsSettings {
+func deserializeImmutableTagsSettings(enabled bool, rules []string) *ImmutableTagsSettings {
 	if !enabled {
-		return ImmutableTagsSettings{
+		return &ImmutableTagsSettings{
 			Enabled: types.BoolValue(false),
 			Rules:   types.ListValueMust(types.StringType, nil),
 		}
 	}
-	return ImmutableTagsSettings{
+	return &ImmutableTagsSettings{
 		Enabled: types.BoolValue(true),
 		Rules:   typesListFromStringSlice(rules),
 	}

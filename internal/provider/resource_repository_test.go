@@ -64,6 +64,37 @@ func TestAccRepositoryResource(t *testing.T) {
 	})
 }
 
+func TestAccRepositoryResource_Upgrade(t *testing.T) {
+	namespace := os.Getenv("DOCKER_USERNAME")
+	name := "example-repo" + randString(10)
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"docker": {
+						VersionConstraint: "0.4.1",
+						Source:            "docker/docker",
+					},
+				},
+				Config: testRepositoryResourceConfig(namespace, name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("docker_hub_repository.test", "id"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testRepositoryResourceConfigUpdated(namespace, name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("docker_hub_repository.test", "id"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "description", "Updated example repository"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testRepositoryResourceConfig(namespace, name string) string {
 	return fmt.Sprintf(`
 resource "docker_hub_repository" "test" {

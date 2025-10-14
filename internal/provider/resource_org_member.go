@@ -177,32 +177,36 @@ func (r *OrgMemberResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	inviteResp, err := r.client.InviteOrgMember(ctx, data.OrgName.ValueString(), data.Role.ValueString(), []string{invitee}, false)
+	current, found, err := r.orgMember(ctx, data.OrgName.ValueString(), invitee)
 	if err != nil {
-		errMsg := fmt.Sprintf("Unable to create org_member resource: %v", err)
-		resp.Diagnostics.AddError("Error Creating Resource", errMsg)
+		resp.Diagnostics.AddError("Error Checking Existing Member", err.Error())
 		return
 	}
 
-	if len(inviteResp.OrgInvitees) == 0 {
-		errMsg := "No invitees were returned from the Docker Hub API."
-		resp.Diagnostics.AddError("Invite Failed", errMsg)
-		return
-	}
-
-	invite := inviteResp.OrgInvitees[0]
-	if invite.Invite.ID != "" {
-		data.InviteID = types.StringValue(invite.Invite.ID)
+	if found {
+		// Set computed fields.
+		data.InviteID = current.InviteID
+		data.Email = current.Email
 	} else {
-		// If the invite is in a pending state, then InviteOrgMember does not return
-		// the invite ID. We need to get the invite ID from the org invites.
-		member, err := r.orgMember(ctx, data.OrgName.ValueString(), invitee)
+		// If the member is not found, invite them now.
+		inviteResp, err := r.client.InviteOrgMember(ctx,
+			data.OrgName.ValueString(), data.Role.ValueString(), []string{invitee}, false)
 		if err != nil {
-			errMsg := fmt.Sprintf("Could not resolve member status: %v", err)
+			errMsg := fmt.Sprintf("Unable to create org_member resource: %v", err)
 			resp.Diagnostics.AddError("Error Creating Resource", errMsg)
 			return
 		}
-		data.InviteID = member.InviteID
+
+		if len(inviteResp.OrgInvitees) == 0 {
+			errMsg := "No invitees were returned from the Docker Hub API."
+			resp.Diagnostics.AddError("Invite Failed", errMsg)
+			return
+		}
+
+		invite := inviteResp.OrgInvitees[0]
+		if invite.Invite.ID != "" {
+			data.InviteID = types.StringValue(invite.Invite.ID)
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -225,10 +229,14 @@ func (r *OrgMemberResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	data, err := r.orgMember(ctx, state.OrgName.ValueString(), invitee)
+	data, found, err := r.orgMember(ctx, state.OrgName.ValueString(), invitee)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Reading Resource", err.Error())
 		return
+	}
+	if !found {
+		resp.Diagnostics.AddError("Resource Not Found",
+			fmt.Sprintf("Member not found in %s: %s", state.OrgName.ValueString(), invitee))
 	}
 
 	if data.Role.ValueString() == "" {
@@ -242,7 +250,10 @@ func (r *OrgMemberResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 }
 
-// TODO: setup update
+// NOTE(nicks): currently, we treat all fields as immutable,
+// so in theory update should never happen.
+//
+// Future work: update the provider to allow role changes.
 func (r *OrgMemberResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	return
 }
@@ -308,7 +319,9 @@ func (r *OrgMemberResource) ImportState(ctx context.Context, req resource.Import
 //
 // Our org_member represents both invited and accepted members, so
 // we need to merge the results from both endpoints.
-func (r *OrgMemberResource) orgMember(ctx context.Context, orgName string, userName string) (OrgMemberResourceModel, error) {
+//
+// Returns true if the member was found, false if not found.
+func (r *OrgMemberResource) orgMember(ctx context.Context, orgName string, userName string) (OrgMemberResourceModel, bool, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -317,7 +330,7 @@ func (r *OrgMemberResource) orgMember(ctx context.Context, orgName string, userN
 		var err error
 		members, err = r.client.ListOrgMembers(ctx, orgName)
 		if err != nil {
-			return OrgMemberResourceModel{}, err
+			return OrgMemberResourceModel{}, false, err
 		}
 		r.orgMembers[orgName] = members
 	}
@@ -329,7 +342,7 @@ func (r *OrgMemberResource) orgMember(ctx context.Context, orgName string, userN
 				UserName: types.StringValue(member.Username),
 				Role:     types.StringValue(strings.ToLower(member.Role)),
 				Email:    types.StringValue(member.Email),
-			}, nil
+			}, true, nil
 		}
 	}
 
@@ -338,7 +351,7 @@ func (r *OrgMemberResource) orgMember(ctx context.Context, orgName string, userN
 		var err error
 		invites, err = r.client.ListOrgInvites(ctx, orgName)
 		if err != nil {
-			return OrgMemberResourceModel{}, err
+			return OrgMemberResourceModel{}, false, err
 		}
 		r.orgInvites[orgName] = invites
 	}
@@ -354,9 +367,9 @@ func (r *OrgMemberResource) orgMember(ctx context.Context, orgName string, userN
 			} else {
 				result.UserName = types.StringValue(userName)
 			}
-			return result, nil
+			return result, true, nil
 		}
 	}
 
-	return OrgMemberResourceModel{}, fmt.Errorf("member not found in org. Org: %s, User: %s", orgName, userName)
+	return OrgMemberResourceModel{}, false, nil
 }

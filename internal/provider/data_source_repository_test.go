@@ -31,7 +31,7 @@ func TestAccRepositoryDataSource(t *testing.T) {
 			{
 				Config: testAccExampleDataSourceConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.docker_hub_repository.test", "id", "ryanhristovski/data-source-example"),
+					resource.TestCheckResourceAttr("data.docker_hub_repository.test", "id", "dockerterraform/docker-terraform-repo-demo"),
 					resource.TestCheckResourceAttr("data.docker_hub_repository.test", "immutable_tags_settings.enabled", "false"),
 				),
 			},
@@ -41,7 +41,7 @@ func TestAccRepositoryDataSource(t *testing.T) {
 
 const testAccExampleDataSourceConfig = `
 data "docker_hub_repository" "test" {
-  namespace = "ryanhristovski"
-  name = "data-source-example"
+  namespace = "dockerterraform"
+  name = "docker-terraform-repo-demo"
 }
 `

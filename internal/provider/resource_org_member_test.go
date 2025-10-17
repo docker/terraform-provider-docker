@@ -56,6 +56,66 @@ resource "docker_org_member" "test" {
 	})
 }
 
+// TestAccOrgMemberResource_ExistingMember tests managing the role of an existing
+// organization member.
+//
+// By design, this test requires the user "nick20241127" to already be a member
+// so that we don't have to deal with the invite flow.
+func TestAccOrgMemberResource_ExistingMember(t *testing.T) {
+	org := envvar.GetWithDefault(envvar.AccTestOrganization)
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+resource "docker_org_member" "test" {
+  org_name  = "%[1]s"
+  user_name = "nick20241127"
+  role      = "member"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}`, org),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_org_member.test", "org_name", org),
+					resource.TestCheckResourceAttr("docker_org_member.test", "user_name", "nick20241127"),
+					resource.TestCheckResourceAttr("docker_org_member.test", "email", "nick.santos+nick20241127@docker.com"),
+					resource.TestCheckResourceAttr("docker_org_member.test", "role", "member"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+resource "docker_org_member" "test" {
+  org_name  = "%[1]s"
+  user_name = "nick20241127"
+  role      = "editor"
+
+  lifecycle{
+    prevent_destroy = true
+  }
+}`, org),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_org_member.test", "org_name", org),
+					resource.TestCheckResourceAttr("docker_org_member.test", "user_name", "nick20241127"),
+					resource.TestCheckResourceAttr("docker_org_member.test", "email", "nick.santos+nick20241127@docker.com"),
+					resource.TestCheckResourceAttr("docker_org_member.test", "role", "editor"),
+				),
+			},
+			{
+				Config: `
+removed {
+  from = docker_org_member.test
+  lifecycle {
+    destroy = false
+  }
+}`,
+			},
+		},
+	})
+}
+
 func TestAccOrgMemberResourceImport(t *testing.T) {
 	username := os.Getenv("DOCKER_USERNAME")
 	org := envvar.GetWithDefault(envvar.AccTestOrganization)

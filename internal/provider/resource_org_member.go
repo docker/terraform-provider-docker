@@ -219,8 +219,10 @@ func (r *OrgMemberResource) Create(ctx context.Context, req resource.CreateReque
 		}
 	}
 
-	if current.InviteID.ValueString() == "" &&
-		current.Role.ValueString() != data.Role.ValueString() {
+	isAlreadyMember := data.InviteID.ValueString() == "" && data.UserName.ValueString() != ""
+	isRoleUpdated := current.Role.ValueString() != data.Role.ValueString()
+
+	if isAlreadyMember && isRoleUpdated {
 		err = r.client.UpdateOrgMember(ctx,
 			data.OrgName.ValueString(),
 			data.UserName.ValueString(),

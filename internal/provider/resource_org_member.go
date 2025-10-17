@@ -132,6 +132,7 @@ resource "docker_org_member" "example" {
 			"user_name": schema.StringAttribute{
 				MarkdownDescription: "User name of the member. Either user_name or email must be specified.",
 				Optional:            true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -144,11 +145,11 @@ resource "docker_org_member" "example" {
 			"role": schema.StringAttribute{
 				MarkdownDescription: "Role assigned to the user within the organization (e.g., 'member', 'editor', 'owner').",
 				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.String{
-					stringvalidator.OneOf("member", "editor", "owner"),
+					stringvalidator.OneOf(
+						string(hubclient.OrgRoleParamMember),
+						string(hubclient.OrgRoleParamEditor),
+						string(hubclient.OrgRoleParamOwner)),
 				},
 			},
 			"invite_id": schema.StringAttribute{
@@ -187,6 +188,7 @@ func (r *OrgMemberResource) Create(ctx context.Context, req resource.CreateReque
 		// Set computed fields.
 		data.InviteID = current.InviteID
 		data.Email = current.Email
+		data.UserName = current.UserName
 	} else {
 		// If the member is not found, invite them now.
 		inviteResp, err := r.client.InviteOrgMember(ctx,
@@ -206,6 +208,29 @@ func (r *OrgMemberResource) Create(ctx context.Context, req resource.CreateReque
 		invite := inviteResp.OrgInvitees[0]
 		if invite.Invite.ID != "" {
 			data.InviteID = types.StringValue(invite.Invite.ID)
+		}
+
+		// If username or email or not set, we need to compute them
+		if data.UserName.ValueString() == "" {
+			data.UserName = types.StringValue("")
+		}
+		if data.Email.ValueString() == "" {
+			data.Email = types.StringValue("")
+		}
+	}
+
+	isAlreadyMember := data.InviteID.ValueString() == "" && data.UserName.ValueString() != ""
+	isRoleUpdated := current.Role.ValueString() != data.Role.ValueString()
+
+	if isAlreadyMember && isRoleUpdated {
+		err = r.client.UpdateOrgMember(ctx,
+			data.OrgName.ValueString(),
+			data.UserName.ValueString(),
+			hubclient.OrgRoleParam(data.Role.ValueString()))
+		if err != nil {
+			errMsg := fmt.Sprintf("Unable to update org_member role: %v", err)
+			resp.Diagnostics.AddError("Error Updating Resource", errMsg)
+			return
 		}
 	}
 
@@ -237,6 +262,7 @@ func (r *OrgMemberResource) Read(ctx context.Context, req resource.ReadRequest, 
 	if !found {
 		resp.Diagnostics.AddError("Resource Not Found",
 			fmt.Sprintf("Member not found in %s: %s", state.OrgName.ValueString(), invitee))
+		return
 	}
 
 	if data.Role.ValueString() == "" {
@@ -250,12 +276,52 @@ func (r *OrgMemberResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 }
 
-// NOTE(nicks): currently, we treat all fields as immutable,
-// so in theory update should never happen.
-//
-// Future work: update the provider to allow role changes.
 func (r *OrgMemberResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	return
+	var plan OrgMemberResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	userNameOrEmail := plan.UserName.ValueString()
+	if userNameOrEmail == "" {
+		userNameOrEmail = plan.Email.ValueString()
+	}
+
+	data, found, err := r.orgMember(ctx, plan.OrgName.ValueString(), userNameOrEmail)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Reading Resource", err.Error())
+		return
+	}
+	if !found {
+		resp.Diagnostics.AddError("Resource Not Found",
+			fmt.Sprintf("Member not found in %s: %s", plan.OrgName.ValueString(), userNameOrEmail))
+		return
+	}
+
+	// Role is the only field that can change.
+	if plan.Role.ValueString() == data.Role.ValueString() {
+		return
+	}
+
+	if data.InviteID.ValueString() != "" {
+		resp.Diagnostics.AddError("Resource cannot be changed",
+			fmt.Sprintf("Member role cannot be changed until invitation is accepted: %s", userNameOrEmail))
+		return
+	}
+
+	err = r.client.UpdateOrgMember(ctx,
+		data.OrgName.ValueString(),
+		data.UserName.ValueString(),
+		hubclient.OrgRoleParam(plan.Role.ValueString()))
+	if err != nil {
+		errMsg := fmt.Sprintf("Unable to update org_member role: %v", err)
+		resp.Diagnostics.AddError("Error Updating Resource", errMsg)
+		return
+	}
+
+	data.Role = plan.Role
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *OrgMemberResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

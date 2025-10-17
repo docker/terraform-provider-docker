@@ -135,6 +135,16 @@ type OrgMemberListResponse struct {
 	Results  []OrgMember `json:"results"`  // List of accounts.
 }
 
+// Weirdly, org role params are lowercase even though org role return values
+// are uppercase.
+type OrgRoleParam string
+
+const (
+	OrgRoleParamOwner  OrgRoleParam = "owner"
+	OrgRoleParamEditor OrgRoleParam = "editor"
+	OrgRoleParamMember OrgRoleParam = "member"
+)
+
 // OrgMember represents each organization member
 type OrgMember struct {
 	Email         string   `json:"email"`          // User's email address
@@ -254,7 +264,7 @@ func (c *Client) ListOrgTeamMembers(ctx context.Context, orgName string, teamNam
 	if err != nil {
 		return membersResponse, err
 	}
-	
+
 	members := membersResponse.Results
 	for membersResponse.Next != "" {
 		nextResponse := OrgTeamMembersResponse{}
@@ -266,7 +276,7 @@ func (c *Client) ListOrgTeamMembers(ctx context.Context, orgName string, teamNam
 		members = append(members, nextResponse.Results...)
 		membersResponse = nextResponse
 	}
-	
+
 	membersResponse.Results = members
 	return membersResponse, nil
 }
@@ -338,6 +348,17 @@ func (c *Client) DeleteOrgInvite(ctx context.Context, inviteID string) error {
 func (c *Client) DeleteOrgMember(ctx context.Context, orgName string, userName string) error {
 	url := fmt.Sprintf("/orgs/%s/members/%s/", orgName, userName)
 	return c.sendRequest(ctx, "DELETE", url, nil, nil)
+}
+
+func (c *Client) UpdateOrgMember(ctx context.Context, orgName string, userName string, role OrgRoleParam) error {
+	url := fmt.Sprintf("/orgs/%s/members/%s/", orgName, userName)
+	body := map[string]string{"role": string(role)}
+	reqBody, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	return c.sendRequest(ctx, "PUT", url, reqBody, nil)
 }
 
 // func (c *Client) GetOrgInvitedMember(ctx context.Context, inviteID string) (OrgMembersResponse, error) {

@@ -96,6 +96,12 @@ func (c *Client) sendRequest(ctx context.Context, method string, url string, bod
 		if readErr != nil {
 			return readErr
 		}
+
+		// Limit the size of the error message body to avoid excessive logs
+		if len(bodyBytes) > 500 {
+			bodyBytes = bodyBytes[:500]
+		}
+
 		return fmt.Errorf("server response %s: %s", path, string(bodyBytes))
 	}
 

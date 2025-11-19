@@ -50,6 +50,7 @@ type AccessTokenResourceModel struct {
 	TokenLabel types.String `tfsdk:"token_label"`
 	Scopes     types.List   `tfsdk:"scopes"`
 	Token      types.String `tfsdk:"token"`
+	ExpiresAt  types.String `tfsdk:"expires_at"`
 }
 
 func (r *AccessTokenResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -115,6 +116,10 @@ resource "docker_access_token" "example" {
 				Computed:            true,
 				Sensitive:           true,
 			},
+			"expires_at": schema.StringAttribute{
+				MarkdownDescription: "Time the token expires. If not set, the token will not expire",
+				Optional:            true,
+			},
 		},
 	}
 }
@@ -137,6 +142,10 @@ func (r *AccessTokenResource) Create(ctx context.Context, req resource.CreateReq
 	createReq := hubclient.AccessTokenCreateParams{
 		Scopes:     scopes,
 		TokenLabel: data.TokenLabel.ValueString(),
+	}
+
+	if !data.ExpiresAt.IsNull() {
+		createReq.ExpiresAt = data.ExpiresAt.ValueString()
 	}
 
 	at, err := r.client.CreateAccessToken(ctx, createReq)
@@ -251,5 +260,6 @@ func (r *AccessTokenResource) toModel(ctx context.Context, at hubclient.AccessTo
 		TokenLabel: types.StringValue(at.TokenLabel),
 		Scopes:     scopes,
 		Token:      types.StringValue(at.Token),
+		ExpiresAt:  types.StringValue(at.ExpiresAt),
 	}
 }

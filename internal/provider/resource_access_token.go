@@ -19,14 +19,17 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -50,6 +53,7 @@ type AccessTokenResourceModel struct {
 	TokenLabel types.String `tfsdk:"token_label"`
 	Scopes     types.List   `tfsdk:"scopes"`
 	Token      types.String `tfsdk:"token"`
+	ExpiresAt  types.String `tfsdk:"expires_at"`
 }
 
 func (r *AccessTokenResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -115,6 +119,16 @@ resource "docker_access_token" "example" {
 				Computed:            true,
 				Sensitive:           true,
 			},
+			"expires_at": schema.StringAttribute{
+				MarkdownDescription: "Time the token expires. If not set, the token will not expire",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$`),
+						"must be in ISO 8601 format, e.g., 2021-10-28T18:30:19.520861Z",
+					),
+				},
+			},
 		},
 	}
 }
@@ -137,6 +151,10 @@ func (r *AccessTokenResource) Create(ctx context.Context, req resource.CreateReq
 	createReq := hubclient.AccessTokenCreateParams{
 		Scopes:     scopes,
 		TokenLabel: data.TokenLabel.ValueString(),
+	}
+
+	if !data.ExpiresAt.IsNull() {
+		createReq.ExpiresAt = data.ExpiresAt.ValueString()
 	}
 
 	at, err := r.client.CreateAccessToken(ctx, createReq)
@@ -251,5 +269,6 @@ func (r *AccessTokenResource) toModel(ctx context.Context, at hubclient.AccessTo
 		TokenLabel: types.StringValue(at.TokenLabel),
 		Scopes:     scopes,
 		Token:      types.StringValue(at.Token),
+		ExpiresAt:  types.StringValue(at.ExpiresAt),
 	}
 }

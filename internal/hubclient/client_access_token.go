@@ -35,11 +35,13 @@ type AccessToken struct {
 	Token       string   `json:"token"`
 	TokenLabel  string   `json:"token_label"`
 	Scopes      []string `json:"scopes"`
+	ExpiresAt   string   `json:"expires_at,omitempty"`
 }
 
 type AccessTokenCreateParams struct {
 	TokenLabel string   `json:"token_label"`
 	Scopes     []string `json:"scopes"`
+	ExpiresAt  string   `json:"expires_at,omitempty"`
 }
 
 type AccessTokenUpdateParams struct {

@@ -36,6 +36,7 @@ func TestAccessTokenResource(t *testing.T) {
 					resource.TestCheckResourceAttr("docker_access_token.test", "token_label", "test-label"),
 					resource.TestCheckResourceAttr("docker_access_token.test", "scopes.#", "2"), // Assuming there are 2 scopes
 					resource.TestCheckResourceAttrSet("docker_access_token.test", "token"),      // Check if the token is set
+					resource.TestCheckResourceAttr("docker_access_token.test_expires", "expires_at", "2025-12-31T23:59:59Z"),
 				),
 			},
 			{
@@ -58,5 +59,6 @@ const testAccessTokenResourceConfig = `
 resource "docker_access_token" "test" {
   token_label = "test-label"
   scopes      = ["repo:read", "repo:write"]
+  expires_at  = "2025-12-31T23:59:59Z"
 }
 `

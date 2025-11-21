@@ -35,6 +35,10 @@ resource "docker_access_token" "example" {
 - `scopes` (List of String) List of scopes
 - `token_label` (String) Token label
 
+### Optional
+
+- `expires_at` (String) Time the token expires. If not set, the token will not expire
+
 ### Read-Only
 
 - `is_active` (Boolean) Whether the token is active

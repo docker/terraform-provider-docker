@@ -58,6 +58,7 @@ output "access_token_details" {
 - `created_at` (String) The creation time of the access token
 - `creator_ip` (String) The IP address of the creator of the access token
 - `creator_ua` (String) The user agent of the creator of the access token
+- `expires_at` (String) The expiration time of the access token
 - `generated_by` (String) The user who generated the access token
 - `is_active` (Boolean) Whether the access token is active
 - `last_used` (String) The last time the access token was used

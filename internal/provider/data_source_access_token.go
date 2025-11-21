@@ -51,6 +51,7 @@ type AccessTokenDataSourceModel struct {
 	Token       types.String `tfsdk:"token"`
 	TokenLabel  types.String `tfsdk:"token_label"`
 	Scopes      types.List   `tfsdk:"scopes"`
+	ExpiresAt   types.String `tfsdk:"expires_at"`
 }
 
 func (d *AccessTokenDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -126,6 +127,10 @@ output "access_token_details" {
 				Optional:            true,
 				ElementType:         types.StringType,
 			},
+			"expires_at": schema.StringAttribute{
+				MarkdownDescription: "The expiration time of the access token",
+				Optional:            true,
+			},
 		},
 	}
 }
@@ -171,6 +176,7 @@ func (d *AccessTokenDataSource) Read(ctx context.Context, req datasource.ReadReq
 	data.Token = types.StringValue(at.Token)
 	data.TokenLabel = types.StringValue(at.TokenLabel)
 	data.Scopes, _ = types.ListValueFrom(ctx, types.StringType, at.Scopes)
+	data.ExpiresAt = types.StringValue(at.ExpiresAt)
 
 	diags := resp.State.Set(ctx, &data)
 	resp.Diagnostics.Append(diags...)

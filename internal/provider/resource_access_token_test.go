@@ -62,3 +62,36 @@ resource "docker_access_token" "test" {
   expires_at  = "2029-12-31T23:59:59Z"
 }
 `
+
+func TestAccessTokenResource_Upgrade(t *testing.T) {
+	config := `
+resource "docker_access_token" "test" {
+  token_label = "test-label"
+  scopes      = ["repo:read"]
+}
+`
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"docker": {
+						VersionConstraint: "0.4.1",
+						Source:            "docker/docker",
+					},
+				},
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("docker_access_token.test", "uuid"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("docker_access_token.test", "uuid"),
+				),
+			},
+		},
+	})
+}

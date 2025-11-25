@@ -158,7 +158,7 @@ func (r *OrgTeamMemberResource) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	// Call the new API to list members of the team
-	membersResponse, err := r.client.ListOrgTeamMembers(ctx, data.OrgName.ValueString(), data.TeamName.ValueString())
+	members, err := r.client.ListOrgTeamMembers(ctx, data.OrgName.ValueString(), data.TeamName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to read org_team_member resource", fmt.Sprintf("Error retrieving team members: %v", err))
 		return
@@ -166,7 +166,7 @@ func (r *OrgTeamMemberResource) Read(ctx context.Context, req resource.ReadReque
 
 	// Check if the specified user is in the team
 	found := false
-	for _, member := range membersResponse.Results {
+	for _, member := range members {
 		if member.Username == data.UserName.ValueString() {
 			found = true
 			break

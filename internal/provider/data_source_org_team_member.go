@@ -204,7 +204,7 @@ func (d *OrgTeamMemberDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	var memberList []Member
-	for _, member := range members.Results {
+	for _, member := range members {
 		memberGroups := make([]attr.Value, len(member.Groups))
 		for i, group := range member.Groups {
 			memberGroups[i] = types.StringValue(group)

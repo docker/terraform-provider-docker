@@ -53,3 +53,19 @@ output "self" {
 }
 `, orgName, username)
 }
+
+func TestAccOrgMembersDataSourceLargeOrg(t *testing.T) {
+	username := os.Getenv("DOCKER_USERNAME")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrgMembersDataSourceConfig("docker", username),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckOutput("self", username),
+				),
+			},
+		},
+	})
+}

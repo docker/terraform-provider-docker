@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 type Org struct {
@@ -185,21 +184,19 @@ func (c *Client) GetOrg(ctx context.Context, orgName string) (Org, error) {
 }
 
 func (c *Client) ListOrgMembers(ctx context.Context, orgName string) ([]OrgMember, error) {
-	org := OrgMemberListResponse{}
-	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/orgs/%s/members", orgName), nil, &org)
-	if err != nil {
-		return nil, err
-	}
-	members := org.Results
-	for org.Next != "" {
-		nextOrg := OrgMemberListResponse{}
-		nextURL := strings.TrimPrefix(org.Next, c.BaseURL)
-		err := c.sendRequest(ctx, "GET", nextURL, nil, &nextOrg)
-		if err != nil {
+	var members []OrgMember
+	initialURL := fmt.Sprintf("/orgs/%s/members", orgName)
+	err := c.paginate(ctx, initialURL, func(url string) (interface{}, error) {
+		var page OrgMemberListResponse
+		if err := c.sendRequest(ctx, "GET", url, nil, &page); err != nil {
 			return nil, err
 		}
-		members = append(members, nextOrg.Results...)
-		org = nextOrg
+
+		members = append(members, page.Results...)
+		return page.Next, nil
+	})
+	if err != nil {
+		return nil, err
 	}
 	return members, nil
 }
@@ -258,27 +255,22 @@ func (c *Client) AddOrgTeamMember(ctx context.Context, orgName string, teamName 
 	return c.sendRequest(ctx, "POST", fmt.Sprintf("/orgs/%s/groups/%s/members/", orgName, teamName), memberRequestJSON, nil)
 }
 
-func (c *Client) ListOrgTeamMembers(ctx context.Context, orgName string, teamName string) (OrgTeamMembersResponse, error) {
-	membersResponse := OrgTeamMembersResponse{}
-	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/orgs/%s/groups/%s/members/", orgName, teamName), nil, &membersResponse)
-	if err != nil {
-		return membersResponse, err
-	}
-
-	members := membersResponse.Results
-	for membersResponse.Next != "" {
-		nextResponse := OrgTeamMembersResponse{}
-		nextURL := strings.TrimPrefix(membersResponse.Next, c.BaseURL)
-		err := c.sendRequest(ctx, "GET", nextURL, nil, &nextResponse)
-		if err != nil {
-			return membersResponse, err
+func (c *Client) ListOrgTeamMembers(ctx context.Context, orgName string, teamName string) ([]OrgTeamMember, error) {
+	var members []OrgTeamMember
+	initialURL := fmt.Sprintf("/orgs/%s/groups/%s/members/", orgName, teamName)
+	err := c.paginate(ctx, initialURL, func(url string) (interface{}, error) {
+		var page OrgTeamMembersResponse
+		if err := c.sendRequest(ctx, "GET", url, nil, &page); err != nil {
+			return nil, err
 		}
-		members = append(members, nextResponse.Results...)
-		membersResponse = nextResponse
-	}
 
-	membersResponse.Results = members
-	return membersResponse, nil
+		members = append(members, page.Results...)
+		return page.Next, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return members, nil
 }
 
 func (c *Client) GetOrgSettingImageAccessManagement(ctx context.Context, orgName string) (OrgSettingImageAccessManagement, error) {

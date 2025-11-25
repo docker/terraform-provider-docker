@@ -163,7 +163,7 @@ func (r *AccessTokenResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	data = r.toModel(ctx, at)
+	data = r.toModel(ctx, at, nil)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -191,7 +191,7 @@ func (r *AccessTokenResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	fromAPI := r.toModel(ctx, at)
+	fromAPI := r.toModel(ctx, at, &fromState)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -230,14 +230,10 @@ func (r *AccessTokenResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	fromAPI := r.toModel(ctx, at)
+	fromAPI := r.toModel(ctx, at, &fromState)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// The token is not returned by the API after initial creation,
-	// so we need to copy it from the state
-	fromAPI.Token = fromState.Token
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &fromAPI)...)
 }
@@ -261,9 +257,9 @@ func (r *AccessTokenResource) ImportState(ctx context.Context, req resource.Impo
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("uuid"), req.ID)...)
 }
 
-func (r *AccessTokenResource) toModel(ctx context.Context, at hubclient.AccessToken) AccessTokenResourceModel {
+func (r *AccessTokenResource) toModel(ctx context.Context, at hubclient.AccessToken, currentState *AccessTokenResourceModel) AccessTokenResourceModel {
 	scopes, _ := types.ListValueFrom(ctx, types.StringType, at.Scopes)
-	return AccessTokenResourceModel{
+	result := AccessTokenResourceModel{
 		UUID:       types.StringValue(at.UUID),
 		IsActive:   types.BoolValue(at.IsActive),
 		TokenLabel: types.StringValue(at.TokenLabel),
@@ -271,4 +267,17 @@ func (r *AccessTokenResource) toModel(ctx context.Context, at hubclient.AccessTo
 		Token:      types.StringValue(at.Token),
 		ExpiresAt:  types.StringValue(at.ExpiresAt),
 	}
+
+	// If the current state is null, keep it as null instead of changing to empty string.
+	if at.ExpiresAt == "" && currentState != nil && currentState.ExpiresAt.IsNull() {
+		result.ExpiresAt = types.StringNull()
+	}
+
+	// The token is not returned by the API after initial creation,
+	// so we need to copy it from the state
+	if currentState != nil {
+		result.Token = currentState.Token
+	}
+
+	return result
 }

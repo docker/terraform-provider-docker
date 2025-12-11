@@ -269,7 +269,7 @@ func (r *AccessTokenResource) toModel(ctx context.Context, at hubclient.AccessTo
 	}
 
 	// If the current state is null, keep it as null instead of changing to empty string.
-	if at.ExpiresAt == "" && currentState != nil && currentState.ExpiresAt.IsNull() {
+	if at.ExpiresAt == "" && (currentState == nil || currentState.ExpiresAt.IsNull()) {
 		result.ExpiresAt = types.StringNull()
 	}
 

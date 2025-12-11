@@ -23,13 +23,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestAccessTokenResource(t *testing.T) {
+func TestAccessTokenResource_WithExpires(t *testing.T) {
+	config := `
+resource "docker_access_token" "test" {
+  token_label = "test-label"
+  scopes      = ["repo:read", "repo:write"]
+  expires_at  = "2029-12-31T23:59:59Z"
+}
+`
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccessTokenResourceConfig,
+				Config: config,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("docker_access_token.test", "uuid"),
 					resource.TestCheckResourceAttr("docker_access_token.test", "is_active", "true"),
@@ -55,13 +62,43 @@ func TestAccessTokenResource(t *testing.T) {
 	})
 }
 
-const testAccessTokenResourceConfig = `
+func TestAccessTokenResource_NoExpires(t *testing.T) {
+	config := `
 resource "docker_access_token" "test" {
   token_label = "test-label"
-  scopes      = ["repo:read", "repo:write"]
-  expires_at  = "2029-12-31T23:59:59Z"
+  scopes      = ["repo:read"]
 }
 `
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("docker_access_token.test", "uuid"),
+					resource.TestCheckResourceAttr("docker_access_token.test", "is_active", "true"),
+					resource.TestCheckResourceAttr("docker_access_token.test", "token_label", "test-label"),
+					resource.TestCheckResourceAttr("docker_access_token.test", "scopes.#", "1"),
+					resource.TestCheckResourceAttrSet("docker_access_token.test", "token"), // Check if the token is set
+					resource.TestCheckNoResourceAttr("docker_access_token.test", "expires_at"),
+				),
+			},
+			{
+				ResourceName:                         "docker_access_token.test",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "uuid",
+				ImportStateVerifyIgnore: []string{
+					"token", // Ignore the token attribute during import state verification
+				},
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					return state.RootModule().Resources["docker_access_token.test"].Primary.Attributes["uuid"], nil
+				},
+			},
+		},
+	})
+}
 
 func TestAccessTokenResource_Upgrade(t *testing.T) {
 	config := `

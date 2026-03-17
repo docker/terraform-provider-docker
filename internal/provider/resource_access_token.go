@@ -19,10 +19,8 @@ package provider
 import (
 	"context"
 	"fmt"
-	"regexp"
 
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -123,10 +121,7 @@ resource "docker_access_token" "example" {
 				MarkdownDescription: "Time the token expires. If not set, the token will not expire",
 				Optional:            true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$`),
-						"must be in ISO 8601 format, e.g., 2021-10-28T18:30:19.520861Z",
-					),
+					accessTokenExpiresAtValidator,
 				},
 			},
 		},

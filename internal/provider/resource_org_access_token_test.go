@@ -48,6 +48,7 @@ func TestAccOrgAccessTokenResource(t *testing.T) {
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.type", hubclient.OrgAccessTokenTypeRepo),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.path", orgName+"/"+repoName),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.scopes.#", "1"),
+					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.scopes.0", "scope-image-pull"),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "expires_at", "2029-12-31T23:59:59Z"),
 					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "token"),
 					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "created_by"),
@@ -75,6 +76,7 @@ func TestAccOrgAccessTokenResource(t *testing.T) {
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "label", updatedLabel),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "description", "updated description"),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.path", orgName+"/"+updatedRepoName),
+					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.scopes.0", "scope-image-pull"),
 					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "token"),
 				),
 			},
@@ -120,7 +122,7 @@ resource "docker_org_access_token" "test" {
     {
       type   = "%s"
       path   = "%s/%s"
-      scopes = ["repo-pull"]
+      scopes = ["scope-image-pull"]
     }
   ]
   expires_at = "%s"

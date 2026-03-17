@@ -15,7 +15,7 @@ description: |-
       {
         type   = "TYPE_REPO"
         path   = "my-organization/my-repository"
-        scopes = ["repo-pull"]
+        scopes = ["scope-image-pull"]
       }
     ]
     expires_at = "2027-12-31T23:59:59Z"
@@ -32,7 +32,7 @@ description: |-
       {
         type   = "TYPE_REPO"
         path   = "*/*/public"
-        scopes = ["repo-pull"]
+        scopes = ["scope-image-pull"]
       }
     ]
   }
@@ -55,7 +55,7 @@ resource "docker_org_access_token" "example" {
     {
       type   = "TYPE_REPO"
       path   = "my-organization/my-repository"
-      scopes = ["repo-pull"]
+      scopes = ["scope-image-pull"]
     }
   ]
   expires_at = "2027-12-31T23:59:59Z"
@@ -75,7 +75,7 @@ resource "docker_org_access_token" "public_pull" {
     {
       type   = "TYPE_REPO"
       path   = "*/*/public"
-      scopes = ["repo-pull"]
+      scopes = ["scope-image-pull"]
     }
   ]
 }

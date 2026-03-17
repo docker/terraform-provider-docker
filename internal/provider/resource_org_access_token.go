@@ -19,12 +19,10 @@ package provider
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -41,14 +39,6 @@ var (
 	_ resource.ResourceWithImportState = &OrgAccessTokenResource{}
 )
 
-var orgAccessTokenResourceEntryObjectType = types.ObjectType{
-	AttrTypes: map[string]attr.Type{
-		"type":   types.StringType,
-		"path":   types.StringType,
-		"scopes": types.ListType{ElemType: types.StringType},
-	},
-}
-
 func NewOrgAccessTokenResource() resource.Resource {
 	return &OrgAccessTokenResource{}
 }
@@ -58,15 +48,15 @@ type OrgAccessTokenResource struct {
 }
 
 type OrgAccessTokenResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	OrgName     types.String `tfsdk:"org_name"`
-	Label       types.String `tfsdk:"label"`
-	Description types.String `tfsdk:"description"`
-	Resources   types.List   `tfsdk:"resources"`
-	ExpiresAt   types.String `tfsdk:"expires_at"`
-	Token       types.String `tfsdk:"token"`
-	CreatedBy   types.String `tfsdk:"created_by"`
-	CreatedAt   types.String `tfsdk:"created_at"`
+	ID          types.String                       `tfsdk:"id"`
+	OrgName     types.String                       `tfsdk:"org_name"`
+	Label       types.String                       `tfsdk:"label"`
+	Description types.String                       `tfsdk:"description"`
+	Resources   []OrgAccessTokenResourceEntryModel `tfsdk:"resources"`
+	ExpiresAt   types.String                       `tfsdk:"expires_at"`
+	Token       types.String                       `tfsdk:"token"`
+	CreatedBy   types.String                       `tfsdk:"created_by"`
+	CreatedAt   types.String                       `tfsdk:"created_at"`
 }
 
 type OrgAccessTokenResourceEntryModel struct {
@@ -113,7 +103,7 @@ resource "docker_org_access_token" "example" {
     {
       type   = "TYPE_REPO"
       path   = "my-organization/my-repository"
-      scopes = ["repo-pull"]
+      scopes = ["scope-image-pull"]
     }
   ]
   expires_at = "2027-12-31T23:59:59Z"
@@ -133,7 +123,7 @@ resource "docker_org_access_token" "public_pull" {
     {
       type   = "TYPE_REPO"
       path   = "*/*/public"
-      scopes = ["repo-pull"]
+      scopes = ["scope-image-pull"]
     }
   ]
 }
@@ -187,10 +177,7 @@ resource "docker_org_access_token" "public_pull" {
 				MarkdownDescription: "Expiration date for the token. Changing this value recreates the token.",
 				Optional:            true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$`),
-						"must be in ISO 8601 format, e.g., 2021-10-28T18:30:19.520861Z",
-					),
+					accessTokenExpiresAtValidator,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -241,7 +228,7 @@ func (r *OrgAccessTokenResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	model, diags := orgAccessTokenToModel(ctx, data.OrgName, data.Description, data.ExpiresAt, types.StringNull(), at)
+	model, diags := r.toModel(ctx, at, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -266,7 +253,7 @@ func (r *OrgAccessTokenResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	model, diags := orgAccessTokenToModel(ctx, fromState.OrgName, fromState.Description, fromState.ExpiresAt, fromState.Token, at)
+	model, diags := r.toModel(ctx, at, &fromState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -302,7 +289,7 @@ func (r *OrgAccessTokenResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	model, diags := orgAccessTokenToModel(ctx, fromState.OrgName, fromPlan.Description, fromState.ExpiresAt, fromState.Token, at)
+	model, diags := r.toModel(ctx, at, &fromState)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -341,16 +328,11 @@ func (r *OrgAccessTokenResource) ImportState(ctx context.Context, req resource.I
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), idParts[1])...)
 }
 
-func expandOrgAccessTokenResources(ctx context.Context, resources types.List) ([]hubclient.OrgAccessTokenResource, diag.Diagnostics) {
+func expandOrgAccessTokenResources(ctx context.Context, resources []OrgAccessTokenResourceEntryModel) ([]hubclient.OrgAccessTokenResource, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	var resourceModels []OrgAccessTokenResourceEntryModel
-	diags.Append(resources.ElementsAs(ctx, &resourceModels, false)...)
-	if diags.HasError() {
-		return nil, diags
-	}
 
-	tokenResources := make([]hubclient.OrgAccessTokenResource, 0, len(resourceModels))
-	for _, resourceModel := range resourceModels {
+	tokenResources := make([]hubclient.OrgAccessTokenResource, 0, len(resources))
+	for _, resourceModel := range resources {
 		var scopes []string
 		diags.Append(resourceModel.Scopes.ElementsAs(ctx, &scopes, false)...)
 		if diags.HasError() {
@@ -367,12 +349,15 @@ func expandOrgAccessTokenResources(ctx context.Context, resources types.List) ([
 	return tokenResources, diags
 }
 
-func flattenOrgAccessTokenResources(ctx context.Context, resources []hubclient.OrgAccessTokenResource) (types.List, diag.Diagnostics) {
+func flattenOrgAccessTokenResources(ctx context.Context, resources []hubclient.OrgAccessTokenResource) ([]OrgAccessTokenResourceEntryModel, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	resourceModels := make([]OrgAccessTokenResourceEntryModel, 0, len(resources))
 	for _, resource := range resources {
-		scopes, diags := types.ListValueFrom(ctx, types.StringType, resource.Scopes)
+		scopes, scopesDiags := types.ListValueFrom(ctx, types.StringType, resource.Scopes)
+		diags.Append(scopesDiags...)
 		if diags.HasError() {
-			return types.ListNull(orgAccessTokenResourceEntryObjectType), diags
+			return nil, diags
 		}
 
 		resourceModels = append(resourceModels, OrgAccessTokenResourceEntryModel{
@@ -382,16 +367,13 @@ func flattenOrgAccessTokenResources(ctx context.Context, resources []hubclient.O
 		})
 	}
 
-	return types.ListValueFrom(ctx, orgAccessTokenResourceEntryObjectType, resourceModels)
+	return resourceModels, diags
 }
 
-func orgAccessTokenToModel(
+func (r *OrgAccessTokenResource) toModel(
 	ctx context.Context,
-	orgName types.String,
-	descriptionFromState types.String,
-	expiresAtFromState types.String,
-	tokenFromState types.String,
 	at hubclient.OrgAccessToken,
+	currentState *OrgAccessTokenResourceModel,
 ) (OrgAccessTokenResourceModel, diag.Diagnostics) {
 	resources, diags := flattenOrgAccessTokenResources(ctx, at.Resources)
 	if diags.HasError() {
@@ -399,35 +381,27 @@ func orgAccessTokenToModel(
 	}
 
 	model := OrgAccessTokenResourceModel{
-		ID:          stringValueOrNull(at.ID),
-		OrgName:     orgName,
-		Label:       stringValueOrNull(at.Label),
-		Description: stringValueOrPreservedNull(at.Description, descriptionFromState),
+		ID:          types.StringValue(at.ID),
+		Label:       types.StringValue(at.Label),
+		Description: types.StringValue(at.Description),
 		Resources:   resources,
-		ExpiresAt:   stringValueOrPreservedNull(at.ExpiresAt, expiresAtFromState),
-		Token:       stringValueOrPreservedNull(at.Token, tokenFromState),
-		CreatedBy:   stringValueOrNull(at.CreatedBy),
-		CreatedAt:   stringValueOrNull(at.CreatedAt),
+		ExpiresAt:   types.StringValue(at.ExpiresAt),
+		Token:       types.StringValue(at.Token),
+		CreatedBy:   types.StringValue(at.CreatedBy),
+		CreatedAt:   types.StringValue(at.CreatedAt),
+	}
+
+	if currentState != nil {
+		model.OrgName = currentState.OrgName
+
+		// The token is not returned by the API after initial creation,
+		// so we need to preserve it from state on subsequent reads.
+		if !currentState.Token.IsUnknown() {
+			model.Token = currentState.Token
+		}
 	}
 
 	return model, diags
-}
-
-func stringValueOrNull(value string) types.String {
-	if value == "" {
-		return types.StringNull()
-	}
-	return types.StringValue(value)
-}
-
-func stringValueOrPreservedNull(value string, preserved types.String) types.String {
-	if value != "" {
-		return types.StringValue(value)
-	}
-	if !preserved.IsNull() && !preserved.IsUnknown() {
-		return preserved
-	}
-	return types.StringNull()
 }
 
 func stringValueOrEmpty(value types.String) string {

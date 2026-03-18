@@ -103,8 +103,6 @@ resource "docker_org_access_token" "public_pull" {
 
 ### Read-Only
 
-- `created_at` (String) The creation time of the access token
-- `created_by` (String) The user that created the access token
 - `id` (String) The ID of the organization access token
 - `token` (String, Sensitive) The organization access token. This value is only returned during creation.
 

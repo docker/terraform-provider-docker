@@ -51,8 +51,6 @@ func TestAccOrgAccessTokenResource(t *testing.T) {
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.scopes.0", "scope-image-pull"),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "expires_at", "2029-12-31T23:59:59Z"),
 					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "token"),
-					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "created_by"),
-					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "created_at"),
 					resource.TestCheckNoResourceAttr("docker_org_access_token.test", "is_active"),
 					resource.TestCheckNoResourceAttr("docker_org_access_token.test", "last_used_at"),
 				),

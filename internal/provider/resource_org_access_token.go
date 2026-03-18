@@ -55,8 +55,6 @@ type OrgAccessTokenResourceModel struct {
 	Resources   []OrgAccessTokenResourceEntryModel `tfsdk:"resources"`
 	ExpiresAt   types.String                       `tfsdk:"expires_at"`
 	Token       types.String                       `tfsdk:"token"`
-	CreatedBy   types.String                       `tfsdk:"created_by"`
-	CreatedAt   types.String                       `tfsdk:"created_at"`
 }
 
 type OrgAccessTokenResourceEntryModel struct {
@@ -189,14 +187,6 @@ resource "docker_org_access_token" "public_pull" {
 				MarkdownDescription: "The organization access token. This value is only returned during creation.",
 				Computed:            true,
 				Sensitive:           true,
-			},
-			"created_by": schema.StringAttribute{
-				MarkdownDescription: "The user that created the access token",
-				Computed:            true,
-			},
-			"created_at": schema.StringAttribute{
-				MarkdownDescription: "The creation time of the access token",
-				Computed:            true,
 			},
 		},
 	}
@@ -389,8 +379,6 @@ func (r *OrgAccessTokenResource) toModel(
 		Resources:   resources,
 		ExpiresAt:   types.StringValue(at.ExpiresAt),
 		Token:       types.StringValue(at.Token),
-		CreatedBy:   types.StringValue(at.CreatedBy),
-		CreatedAt:   types.StringValue(at.CreatedAt),
 	}
 
 	if currentState != nil {

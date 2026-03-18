@@ -382,6 +382,7 @@ func getConfigfileKey(host string) string {
 func (p *DockerProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewAccessTokenResource,
+		NewOrgAccessTokenResource,
 		NewOrgSettingImageAccessManagementResource,
 		NewOrgSettingRegistryAccessManagementResource,
 		NewOrgTeamResource,

@@ -30,15 +30,15 @@ func TestAccOrgAccessTokenResource(t *testing.T) {
 	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)
 	label := "test-" + randString(10)
 	updatedLabel := "test-" + randString(10)
-	repoName := "repo-" + randString(8)
-	updatedRepoName := "repo-" + randString(8)
+	allReposPath := orgName + "/*"
+	publicReposPath := "*/*/public"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrgAccessTokenResourceConfig(orgName, label, "test description", repoName, "2029-12-31T23:59:59Z"),
+				Config: testAccOrgAccessTokenResourceConfig(orgName, label, "test description", allReposPath, "2029-12-31T23:59:59Z"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "id"),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "org_name", orgName),
@@ -46,7 +46,7 @@ func TestAccOrgAccessTokenResource(t *testing.T) {
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "description", "test description"),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.#", "1"),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.type", hubclient.OrgAccessTokenTypeRepo),
-					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.path", orgName+"/"+repoName),
+					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.path", allReposPath),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.scopes.#", "1"),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.scopes.0", "scope-image-pull"),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "expires_at", "2029-12-31T23:59:59Z"),
@@ -70,12 +70,12 @@ func TestAccOrgAccessTokenResource(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccOrgAccessTokenResourceConfig(orgName, updatedLabel, "updated description", updatedRepoName, "2029-12-31T23:59:59Z"),
+				Config: testAccOrgAccessTokenResourceConfig(orgName, updatedLabel, "updated description", publicReposPath, "2029-12-31T23:59:59Z"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "id"),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "label", updatedLabel),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "description", "updated description"),
-					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.path", orgName+"/"+updatedRepoName),
+					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.path", publicReposPath),
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "resources.0.scopes.0", "scope-image-pull"),
 					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "token"),
 				),
@@ -87,7 +87,7 @@ func TestAccOrgAccessTokenResource(t *testing.T) {
 func TestAccOrgAccessTokenResource_ExpiresAtReplaces(t *testing.T) {
 	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)
 	label := "test-" + randString(10)
-	repoName := "repo-" + randString(8)
+	allReposPath := orgName + "/*"
 	var firstID string
 
 	resource.Test(t, resource.TestCase{
@@ -95,14 +95,14 @@ func TestAccOrgAccessTokenResource_ExpiresAtReplaces(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrgAccessTokenResourceConfig(orgName, label, "test description", repoName, "2029-12-31T23:59:59Z"),
+				Config: testAccOrgAccessTokenResourceConfig(orgName, label, "test description", allReposPath, "2029-12-31T23:59:59Z"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "id"),
 					storeResourceAttribute("docker_org_access_token.test", "id", &firstID),
 				),
 			},
 			{
-				Config: testAccOrgAccessTokenResourceConfig(orgName, label, "test description", repoName, "2030-12-31T23:59:59Z"),
+				Config: testAccOrgAccessTokenResourceConfig(orgName, label, "test description", allReposPath, "2030-12-31T23:59:59Z"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("docker_org_access_token.test", "expires_at", "2030-12-31T23:59:59Z"),
 					assertResourceAttributeChanged("docker_org_access_token.test", "id", firstID),
@@ -112,7 +112,7 @@ func TestAccOrgAccessTokenResource_ExpiresAtReplaces(t *testing.T) {
 	})
 }
 
-func testAccOrgAccessTokenResourceConfig(orgName, label, description, repoName, expiresAt string) string {
+func testAccOrgAccessTokenResourceConfig(orgName, label, description, resourcePath, expiresAt string) string {
 	return fmt.Sprintf(`
 resource "docker_org_access_token" "test" {
   org_name    = "%s"
@@ -121,13 +121,13 @@ resource "docker_org_access_token" "test" {
   resources = [
     {
       type   = "%s"
-      path   = "%s/%s"
+      path   = "%s"
       scopes = ["scope-image-pull"]
     }
   ]
   expires_at = "%s"
 }
-`, orgName, label, description, hubclient.OrgAccessTokenTypeRepo, orgName, repoName, expiresAt)
+`, orgName, label, description, hubclient.OrgAccessTokenTypeRepo, resourcePath, expiresAt)
 }
 
 func storeResourceAttribute(resourceName, attributeName string, destination *string) resource.TestCheckFunc {

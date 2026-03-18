@@ -102,13 +102,15 @@ resource "docker_org_access_token" "example" {
   resources = [
     {
       type   = "TYPE_REPO"
-      path   = "my-organization/my-repository"
+      path   = "my-organization/*"
       scopes = ["scope-image-pull"]
     }
   ]
   expires_at = "2027-12-31T23:59:59Z"
 }
 ` + "```" + `
+
+For ` + "`TYPE_REPO`" + ` resources, ` + "`path`" + ` must point to an existing repository or a supported glob such as ` + "`my-organization/*`" + `.
 
 ## Public-Only Repositories
 
@@ -162,7 +164,7 @@ resource "docker_org_access_token" "public_pull" {
 							},
 						},
 						"path": schema.StringAttribute{
-							MarkdownDescription: "The path of the resource",
+							MarkdownDescription: "The path of the resource. For TYPE_REPO, this must point to an existing repository or a supported glob such as `my-organization/*`. Use `*/*/public` for public repositories only.",
 							Required:            true,
 						},
 						"scopes": schema.ListAttribute{

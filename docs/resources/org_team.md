@@ -4,7 +4,7 @@ page_title: "docker_org_team Resource - docker"
 subcategory: ""
 description: |-
   Manages teams for an organization.
-  -> Note: This resource is only available when authenticated with a username and password as an owner of the org.
+  -> Note: This resource requires credentials that can read and manage organization groups, such as an owner login with a user password or an organization access token (OAT) with the Group Read and Group Edit scopes.
   Example Usage
   
   resource "docker_org_team" "example" {
@@ -18,7 +18,7 @@ description: |-
 
 Manages teams for an organization.
 
--> **Note**: This resource is only available when authenticated with a username and password as an owner of the org.
+-> **Note**: This resource requires credentials that can read and manage organization groups, such as an owner login with a user password or an organization access token (OAT) with the `Group Read` and `Group Edit` scopes.
 
 ## Example Usage
 

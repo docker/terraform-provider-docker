@@ -76,6 +76,8 @@ func (r *OrgSettingImageAccessManagementResource) Schema(ctx context.Context, re
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Manages the Image Access Management settings for an organization.
 
+-> **Note**: Docker does not support organization access token (OAT) authentication for Image Access Management. Use a user password or PAT instead.
+
 ## Example Usage
 
 ` + "```hcl" + `

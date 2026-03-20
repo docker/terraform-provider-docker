@@ -86,7 +86,7 @@ func (r *OrgMemberResource) Schema(ctx context.Context, req resource.SchemaReque
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Manages members associated with an organization.
 
--> **Note** Only available when authenticated with a username and password as an owner of the org.
+-> **Note** Requires credentials that can read and manage organization members and invites, such as an owner login with a user password or an organization access token (OAT) with the ` + "`Member Read`" + `, ` + "`Member Edit`" + `, ` + "`Invite Read`" + `, and ` + "`Invite Edit`" + ` scopes.
 
 When a member is added to an organization, they don't have access to the
 organization's repositories until they accept the invitation. The invitation is

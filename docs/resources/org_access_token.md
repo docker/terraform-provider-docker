@@ -20,9 +20,8 @@ description: |-
     ]
     expires_at = "2027-12-31T23:59:59Z"
   }
-
-  For TYPE_REPO resources, path must point to an existing repository or a supported glob such as my-organization/*.
   
+  For TYPE_REPO resources, path must point to an existing repository or a supported glob such as my-organization/*.
   Public-Only Repositories
   Use the special path */*/public to scope the token to public repositories only.
   

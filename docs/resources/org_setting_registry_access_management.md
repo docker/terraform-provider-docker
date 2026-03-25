@@ -4,6 +4,7 @@ page_title: "docker_org_setting_registry_access_management Resource - docker"
 subcategory: ""
 description: |-
   Manages the Registry Access Management settings for an organization.
+  -> Note: Docker does not support organization access token (OAT) authentication for Registry Access Management. Use a user password or PAT instead.
   Example Usage
   
   resource "docker_org_setting_registry_access_management" "example" {
@@ -30,6 +31,8 @@ description: |-
 # docker_org_setting_registry_access_management (Resource)
 
 Manages the Registry Access Management settings for an organization.
+
+-> **Note**: Docker does not support organization access token (OAT) authentication for Registry Access Management. Use a user password or PAT instead.
 
 ## Example Usage
 

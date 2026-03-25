@@ -104,6 +104,8 @@ func (r *OrgSettingRegistryAccessManagementResource) Schema(ctx context.Context,
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Manages the Registry Access Management settings for an organization.
 
+-> **Note**: Docker does not support organization access token (OAT) authentication for Registry Access Management. Use a user password or PAT instead.
+
 ## Example Usage
 
 ` + "```hcl" + `

@@ -76,7 +76,7 @@ func (d *OrgTeamMemberDataSource) Schema(ctx context.Context, req datasource.Sch
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Reads team members of a specified team within a Docker Hub organization.
 
--> **Note**: This data source is only available when authenticated with a username and password.
+-> **Note**: This data source requires credentials that can read organization groups, such as a user password or an organization access token (OAT) with the ` + "`Group Read`" + ` scope.
 
 ## Example Usage
 

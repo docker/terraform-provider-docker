@@ -54,7 +54,8 @@ cat ~/my_password.txt | docker login --username my-username --password-stdin
 ```
 
 If you'd like to use a different account for running the provider,
-you can set credentials in the environment:
+you can set credentials in the environment. When using an organization access
+token (OAT), set `DOCKER_USERNAME` to the organization name:
 
 ```
 export DOCKER_USERNAME=my-username
@@ -77,6 +78,23 @@ passwords.
 Unfortunately, PATs are limited to managing repositories. If you'd like to use
 this provider to manage organizations and teams, you will need to authenticate
 with a password.
+
+Organization access tokens (OATs) are a separate credential type for
+organization-scoped automation. Authenticate with the organization name as the
+username and the OAT as the password.
+
+OATs can be used with this provider for organization APIs when the token has
+the required permissions for the target API, such as `Member Read`,
+`Member Edit`, `Invite Read`, `Invite Edit`, `Group Read`, and `Group Edit`.
+
+When the provider auto-resolves credentials from Docker's config file, it
+currently prefers Docker Desktop's cached access token before `docker login`
+pull credentials. If you want to force OAT usage, set `DOCKER_USERNAME` and
+`DOCKER_PASSWORD` explicitly or configure them in the provider block.
+
+Organization access tokens are incompatible with Docker Desktop, Image Access
+Management, and Registry Access Management. Use a password or PAT for those
+features.
 
 ## Contributing
 

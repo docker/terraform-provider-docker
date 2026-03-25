@@ -70,7 +70,7 @@ func (d *OrgMembersDataSource) Schema(ctx context.Context, req datasource.Schema
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Reads members of an organization.
 
--> **Note** Only available when authenticated with a username and password.
+-> **Note** Requires credentials that can read organization members, such as a user password or an organization access token (OAT) with the ` + "`Member Read`" + ` scope.
 
 ## Example Usage
 

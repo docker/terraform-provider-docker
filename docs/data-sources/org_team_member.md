@@ -4,7 +4,7 @@ page_title: "docker_org_team_member Data Source - docker"
 subcategory: ""
 description: |-
   Reads team members of a specified team within a Docker Hub organization.
-  -> Note: This data source is only available when authenticated with a username and password.
+  -> Note: This data source requires credentials that can read organization groups, such as a user password or an organization access token (OAT) with the Group Read scope.
   Example Usage
   
   data "docker_org_team_member" "example" {
@@ -25,7 +25,7 @@ description: |-
 
 Reads team members of a specified team within a Docker Hub organization.
 
--> **Note**: This data source is only available when authenticated with a username and password.
+-> **Note**: This data source requires credentials that can read organization groups, such as a user password or an organization access token (OAT) with the `Group Read` scope.
 
 ## Example Usage
 

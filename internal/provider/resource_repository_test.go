@@ -18,15 +18,15 @@ package provider
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
+	"github.com/docker/terraform-provider-docker/internal/envvar"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccRepositoryResource(t *testing.T) {
-	namespace := os.Getenv("DOCKER_USERNAME")
+	namespace := envvar.GetWithDefault(envvar.AccTestOrganization)
 	name := "example-repo" + randString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -65,7 +65,7 @@ func TestAccRepositoryResource(t *testing.T) {
 }
 
 func TestAccRepositoryResource_Upgrade(t *testing.T) {
-	namespace := os.Getenv("DOCKER_USERNAME")
+	namespace := envvar.GetWithDefault(envvar.AccTestOrganization)
 	name := "example-repo" + randString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
@@ -117,7 +117,7 @@ resource "docker_hub_repository" "test" {
 }
 
 func TestAccRepositoryResourceImmutableTags(t *testing.T) {
-	namespace := os.Getenv("DOCKER_USERNAME")
+	namespace := envvar.GetWithDefault(envvar.AccTestOrganization)
 	name := "immutable-repo" + randString(10)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

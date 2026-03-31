@@ -66,7 +66,7 @@ data "docker_org_access_token" "by_label" {
 
 ### Optional
 
-- `filter` (Attributes List) One or more name/value filter blocks. Exactly one of `id` or `filter` must be set. Filters are applied with OR semantics within `values` and AND semantics across blocks. Only `label` is supported in v1. (see [below for nested schema](#nestedatt--filter))
+- `filter` (Block List) One or more name/value filter blocks. Exactly one of `id` or `filter` must be set. Filters are applied with OR semantics within `values` and AND semantics across blocks. Only `label` is supported in v1. (see [below for nested schema](#nestedblock--filter))
 - `id` (String) The ID of the organization access token. Set this for a direct lookup, or omit it when using `filter`.
 
 ### Read-Only
@@ -80,7 +80,7 @@ data "docker_org_access_token" "by_label" {
 - `last_used_at` (String) The last time the access token was used, if available.
 - `resources` (Attributes List) Resources this token has access to. (see [below for nested schema](#nestedatt--resources))
 
-<a id="nestedatt--filter"></a>
+<a id="nestedblock--filter"></a>
 ### Nested Schema for `filter`
 
 Required:

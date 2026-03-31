@@ -112,26 +112,6 @@ data "docker_org_access_token" "by_label" {
 				Optional:            true,
 				Computed:            true,
 			},
-			"filter": schema.ListNestedAttribute{
-				MarkdownDescription: "One or more name/value filter blocks. Exactly one of `id` or `filter` must be set. Filters are applied with OR semantics within `values` and AND semantics across blocks. Only `label` is supported in v1.",
-				Optional:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							MarkdownDescription: "Name of the field to filter by. Only `label` is supported.",
-							Required:            true,
-							Validators: []validator.String{
-								stringvalidator.OneOf(orgAccessTokenFilterNameLabel),
-							},
-						},
-						"values": schema.ListAttribute{
-							MarkdownDescription: "Accepted values for the given filter name.",
-							Required:            true,
-							ElementType:         types.StringType,
-						},
-					},
-				},
-			},
 			"label": schema.StringAttribute{
 				MarkdownDescription: "The label of the access token.",
 				Computed:            true,
@@ -176,6 +156,27 @@ data "docker_org_access_token" "by_label" {
 						"scopes": schema.ListAttribute{
 							MarkdownDescription: "The scopes this token has access to.",
 							Computed:            true,
+							ElementType:         types.StringType,
+						},
+					},
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"filter": schema.ListNestedBlock{
+				MarkdownDescription: "One or more name/value filter blocks. Exactly one of `id` or `filter` must be set. Filters are applied with OR semantics within `values` and AND semantics across blocks. Only `label` is supported in v1.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							MarkdownDescription: "Name of the field to filter by. Only `label` is supported.",
+							Required:            true,
+							Validators: []validator.String{
+								stringvalidator.OneOf(orgAccessTokenFilterNameLabel),
+							},
+						},
+						"values": schema.ListAttribute{
+							MarkdownDescription: "Accepted values for the given filter name.",
+							Required:            true,
 							ElementType:         types.StringType,
 						},
 					},

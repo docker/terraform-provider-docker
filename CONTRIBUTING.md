@@ -57,17 +57,27 @@ Note, when you run the `terraform plan` you should see a warning, this ensures t
 
 Happy developing!
 
-## Testing
+## Acceptance Testing
 
-Run full test suite:
+WARNING: Acceptance tests run the provider with a real account against a real
+environment. They will create repositories, delete repositories, invite users to
+orgs, etc.
 
-```shell
-make testacc
+Only run them with account credentials that are ok for testing!
+
+### Adding a new test
+
+If you're contributing a new test, set up your credentials:
+
+```
+export DOCKER_USERNAME=[your-username]
+export DOCKER_PASSWORD=[your-password]
+export ACCTEST_DOCKER_ORG=[an-org-you-belong-to]
 ```
 
-Run a specific test(s):
+Then run:
 
-```shell
+```
 make testacc TESTS=TestAccXXX
 ```
 
@@ -78,6 +88,36 @@ TF_ACC=1 go test ./... -v -count 1 -parallel 20 -timeout 120m -run TestAccXXX
 ```
 
 where `TestAccXXX` is the testing function within the `_test.go` file.
+
+New tests should create resources under the org namespace
+`envvar.AccTestOrganization`. See existing tests for examples.
+
+### Running the full test suite
+
+Only Docker employees can currently run the full acceptance suite,
+because they use the stage environment.
+
+To run the tests on Github Actions on main, run:
+
+```
+gh workflow run acctest.yaml
+```
+
+To run it on a specific branch, run:
+
+```
+gh workflow run acctest.yaml -f ref=[git-sha|branch-name]
+```
+
+To run it locally, you will need credentials for our test account. 
+The password is in the terraform-provider-docker 1password vault.
+
+```
+export DOCKER_HUB_HOST=hub-stage.docker.com
+export DOCKER_USERNAME=dockerterraformacctest
+export DOCKER_PASSWORD=[password]
+make testacc
+```
 
 ## Environment Variables
 

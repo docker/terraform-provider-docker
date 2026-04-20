@@ -423,6 +423,7 @@ func (p *DockerProvider) DataSources(ctx context.Context) []func() datasource.Da
 		NewRepositoryTagsDataSource,
 		NewAccessTokenDataSource,
 		NewAccessTokensDataSource,
+		NewOrgAccessTokenDataSource,
 		NewOrgTeamDataSource,
 		NewLoginDataSource,
 	}

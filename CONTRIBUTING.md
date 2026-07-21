@@ -75,6 +75,15 @@ export DOCKER_PASSWORD=[your-password]
 export ACCTEST_DOCKER_ORG=[an-org-you-belong-to]
 ```
 
+To run OAT-specific tests (those testing Organization Access Token authentication),
+also set `DOCKER_OAT` to an OAT issued for the org in `ACCTEST_DOCKER_ORG`. The OAT
+needs the scopes required by the resources under test (e.g. RAM Read/Write, Member Read).
+OAT tests are automatically skipped when `DOCKER_OAT` is not set.
+
+```
+export DOCKER_OAT=[your-oat]
+```
+
 Then run:
 
 ```
@@ -109,13 +118,14 @@ To run it on a specific branch, run:
 gh workflow run acctest.yaml -f ref=[git-sha|branch-name]
 ```
 
-To run it locally, you will need credentials for our test account. 
-The password is in the terraform-provider-docker 1password vault.
+To run it locally, you will need credentials for our internal test account.
+The password and OAT are in the terraform-provider-docker 1password vault.
 
 ```
 export DOCKER_HUB_HOST=hub-stage.docker.com
 export DOCKER_USERNAME=dockerterraformacctest
 export DOCKER_PASSWORD=[password]
+export DOCKER_OAT=[oat]
 make testacc
 ```
 

@@ -54,6 +54,35 @@ output "self" {
 `, orgName, username)
 }
 
+func TestAccOrgMembersDataSourceOAT(t *testing.T) {
+	oat := os.Getenv("DOCKER_OAT")
+	if oat == "" {
+		t.Skip("DOCKER_OAT not set, skipping OAT acceptance test")
+	}
+	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrgSettingRegistryAccessManagementOATProvider(orgName, oat) +
+					testAccOrgMembersDataSourceOATConfig(orgName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.docker_org_members._", "members.#"),
+				),
+			},
+		},
+	})
+}
+
+func testAccOrgMembersDataSourceOATConfig(orgName string) string {
+	return fmt.Sprintf(`
+data "docker_org_members" "_" {
+  org_name = "%s"
+}
+`, orgName)
+}
+
 func TestAccOrgMembersDataSourceLargeOrg(t *testing.T) {
 	username := os.Getenv("DOCKER_USERNAME")
 	resource.Test(t, resource.TestCase{

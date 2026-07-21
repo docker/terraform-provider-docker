@@ -18,12 +18,55 @@ package provider
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/docker/terraform-provider-docker/internal/envvar"
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
+
+func TestAccOrgSettingRegistryAccessManagementOAT(t *testing.T) {
+	oat := os.Getenv("DOCKER_OAT")
+	if oat == "" {
+		t.Skip("DOCKER_OAT not set, skipping OAT acceptance test")
+	}
+	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrgSettingRegistryAccessManagementOATProvider(orgName, oat) +
+					testAccOrgSettingRegistryAccessManagementNoCustomRegistry(orgName, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "enabled", "true"),
+				),
+			},
+			{
+				Config: testAccOrgSettingRegistryAccessManagementOATProvider(orgName, oat) +
+					testAccOrgSettingRegistryAccessManagementNoCustomRegistry(orgName, false, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_registry_access_management.test", "enabled", "false"),
+				),
+			},
+			{
+				Config: testAccOrgSettingRegistryAccessManagementOATProvider(orgName, oat),
+			},
+		},
+	})
+}
+
+func testAccOrgSettingRegistryAccessManagementOATProvider(orgName, oat string) string {
+	return fmt.Sprintf(`
+provider "docker" {
+  username = %q
+  password = %q
+}
+`, orgName, oat)
+}
 
 func TestAccOrgSettingRegistryAccessManagement(t *testing.T) {
 	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)

@@ -209,7 +209,8 @@ func (r *OrgTeamResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	data.ID = types.Int64Value(orgTeam.ID)
-	data.TeamName = types.StringValue(orgTeam.Name)
+	// Use the planned team name rather than the API response, which returns the
+	// old name before the rename takes effect.
 	if len(orgTeam.Description) > 0 {
 		data.TeamDesc = types.StringValue(orgTeam.Description)
 	} else {

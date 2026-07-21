@@ -66,11 +66,11 @@ func (p *LoginTokenProvider) EnsureToken(ctx context.Context) (string, error) {
 
 	// Request new token
 	auth := struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Identifier string `json:"identifier"`
+		Secret     string `json:"secret"`
 	}{
-		Username: p.username,
-		Password: p.password,
+		Identifier: p.username,
+		Secret:     p.password,
 	}
 
 	authJSON, err := json.Marshal(auth)
@@ -78,7 +78,7 @@ func (p *LoginTokenProvider) EnsureToken(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("marshal auth: %v", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/users/login", p.baseURL), bytes.NewBuffer(authJSON))
+	req, err := http.NewRequestWithContext(ctx, "POST", fmt.Sprintf("%s/auth/token", p.baseURL), bytes.NewBuffer(authJSON))
 	if err != nil {
 		return "", err
 	}
@@ -101,14 +101,14 @@ func (p *LoginTokenProvider) EnsureToken(ctx context.Context) (string, error) {
 	}
 
 	var tokenResponse struct {
-		Token string `json:"token"`
+		AccessToken string `json:"access_token"`
 	}
 	if err := json.NewDecoder(res.Body).Decode(&tokenResponse); err != nil {
 		return "", fmt.Errorf("decode token response: %v", err)
 	}
 
 	// Parse token expiry
-	claims, err := getClaims(tokenResponse.Token)
+	claims, err := getClaims(tokenResponse.AccessToken)
 	if err != nil {
 		return "", fmt.Errorf("parse token claims: %v", err)
 	}
@@ -117,7 +117,7 @@ func (p *LoginTokenProvider) EnsureToken(ctx context.Context) (string, error) {
 	}
 
 	// Cache the token
-	p.token = tokenResponse.Token
+	p.token = tokenResponse.AccessToken
 	p.tokenExpiry = claims.Expiry.Time()
 
 	return p.token, nil

@@ -50,5 +50,6 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ vars.DOCKER_USERNAME }}
           DOCKER_HUB_HOST: "hub-stage.docker.com"
+          DOCKER_OAT: ${{ secrets.DOCKER_OAT }}
           TF_ACC: "1"
         timeout-minutes: 30

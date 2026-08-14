@@ -4,3 +4,6 @@
 
 # Store acceptance testing secrets in .env
 .env
+
+# JetBrains IDE files
+.idea/

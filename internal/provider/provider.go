@@ -404,6 +404,7 @@ func (p *DockerProvider) Resources(ctx context.Context) []func() resource.Resour
 		NewAccessTokenResource,
 		NewOrgAccessTokenResource,
 		NewOrgSettingImageAccessManagementResource,
+		NewOrgSettingNamespaceResource,
 		NewOrgSettingRegistryAccessManagementResource,
 		NewOrgTeamResource,
 		NewOrgTeamMemberResource,

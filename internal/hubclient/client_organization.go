@@ -126,6 +126,16 @@ type OrgSettingRegistryAccessManagement struct {
 	CustomRegistries   []RegistryAccessManagementCustomRegistry   `json:"custom_registries"`
 }
 
+type OrgSettingNamespace struct {
+	DisablePublicRepositories   bool `json:"disable_public_repositories"`
+	DisablePushMemberNamespaces bool `json:"disable_push_member_namespaces"`
+}
+
+type orgSettingNamespaceRequest struct {
+	DisablePublicRepositories   *bool `json:"disable_public_repositories"`
+	DisablePushMemberNamespaces *bool `json:"disable_push_member_namespaces"`
+}
+
 // OrgMemberList response
 type OrgMemberListResponse struct {
 	Count    int         `json:"count"`    // The total number of items that match with the search.
@@ -335,6 +345,28 @@ func (c *Client) InviteOrgMember(ctx context.Context, orgName, role string, invi
 func (c *Client) DeleteOrgInvite(ctx context.Context, inviteID string) error {
 	url := fmt.Sprintf("/invites/%s", inviteID)
 	return c.sendRequest(ctx, "DELETE", url, nil, nil)
+}
+
+func (c *Client) GetOrgSettingNamespace(ctx context.Context, orgName string) (OrgSettingNamespace, error) {
+	var settings OrgSettingNamespace
+	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/namespaces/%s/settings", orgName), nil, &settings)
+	return settings, err
+}
+
+func (c *Client) SetOrgSettingNamespace(ctx context.Context, orgName string, settings OrgSettingNamespace) (OrgSettingNamespace, error) {
+	req := orgSettingNamespaceRequest{
+		DisablePublicRepositories:   &settings.DisablePublicRepositories,
+		DisablePushMemberNamespaces: &settings.DisablePushMemberNamespaces,
+	}
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		return OrgSettingNamespace{}, err
+	}
+	err = c.sendRequest(ctx, "PUT", fmt.Sprintf("/namespaces/%s/settings", orgName), reqBody, nil)
+	if err != nil {
+		return OrgSettingNamespace{}, err
+	}
+	return c.GetOrgSettingNamespace(ctx, orgName)
 }
 
 func (c *Client) DeleteOrgMember(ctx context.Context, orgName string, userName string) error {

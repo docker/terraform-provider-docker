@@ -129,11 +129,31 @@ type OrgSettingRegistryAccessManagement struct {
 type OrgSettingNamespace struct {
 	DisablePublicRepositories   bool `json:"disable_public_repositories"`
 	DisablePushMemberNamespaces bool `json:"disable_push_member_namespaces"`
+	RepositoryAllowlistEnabled  bool `json:"repository_allowlist_enabled"`
 }
 
 type orgSettingNamespaceRequest struct {
 	DisablePublicRepositories   *bool `json:"disable_public_repositories"`
 	DisablePushMemberNamespaces *bool `json:"disable_push_member_namespaces"`
+	RepositoryAllowlistEnabled  *bool `json:"repository_allowlist_enabled"`
+}
+
+type NamespaceAllowlistItem struct {
+	RepositoryName string `json:"repository_name"`
+}
+
+type namespaceAllowlistResponse struct {
+	Count   int                      `json:"count"`
+	Next    *string                  `json:"next"`
+	Results []NamespaceAllowlistItem `json:"results"`
+}
+
+type namespaceAllowlistAddRequest struct {
+	RepositoryNames []string `json:"repository_names"`
+}
+
+type namespaceAllowlistRemoveRequest struct {
+	RepositoryNames []string `json:"repository_names"`
 }
 
 // OrgMemberList response
@@ -357,6 +377,7 @@ func (c *Client) SetOrgSettingNamespace(ctx context.Context, orgName string, set
 	req := orgSettingNamespaceRequest{
 		DisablePublicRepositories:   &settings.DisablePublicRepositories,
 		DisablePushMemberNamespaces: &settings.DisablePushMemberNamespaces,
+		RepositoryAllowlistEnabled:  &settings.RepositoryAllowlistEnabled,
 	}
 	reqBody, err := json.Marshal(req)
 	if err != nil {
@@ -367,6 +388,40 @@ func (c *Client) SetOrgSettingNamespace(ctx context.Context, orgName string, set
 		return OrgSettingNamespace{}, err
 	}
 	return c.GetOrgSettingNamespace(ctx, orgName)
+}
+
+func (c *Client) ListNamespaceAllowlistItems(ctx context.Context, orgName string) ([]NamespaceAllowlistItem, error) {
+	var items []NamespaceAllowlistItem
+	url := fmt.Sprintf("/namespaces/%s/allowlist/items", orgName)
+	for url != "" {
+		var page namespaceAllowlistResponse
+		if err := c.sendRequest(ctx, "GET", url, nil, &page); err != nil {
+			return nil, err
+		}
+		items = append(items, page.Results...)
+		if page.Next != nil && *page.Next != "" {
+			url = *page.Next
+		} else {
+			url = ""
+		}
+	}
+	return items, nil
+}
+
+func (c *Client) AddNamespaceAllowlistItems(ctx context.Context, orgName string, repositoryNames []string) error {
+	reqBody, err := json.Marshal(namespaceAllowlistAddRequest{RepositoryNames: repositoryNames})
+	if err != nil {
+		return err
+	}
+	return c.sendRequest(ctx, "POST", fmt.Sprintf("/namespaces/%s/allowlist/items", orgName), reqBody, nil)
+}
+
+func (c *Client) RemoveNamespaceAllowlistItems(ctx context.Context, orgName string, repositoryNames []string) error {
+	reqBody, err := json.Marshal(namespaceAllowlistRemoveRequest{RepositoryNames: repositoryNames})
+	if err != nil {
+		return err
+	}
+	return c.sendRequest(ctx, "DELETE", fmt.Sprintf("/namespaces/%s/allowlist/items", orgName), reqBody, nil)
 }
 
 func (c *Client) DeleteOrgMember(ctx context.Context, orgName string, userName string) error {

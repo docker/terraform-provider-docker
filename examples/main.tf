@@ -32,6 +32,14 @@ resource "docker_hub_repository" "org_hub_repo" {
   full_description = "Full description for the repository."
 }
 
+# Tag immutability settings
+resource "docker_hub_repository_immutable_tags" "immutable_tags" {
+  namespace = docker_hub_repository.org_hub_repo.namespace
+  name      = docker_hub_repository.org_hub_repo.name
+  enabled   = true
+  rules     = ["latest", "v[0-9]+\\..*"]
+}
+
 # Create team
 resource "docker_org_team" "team" {
   org_name         = local.org_name
@@ -69,6 +77,12 @@ resource "docker_org_setting_image_access_allowlist" "allowlist" {
   repositories = [
     "${local.org_name}/allowed-repo",
   ]
+}
+
+# Registry settings (default repository visibility)
+resource "docker_org_setting_registry" "registry_settings" {
+  org_name                = local.org_name
+  default_repo_visibility = "private"
 }
 
 # Create access token

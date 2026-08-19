@@ -156,6 +156,14 @@ type namespaceAllowlistRemoveRequest struct {
 	RepositoryNames []string `json:"repository_names"`
 }
 
+type RegistrySettings struct {
+	DefaultRepoVisibility string `json:"default_repo_visibility"`
+}
+
+type registryDefaultVisibilityRequest struct {
+	DefaultRepoVisibility string `json:"default_repo_visibility"`
+}
+
 // OrgMemberList response
 type OrgMemberListResponse struct {
 	Count    int         `json:"count"`    // The total number of items that match with the search.
@@ -438,6 +446,24 @@ func (c *Client) UpdateOrgMember(ctx context.Context, orgName string, userName s
 	}
 
 	return c.sendRequest(ctx, "PUT", url, reqBody, nil)
+}
+
+func (c *Client) GetRegistrySettings(ctx context.Context, orgName string) (RegistrySettings, error) {
+	var settings RegistrySettings
+	err := c.sendRequest(ctx, "GET", fmt.Sprintf("/namespaces/%s/registry-settings", orgName), nil, &settings)
+	return settings, err
+}
+
+func (c *Client) SetDefaultRepoVisibility(ctx context.Context, orgName string, visibility string) (RegistrySettings, error) {
+	reqBody, err := json.Marshal(registryDefaultVisibilityRequest{DefaultRepoVisibility: visibility})
+	if err != nil {
+		return RegistrySettings{}, err
+	}
+	err = c.sendRequest(ctx, "PATCH", fmt.Sprintf("/namespaces/%s/registry-settings/default_repo_visibility", orgName), reqBody, nil)
+	if err != nil {
+		return RegistrySettings{}, err
+	}
+	return c.GetRegistrySettings(ctx, orgName)
 }
 
 // func (c *Client) GetOrgInvitedMember(ctx context.Context, inviteID string) (OrgMembersResponse, error) {

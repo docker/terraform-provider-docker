@@ -70,6 +70,12 @@ resource "docker_org_setting_namespace" "namespace_settings" {
   disable_push_member_namespaces = true
 }
 
+# Registry settings (default repository visibility)
+resource "docker_org_setting_registry" "registry_settings" {
+  org_name                = local.org_name
+  default_repo_visibility = "private"
+}
+
 # Create access token
 resource "docker_access_token" "access_token" {
   token_label = local.token_label

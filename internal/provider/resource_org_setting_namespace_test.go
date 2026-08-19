@@ -32,16 +32,17 @@ func TestAccOrgSettingNamespace(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testAccOrgSettingNamespace(orgName, true, true),
+				Config: testAccOrgSettingNamespace(orgName, true, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "org_name", orgName),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_public_repositories", "true"),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_push_member_namespaces", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "repository_allowlist_enabled", "true"),
 				),
 			},
 			{
 				// import
-				Config:        testAccOrgSettingNamespace(orgName, true, true),
+				Config:        testAccOrgSettingNamespace(orgName, true, true, true),
 				ImportState:   true,
 				ImportStateId: orgName,
 				ResourceName:  "docker_org_setting_namespace.test",
@@ -49,31 +50,34 @@ func TestAccOrgSettingNamespace(t *testing.T) {
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "org_name", orgName),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_public_repositories", "true"),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_push_member_namespaces", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "repository_allowlist_enabled", "true"),
 				),
 			},
 			{
 				// update
-				Config: testAccOrgSettingNamespace(orgName, false, true),
+				Config: testAccOrgSettingNamespace(orgName, false, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "org_name", orgName),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_public_repositories", "false"),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_push_member_namespaces", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "repository_allowlist_enabled", "false"),
 				),
 			},
 			{
-				// delete (resets to false/false)
+				// delete (resets all to false)
 				Config: " ",
 			},
 		},
 	})
 }
 
-func testAccOrgSettingNamespace(orgName string, disablePublicRepositories, disablePushMemberNamespaces bool) string {
+func testAccOrgSettingNamespace(orgName string, disablePublicRepositories, disablePushMemberNamespaces, repositoryAllowlistEnabled bool) string {
 	return fmt.Sprintf(`
 resource "docker_org_setting_namespace" "test" {
   org_name                       = "%[1]s"
   disable_public_repositories    = %[2]t
   disable_push_member_namespaces = %[3]t
+  repository_allowlist_enabled   = %[4]t
 }
-`, orgName, disablePublicRepositories, disablePushMemberNamespaces)
+`, orgName, disablePublicRepositories, disablePushMemberNamespaces, repositoryAllowlistEnabled)
 }

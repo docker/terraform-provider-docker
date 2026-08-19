@@ -68,6 +68,15 @@ resource "docker_org_setting_namespace" "namespace_settings" {
   org_name                       = local.org_name
   disable_public_repositories    = true
   disable_push_member_namespaces = true
+  repository_allowlist_enabled   = true
+}
+
+# Namespace allowlist
+resource "docker_org_setting_image_access_allowlist" "allowlist" {
+  org_name = docker_org_setting_namespace.namespace_settings.org_name
+  repositories = [
+    "${local.org_name}/allowed-repo",
+  ]
 }
 
 # Registry settings (default repository visibility)

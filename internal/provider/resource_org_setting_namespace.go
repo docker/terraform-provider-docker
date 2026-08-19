@@ -47,6 +47,7 @@ type OrgSettingNamespaceResourceModel struct {
 	OrgName                     types.String `tfsdk:"org_name"`
 	DisablePublicRepositories   types.Bool   `tfsdk:"disable_public_repositories"`
 	DisablePushMemberNamespaces types.Bool   `tfsdk:"disable_push_member_namespaces"`
+	RepositoryAllowlistEnabled  types.Bool   `tfsdk:"repository_allowlist_enabled"`
 }
 
 func (r *OrgSettingNamespaceResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -81,6 +82,7 @@ resource "docker_org_setting_namespace" "example" {
   org_name                       = "my-organization"
   disable_public_repositories    = true
   disable_push_member_namespaces = true
+  repository_allowlist_enabled   = true
 }
 ` + "```" + `
 `,
@@ -100,6 +102,10 @@ resource "docker_org_setting_namespace" "example" {
 				MarkdownDescription: "When true, prevents organization members from pushing images to their personal namespaces.",
 				Required:            true,
 			},
+			"repository_allowlist_enabled": schema.BoolAttribute{
+				MarkdownDescription: "When true, enables the repository allowlist for the organization. Only repositories in the allowlist can be used. Manage allowlist entries with `docker_org_setting_image_access_allowlist`.",
+				Required:            true,
+			},
 		},
 	}
 }
@@ -115,6 +121,7 @@ func (r *OrgSettingNamespaceResource) Create(ctx context.Context, req resource.C
 	settings, err := r.client.SetOrgSettingNamespace(ctx, data.OrgName.ValueString(), hubclient.OrgSettingNamespace{
 		DisablePublicRepositories:   data.DisablePublicRepositories.ValueBool(),
 		DisablePushMemberNamespaces: data.DisablePushMemberNamespaces.ValueBool(),
+		RepositoryAllowlistEnabled:  data.RepositoryAllowlistEnabled.ValueBool(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to create org_setting_namespace resource", err.Error())
@@ -123,6 +130,7 @@ func (r *OrgSettingNamespaceResource) Create(ctx context.Context, req resource.C
 
 	data.DisablePublicRepositories = types.BoolValue(settings.DisablePublicRepositories)
 	data.DisablePushMemberNamespaces = types.BoolValue(settings.DisablePushMemberNamespaces)
+	data.RepositoryAllowlistEnabled = types.BoolValue(settings.RepositoryAllowlistEnabled)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -140,6 +148,7 @@ func (r *OrgSettingNamespaceResource) Read(ctx context.Context, req resource.Rea
 
 	data.DisablePublicRepositories = types.BoolValue(settings.DisablePublicRepositories)
 	data.DisablePushMemberNamespaces = types.BoolValue(settings.DisablePushMemberNamespaces)
+	data.RepositoryAllowlistEnabled = types.BoolValue(settings.RepositoryAllowlistEnabled)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -155,6 +164,7 @@ func (r *OrgSettingNamespaceResource) Update(ctx context.Context, req resource.U
 	settings, err := r.client.SetOrgSettingNamespace(ctx, data.OrgName.ValueString(), hubclient.OrgSettingNamespace{
 		DisablePublicRepositories:   data.DisablePublicRepositories.ValueBool(),
 		DisablePushMemberNamespaces: data.DisablePushMemberNamespaces.ValueBool(),
+		RepositoryAllowlistEnabled:  data.RepositoryAllowlistEnabled.ValueBool(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update org_setting_namespace resource", err.Error())
@@ -163,6 +173,7 @@ func (r *OrgSettingNamespaceResource) Update(ctx context.Context, req resource.U
 
 	data.DisablePublicRepositories = types.BoolValue(settings.DisablePublicRepositories)
 	data.DisablePushMemberNamespaces = types.BoolValue(settings.DisablePushMemberNamespaces)
+	data.RepositoryAllowlistEnabled = types.BoolValue(settings.RepositoryAllowlistEnabled)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -172,10 +183,11 @@ func (r *OrgSettingNamespaceResource) Delete(ctx context.Context, req resource.D
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
-	// Reset both settings to false (permissive defaults)
+	// Reset all settings to false (permissive defaults)
 	_, err := r.client.SetOrgSettingNamespace(ctx, data.OrgName.ValueString(), hubclient.OrgSettingNamespace{
 		DisablePublicRepositories:   false,
 		DisablePushMemberNamespaces: false,
+		RepositoryAllowlistEnabled:  false,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to delete org_setting_namespace resource", err.Error())

@@ -160,6 +160,21 @@ func (c *Client) UpdateRepository(ctx context.Context, id string, req UpdateRepo
 	return repository, err
 }
 
+type UpdateRepositoryImmutableTagsRequest struct {
+	ImmutableTags      bool     `json:"immutable_tags"`
+	ImmutableTagsRules []string `json:"immutable_tags_rules,omitempty"`
+}
+
+func (c *Client) UpdateRepositoryImmutableTags(ctx context.Context, namespace, name string, req UpdateRepositoryImmutableTagsRequest) (Repository, error) {
+	repository := Repository{}
+	reqJSON, err := json.Marshal(req)
+	if err != nil {
+		return repository, err
+	}
+	err = c.sendRequest(ctx, "PATCH", fmt.Sprintf("/namespaces/%s/repositories/%s/immutabletags", namespace, name), reqJSON, &repository)
+	return repository, err
+}
+
 type SetRepositoryPrivacyRequest struct {
 	IsPrivate bool `json:"is_private"`
 }

@@ -130,12 +130,14 @@ type OrgSettingNamespace struct {
 	DisablePublicRepositories   bool `json:"disable_public_repositories"`
 	DisablePushMemberNamespaces bool `json:"disable_push_member_namespaces"`
 	RepositoryAllowlistEnabled  bool `json:"repository_allowlist_enabled"`
+	RequireFederatedAuthForPush bool `json:"require_federated_auth_for_push"`
 }
 
 type orgSettingNamespaceRequest struct {
 	DisablePublicRepositories   *bool `json:"disable_public_repositories"`
 	DisablePushMemberNamespaces *bool `json:"disable_push_member_namespaces"`
 	RepositoryAllowlistEnabled  *bool `json:"repository_allowlist_enabled"`
+	RequireFederatedAuthForPush *bool `json:"require_federated_auth_for_push"`
 }
 
 type NamespaceAllowlistItem struct {
@@ -386,6 +388,7 @@ func (c *Client) SetOrgSettingNamespace(ctx context.Context, orgName string, set
 		DisablePublicRepositories:   &settings.DisablePublicRepositories,
 		DisablePushMemberNamespaces: &settings.DisablePushMemberNamespaces,
 		RepositoryAllowlistEnabled:  &settings.RepositoryAllowlistEnabled,
+		RequireFederatedAuthForPush: &settings.RequireFederatedAuthForPush,
 	}
 	reqBody, err := json.Marshal(req)
 	if err != nil {

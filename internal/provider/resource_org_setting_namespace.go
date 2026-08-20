@@ -48,6 +48,7 @@ type OrgSettingNamespaceResourceModel struct {
 	DisablePublicRepositories   types.Bool   `tfsdk:"disable_public_repositories"`
 	DisablePushMemberNamespaces types.Bool   `tfsdk:"disable_push_member_namespaces"`
 	RepositoryAllowlistEnabled  types.Bool   `tfsdk:"repository_allowlist_enabled"`
+	RequireFederatedAuthForPush types.Bool   `tfsdk:"require_federated_auth_for_push"`
 }
 
 func (r *OrgSettingNamespaceResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -79,10 +80,11 @@ func (r *OrgSettingNamespaceResource) Schema(ctx context.Context, req resource.S
 
 ` + "```hcl" + `
 resource "docker_org_setting_namespace" "example" {
-  org_name                       = "my-organization"
-  disable_public_repositories    = true
-  disable_push_member_namespaces = true
-  repository_allowlist_enabled   = true
+  org_name                        = "my-organization"
+  disable_public_repositories     = true
+  disable_push_member_namespaces  = true
+  repository_allowlist_enabled    = true
+  require_federated_auth_for_push = true
 }
 ` + "```" + `
 `,
@@ -106,6 +108,10 @@ resource "docker_org_setting_namespace" "example" {
 				MarkdownDescription: "When true, enables the repository allowlist for the organization. Only repositories in the allowlist can be used. Manage allowlist entries with `docker_org_setting_image_access_allowlist`.",
 				Required:            true,
 			},
+			"require_federated_auth_for_push": schema.BoolAttribute{
+				MarkdownDescription: "When true, requires federated authentication for pushes to repositories in this namespace.",
+				Required:            true,
+			},
 		},
 	}
 }
@@ -122,6 +128,7 @@ func (r *OrgSettingNamespaceResource) Create(ctx context.Context, req resource.C
 		DisablePublicRepositories:   data.DisablePublicRepositories.ValueBool(),
 		DisablePushMemberNamespaces: data.DisablePushMemberNamespaces.ValueBool(),
 		RepositoryAllowlistEnabled:  data.RepositoryAllowlistEnabled.ValueBool(),
+		RequireFederatedAuthForPush: data.RequireFederatedAuthForPush.ValueBool(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to create org_setting_namespace resource", err.Error())
@@ -131,6 +138,7 @@ func (r *OrgSettingNamespaceResource) Create(ctx context.Context, req resource.C
 	data.DisablePublicRepositories = types.BoolValue(settings.DisablePublicRepositories)
 	data.DisablePushMemberNamespaces = types.BoolValue(settings.DisablePushMemberNamespaces)
 	data.RepositoryAllowlistEnabled = types.BoolValue(settings.RepositoryAllowlistEnabled)
+	data.RequireFederatedAuthForPush = types.BoolValue(settings.RequireFederatedAuthForPush)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -149,6 +157,7 @@ func (r *OrgSettingNamespaceResource) Read(ctx context.Context, req resource.Rea
 	data.DisablePublicRepositories = types.BoolValue(settings.DisablePublicRepositories)
 	data.DisablePushMemberNamespaces = types.BoolValue(settings.DisablePushMemberNamespaces)
 	data.RepositoryAllowlistEnabled = types.BoolValue(settings.RepositoryAllowlistEnabled)
+	data.RequireFederatedAuthForPush = types.BoolValue(settings.RequireFederatedAuthForPush)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -165,6 +174,7 @@ func (r *OrgSettingNamespaceResource) Update(ctx context.Context, req resource.U
 		DisablePublicRepositories:   data.DisablePublicRepositories.ValueBool(),
 		DisablePushMemberNamespaces: data.DisablePushMemberNamespaces.ValueBool(),
 		RepositoryAllowlistEnabled:  data.RepositoryAllowlistEnabled.ValueBool(),
+		RequireFederatedAuthForPush: data.RequireFederatedAuthForPush.ValueBool(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update org_setting_namespace resource", err.Error())
@@ -174,6 +184,7 @@ func (r *OrgSettingNamespaceResource) Update(ctx context.Context, req resource.U
 	data.DisablePublicRepositories = types.BoolValue(settings.DisablePublicRepositories)
 	data.DisablePushMemberNamespaces = types.BoolValue(settings.DisablePushMemberNamespaces)
 	data.RepositoryAllowlistEnabled = types.BoolValue(settings.RepositoryAllowlistEnabled)
+	data.RequireFederatedAuthForPush = types.BoolValue(settings.RequireFederatedAuthForPush)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -188,6 +199,7 @@ func (r *OrgSettingNamespaceResource) Delete(ctx context.Context, req resource.D
 		DisablePublicRepositories:   false,
 		DisablePushMemberNamespaces: false,
 		RepositoryAllowlistEnabled:  false,
+		RequireFederatedAuthForPush: false,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to delete org_setting_namespace resource", err.Error())

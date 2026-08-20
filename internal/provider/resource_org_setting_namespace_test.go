@@ -32,17 +32,18 @@ func TestAccOrgSettingNamespace(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testAccOrgSettingNamespace(orgName, true, true, true),
+				Config: testAccOrgSettingNamespace(orgName, true, true, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "org_name", orgName),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_public_repositories", "true"),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_push_member_namespaces", "true"),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "repository_allowlist_enabled", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "require_federated_auth_for_push", "true"),
 				),
 			},
 			{
 				// import
-				Config:        testAccOrgSettingNamespace(orgName, true, true, true),
+				Config:        testAccOrgSettingNamespace(orgName, true, true, true, true),
 				ImportState:   true,
 				ImportStateId: orgName,
 				ResourceName:  "docker_org_setting_namespace.test",
@@ -51,16 +52,29 @@ func TestAccOrgSettingNamespace(t *testing.T) {
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_public_repositories", "true"),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_push_member_namespaces", "true"),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "repository_allowlist_enabled", "true"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "require_federated_auth_for_push", "true"),
 				),
 			},
 			{
 				// update
-				Config: testAccOrgSettingNamespace(orgName, false, true, false),
+				Config: testAccOrgSettingNamespace(orgName, false, true, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "org_name", orgName),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_public_repositories", "false"),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_push_member_namespaces", "true"),
 					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "repository_allowlist_enabled", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "require_federated_auth_for_push", "false"),
+				),
+			},
+			{
+				// omitting the optional settings falls back to the false defaults
+				Config: testAccOrgSettingNamespaceDefaults(orgName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_public_repositories", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_push_member_namespaces", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "repository_allowlist_enabled", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "require_federated_auth_for_push", "false"),
 				),
 			},
 			{
@@ -71,13 +85,22 @@ func TestAccOrgSettingNamespace(t *testing.T) {
 	})
 }
 
-func testAccOrgSettingNamespace(orgName string, disablePublicRepositories, disablePushMemberNamespaces, repositoryAllowlistEnabled bool) string {
+func testAccOrgSettingNamespace(orgName string, disablePublicRepositories, disablePushMemberNamespaces, repositoryAllowlistEnabled, requireFederatedAuthForPush bool) string {
 	return fmt.Sprintf(`
 resource "docker_org_setting_namespace" "test" {
-  org_name                       = "%[1]s"
-  disable_public_repositories    = %[2]t
-  disable_push_member_namespaces = %[3]t
-  repository_allowlist_enabled   = %[4]t
+  org_name                        = "%[1]s"
+  disable_public_repositories     = %[2]t
+  disable_push_member_namespaces  = %[3]t
+  repository_allowlist_enabled    = %[4]t
+  require_federated_auth_for_push = %[5]t
 }
-`, orgName, disablePublicRepositories, disablePushMemberNamespaces, repositoryAllowlistEnabled)
+`, orgName, disablePublicRepositories, disablePushMemberNamespaces, repositoryAllowlistEnabled, requireFederatedAuthForPush)
+}
+
+func testAccOrgSettingNamespaceDefaults(orgName string) string {
+	return fmt.Sprintf(`
+resource "docker_org_setting_namespace" "test" {
+  org_name = "%[1]s"
+}
+`, orgName)
 }

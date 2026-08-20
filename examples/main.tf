@@ -65,10 +65,11 @@ resource "docker_hub_repository_team_permission" "repo_permission" {
 
 # Namespace settings
 resource "docker_org_setting_namespace" "namespace_settings" {
-  org_name                       = local.org_name
-  disable_public_repositories    = true
-  disable_push_member_namespaces = true
-  repository_allowlist_enabled   = true
+  org_name                        = local.org_name
+  disable_public_repositories     = true
+  disable_push_member_namespaces  = true
+  repository_allowlist_enabled    = true
+  require_federated_auth_for_push = true
 }
 
 # Namespace allowlist

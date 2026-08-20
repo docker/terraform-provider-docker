@@ -7,10 +7,11 @@ description: |-
   Example Usage
   
   resource "docker_org_setting_namespace" "example" {
-    org_name                       = "my-organization"
-    disable_public_repositories    = true
-    disable_push_member_namespaces = true
-    repository_allowlist_enabled   = true
+    org_name                        = "my-organization"
+    disable_public_repositories     = true
+    disable_push_member_namespaces  = true
+    repository_allowlist_enabled    = true
+    require_federated_auth_for_push = true
   }
 ---
 
@@ -22,10 +23,11 @@ Manages namespace settings for an organization.
 
 ```hcl
 resource "docker_org_setting_namespace" "example" {
-  org_name                       = "my-organization"
-  disable_public_repositories    = true
-  disable_push_member_namespaces = true
-  repository_allowlist_enabled   = true
+  org_name                        = "my-organization"
+  disable_public_repositories     = true
+  disable_push_member_namespaces  = true
+  repository_allowlist_enabled    = true
+  require_federated_auth_for_push = true
 }
 ```
 
@@ -36,7 +38,11 @@ resource "docker_org_setting_namespace" "example" {
 
 ### Required
 
-- `disable_public_repositories` (Boolean) When true, prevents organization members from creating public repositories.
-- `disable_push_member_namespaces` (Boolean) When true, prevents organization members from pushing images to their personal namespaces.
 - `org_name` (String) Organization name
-- `repository_allowlist_enabled` (Boolean) When true, enables the repository allowlist for the organization. Only repositories in the allowlist can be used. Manage allowlist entries with `docker_org_setting_image_access_allowlist`.
+
+### Optional
+
+- `disable_public_repositories` (Boolean) When true, prevents organization members from creating public repositories. Defaults to `false`.
+- `disable_push_member_namespaces` (Boolean) When true, prevents organization members from pushing images to their personal namespaces. Defaults to `false`.
+- `repository_allowlist_enabled` (Boolean) When true, enables the repository allowlist for the organization. Only repositories in the allowlist can be used. Manage allowlist entries with `docker_org_setting_image_access_allowlist`. Defaults to `false`.
+- `require_federated_auth_for_push` (Boolean) When true, requires federated authentication for pushes to repositories in this namespace. Defaults to `false`.

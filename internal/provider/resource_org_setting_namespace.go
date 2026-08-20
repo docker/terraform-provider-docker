@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -97,20 +98,28 @@ resource "docker_org_setting_namespace" "example" {
 				},
 			},
 			"disable_public_repositories": schema.BoolAttribute{
-				MarkdownDescription: "When true, prevents organization members from creating public repositories.",
-				Required:            true,
+				MarkdownDescription: "When true, prevents organization members from creating public repositories. Defaults to `false`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 			"disable_push_member_namespaces": schema.BoolAttribute{
-				MarkdownDescription: "When true, prevents organization members from pushing images to their personal namespaces.",
-				Required:            true,
+				MarkdownDescription: "When true, prevents organization members from pushing images to their personal namespaces. Defaults to `false`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 			"repository_allowlist_enabled": schema.BoolAttribute{
-				MarkdownDescription: "When true, enables the repository allowlist for the organization. Only repositories in the allowlist can be used. Manage allowlist entries with `docker_org_setting_image_access_allowlist`.",
-				Required:            true,
+				MarkdownDescription: "When true, enables the repository allowlist for the organization. Only repositories in the allowlist can be used. Manage allowlist entries with `docker_org_setting_image_access_allowlist`. Defaults to `false`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 			"require_federated_auth_for_push": schema.BoolAttribute{
-				MarkdownDescription: "When true, requires federated authentication for pushes to repositories in this namespace.",
-				Required:            true,
+				MarkdownDescription: "When true, requires federated authentication for pushes to repositories in this namespace. Defaults to `false`.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 		},
 	}

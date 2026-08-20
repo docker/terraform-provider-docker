@@ -67,6 +67,17 @@ func TestAccOrgSettingNamespace(t *testing.T) {
 				),
 			},
 			{
+				// omitting the optional settings falls back to the false defaults
+				Config: testAccOrgSettingNamespaceDefaults(orgName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "org_name", orgName),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_public_repositories", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "disable_push_member_namespaces", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "repository_allowlist_enabled", "false"),
+					resource.TestCheckResourceAttr("docker_org_setting_namespace.test", "require_federated_auth_for_push", "false"),
+				),
+			},
+			{
 				// delete (resets all to false)
 				Config: " ",
 			},
@@ -84,4 +95,12 @@ resource "docker_org_setting_namespace" "test" {
   require_federated_auth_for_push = %[5]t
 }
 `, orgName, disablePublicRepositories, disablePushMemberNamespaces, repositoryAllowlistEnabled, requireFederatedAuthForPush)
+}
+
+func testAccOrgSettingNamespaceDefaults(orgName string) string {
+	return fmt.Sprintf(`
+resource "docker_org_setting_namespace" "test" {
+  org_name = "%[1]s"
+}
+`, orgName)
 }

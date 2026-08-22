@@ -231,7 +231,11 @@ func (r *RepositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	getResp, err := r.client.GetRepository(ctx, state.ID.ValueString())
-	if err != nil {
+	// Treat HTTP 404 Not Found status as a signal to recreate resource and return early
+	if isNotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	} else if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading Docker Hub repository",
 			"Could not read Docker Hub repository "+state.ID.ValueString()+": "+err.Error(),

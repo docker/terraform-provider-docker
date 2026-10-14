@@ -17,11 +17,13 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/docker/terraform-provider-docker/internal/envvar"
 	"github.com/docker/terraform-provider-docker/internal/hubclient"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
@@ -108,6 +110,111 @@ func TestAccOrgAccessTokenResource_ExpiresAtReplaces(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccOrgAccessTokenResource_NoExpiresAt(t *testing.T) {
+	orgName := envvar.GetWithDefault(envvar.AccTestOrganization)
+	label := "test-" + randString(10)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+resource "docker_org_access_token" "test" {
+  org_name = "%s"
+  label    = "%s"
+  resources = [
+    {
+      type   = "%s"
+      path   = "%s/*"
+      scopes = ["scope-image-pull"]
+    }
+  ]
+}
+`, orgName, label, hubclient.OrgAccessTokenTypeRepo, orgName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "id"),
+					resource.TestCheckNoResourceAttr("docker_org_access_token.test", "expires_at"),
+					resource.TestCheckNoResourceAttr("docker_org_access_token.test", "description"),
+					resource.TestCheckResourceAttrSet("docker_org_access_token.test", "token"),
+				),
+			},
+		},
+	})
+}
+
+func TestOrgAccessTokenResource_toModelOptionalAttributes(t *testing.T) {
+	r := &OrgAccessTokenResource{}
+	token := hubclient.OrgAccessToken{ID: "id", Label: "label", Token: "secret"}
+	withValues := hubclient.OrgAccessToken{
+		ID:          "id",
+		Label:       "label",
+		Description: "desc",
+		ExpiresAt:   "2029-12-31T23:59:59Z",
+	}
+
+	tests := []struct {
+		name        string
+		token       hubclient.OrgAccessToken
+		state       *OrgAccessTokenResourceModel
+		wantExpires types.String
+		wantDesc    types.String
+	}{
+		{
+			name:        "no prior state and no values from the API stay null",
+			token:       token,
+			state:       nil,
+			wantExpires: types.StringNull(),
+			wantDesc:    types.StringNull(),
+		},
+		{
+			name:  "null prior values stay null",
+			token: token,
+			state: &OrgAccessTokenResourceModel{
+				ExpiresAt:   types.StringNull(),
+				Description: types.StringNull(),
+			},
+			wantExpires: types.StringNull(),
+			wantDesc:    types.StringNull(),
+		},
+		{
+			name:  "empty strings from earlier provider versions are healed to null",
+			token: token,
+			state: &OrgAccessTokenResourceModel{
+				ExpiresAt:   types.StringValue(""),
+				Description: types.StringValue(""),
+			},
+			wantExpires: types.StringNull(),
+			wantDesc:    types.StringNull(),
+		},
+		{
+			name:  "values returned by the API are kept",
+			token: withValues,
+			state: &OrgAccessTokenResourceModel{
+				ExpiresAt:   types.StringValue("2029-12-31T23:59:59Z"),
+				Description: types.StringValue("desc"),
+			},
+			wantExpires: types.StringValue("2029-12-31T23:59:59Z"),
+			wantDesc:    types.StringValue("desc"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model, diags := r.toModel(context.Background(), tt.token, tt.state)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
+			if !model.ExpiresAt.Equal(tt.wantExpires) {
+				t.Errorf("expires_at: got %s, want %s", model.ExpiresAt, tt.wantExpires)
+			}
+			if !model.Description.Equal(tt.wantDesc) {
+				t.Errorf("description: got %s, want %s", model.Description, tt.wantDesc)
+			}
+		})
+	}
 }
 
 func testAccOrgAccessTokenResourceConfig(orgName, label, description, resourcePath, expiresAt string) string {

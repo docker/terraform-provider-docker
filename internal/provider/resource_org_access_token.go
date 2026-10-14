@@ -381,6 +381,13 @@ func (r *OrgAccessTokenResource) toModel(
 		Token:       types.StringValue(at.Token),
 	}
 
+	if isUnsetOrEmpty(currentState, func(m *OrgAccessTokenResourceModel) types.String { return m.ExpiresAt }) && at.ExpiresAt == "" {
+		model.ExpiresAt = types.StringNull()
+	}
+	if isUnsetOrEmpty(currentState, func(m *OrgAccessTokenResourceModel) types.String { return m.Description }) && at.Description == "" {
+		model.Description = types.StringNull()
+	}
+
 	if currentState != nil {
 		model.OrgName = currentState.OrgName
 
@@ -392,6 +399,17 @@ func (r *OrgAccessTokenResource) toModel(
 	}
 
 	return model, diags
+}
+
+func isUnsetOrEmpty(
+	currentState *OrgAccessTokenResourceModel,
+	attr func(*OrgAccessTokenResourceModel) types.String,
+) bool {
+	if currentState == nil {
+		return true
+	}
+	value := attr(currentState)
+	return value.IsNull() || value.IsUnknown() || value.ValueString() == ""
 }
 
 func stringValueOrEmpty(value types.String) string {

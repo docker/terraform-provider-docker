@@ -41,6 +41,13 @@ type OrgAccessToken struct {
 	Resources   []OrgAccessTokenResource `json:"resources,omitempty"`
 }
 
+type OrgAccessTokenPage struct {
+	Total    int              `json:"total"`
+	Next     string           `json:"next,omitempty"`
+	Previous string           `json:"previous,omitempty"`
+	Results  []OrgAccessToken `json:"results"`
+}
+
 type OrgAccessTokenResource struct {
 	Type   string   `json:"type"`
 	Path   string   `json:"path"`
@@ -73,6 +80,29 @@ func (c *Client) CreateOrgAccessToken(ctx context.Context, orgName string, param
 	var accessToken OrgAccessToken
 	err := c.sendRequest(ctx, "POST", fmt.Sprintf("/orgs/%s/access-tokens", orgName), buf.Bytes(), &accessToken)
 	return accessToken, err
+}
+
+func (c *Client) ListOrgAccessTokens(ctx context.Context, orgName string) ([]OrgAccessToken, error) {
+	if orgName == "" {
+		return nil, fmt.Errorf("orgName is required")
+	}
+
+	var accessTokens []OrgAccessToken
+	nextURL := fmt.Sprintf("/orgs/%s/access-tokens", orgName)
+
+	for nextURL != "" {
+		relativeURL := c.convertToRelativeURL(nextURL)
+
+		var page OrgAccessTokenPage
+		if err := c.sendRequest(ctx, "GET", relativeURL, nil, &page); err != nil {
+			return nil, err
+		}
+
+		accessTokens = append(accessTokens, page.Results...)
+		nextURL = page.Next
+	}
+
+	return accessTokens, nil
 }
 
 func (c *Client) GetOrgAccessToken(ctx context.Context, orgName, accessTokenID string) (OrgAccessToken, error) {

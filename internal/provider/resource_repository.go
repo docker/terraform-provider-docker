@@ -27,16 +27,18 @@ import (
 	"github.com/docker/terraform-provider-docker/internal/repositoryutils"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 var (
@@ -58,32 +60,54 @@ type ImmutableTagsSettings struct {
 }
 
 type RepositoryResourceModel struct {
-	ID                    types.String           `tfsdk:"id"`
-	Namespace             types.String           `tfsdk:"namespace"`
-	Name                  types.String           `tfsdk:"name"`
-	Description           types.String           `tfsdk:"description"`
-	FullDescription       types.String           `tfsdk:"full_description"`
-	Private               types.Bool             `tfsdk:"private"`
-	PullCount             types.Int64            `tfsdk:"pull_count"`
-	ImmutableTagsSettings *ImmutableTagsSettings `tfsdk:"immutable_tags_settings"`
+	ID              types.String `tfsdk:"id"`
+	Namespace       types.String `tfsdk:"namespace"`
+	Name            types.String `tfsdk:"name"`
+	Description     types.String `tfsdk:"description"`
+	FullDescription types.String `tfsdk:"full_description"`
+	Private         types.Bool   `tfsdk:"private"`
+	PullCount       types.Int64  `tfsdk:"pull_count"`
+	// ImmutableTagsSettings is a types.Object rather than a struct pointer
+	// because the planned value is unknown when the block is omitted from
+	// config on create.
+	ImmutableTagsSettings types.Object `tfsdk:"immutable_tags_settings"`
 }
 
+var immutableTagsSettingsAttrTypes = map[string]attr.Type{
+	"enabled": types.BoolType,
+	"rules":   types.ListType{ElemType: types.StringType},
+}
+
+// repositoryImmutableTagsSettingsSchema is the immutable_tags_settings schema
+// for the docker_hub_repository resource. It extends the shared schema with
+// resource-only behavior and wording.
+func repositoryImmutableTagsSettingsSchema() schema.SingleNestedAttribute {
+	s := immutableTagsSettingsSchema()
+	s.MarkdownDescription = "Immutable tags settings for the repository. When omitted, the repository's " +
+		"immutable tags settings are not managed by this resource and are only read from Docker Hub, " +
+		"which allows managing them with `docker_hub_repository_immutable_tags` instead. " +
+		"Removing this block does not disable immutable tags; set `enabled = false` to do that. " +
+		"Do not set both on the same repository."
+	// No Default: a static default would make this resource reset settings
+	// managed by docker_hub_repository_immutable_tags.
+	//
+	// No UseStateForUnknown either: when unconfigured, the plan keeps the
+	// prior state if the repository has no other changes (so no diff), and
+	// becomes unknown when it is updated. The cached value can be stale
+	// within an apply (e.g. docker_hub_repository_immutable_tags is destroyed
+	// first and disables immutable tags), and promising it in the plan would
+	// make the PATCH response an inconsistent result.
+	return s
+}
+
+// immutableTagsSettingsSchema is shared with the docker_hub_repository data
+// source.
 func immutableTagsSettingsSchema() schema.SingleNestedAttribute {
 	return schema.SingleNestedAttribute{
 		MarkdownDescription: "Immutable tags settings for the repository",
 		Required:            false,
 		Optional:            true,
 		Computed:            true,
-		Default: objectdefault.StaticValue(
-			types.ObjectValueMust(
-				map[string]attr.Type{
-					"enabled": types.BoolType,
-					"rules":   types.ListType{ElemType: types.StringType},
-				},
-				map[string]attr.Value{
-					"enabled": types.BoolValue(false),
-					"rules":   types.ListValueMust(types.StringType, nil),
-				})),
 		Attributes: map[string]schema.Attribute{
 			"enabled": schema.BoolAttribute{
 				MarkdownDescription: "Whether immutable tags are enabled for the repository",
@@ -160,9 +184,15 @@ func (r *RepositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	data.FullDescription = stringNullIfEmpty(createResp.FullDescription)
 	data.Private = types.BoolValue(createResp.IsPrivate)
 	data.PullCount = types.Int64Value(createResp.PullCount)
-	data.ImmutableTagsSettings = deserializeImmutableTagsSettings(false, nil)
+	data.ImmutableTagsSettings = immutableTagsSettingsObject(false, nil)
 
 	diags = resp.State.Set(ctx, data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	planSettings, diags := immutableTagsSettingsFromObject(ctx, plan.ImmutableTagsSettings)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -172,13 +202,13 @@ func (r *RepositoryResource) Create(ctx context.Context, req resource.CreateRequ
 	// them separately as an update request.
 	//
 	// If the update requests fail, we save empty settings.
-	immutableTagsEnabled := serializeImmutableTagsEnabled(plan)
+	immutableTagsEnabled := serializeImmutableTagsEnabled(planSettings)
 	if immutableTagsEnabled {
 		immutableTagsReq := hubclient.UpdateRepositoryRequest{
 			Description:        plan.Description.ValueString(),
 			FullDescription:    plan.FullDescription.ValueString(),
-			ImmutableTags:      immutableTagsEnabled,
-			ImmutableTagsRules: serializeImmutableTagsRules(plan),
+			ImmutableTags:      &immutableTagsEnabled,
+			ImmutableTagsRules: serializeImmutableTagsRules(planSettings),
 		}
 		id := repositoryutils.NewID(createResp.Namespace, createResp.Name)
 		updateResult, err := r.client.UpdateRepository(ctx, id, immutableTagsReq)
@@ -188,7 +218,7 @@ func (r *RepositoryResource) Create(ctx context.Context, req resource.CreateRequ
 			return
 		}
 
-		data.ImmutableTagsSettings = deserializeImmutableTagsSettings(
+		data.ImmutableTagsSettings = immutableTagsSettingsObject(
 			true, updateResult.ImmutableTagsSettings.Rules)
 	}
 
@@ -247,7 +277,7 @@ func (r *RepositoryResource) Read(ctx context.Context, req resource.ReadRequest,
 	state.Private = types.BoolValue(getResp.IsPrivate)
 	state.PullCount = types.Int64Value(getResp.PullCount)
 
-	state.ImmutableTagsSettings = deserializeImmutableTagsSettings(
+	state.ImmutableTagsSettings = immutableTagsSettingsObject(
 		getResp.ImmutableTagsSettings.Enabled,
 		getResp.ImmutableTagsSettings.Rules)
 
@@ -348,7 +378,7 @@ terraform import docker_hub_repository.docker-repo docker-namespace/docker-repo
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
-			"immutable_tags_settings": immutableTagsSettingsSchema(),
+			"immutable_tags_settings": repositoryImmutableTagsSettingsSchema(),
 		},
 	}
 }
@@ -370,10 +400,30 @@ func (r *RepositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	updateReq := hubclient.UpdateRepositoryRequest{
-		Description:        plan.Description.ValueString(),
-		FullDescription:    plan.FullDescription.ValueString(),
-		ImmutableTags:      serializeImmutableTagsEnabled(plan),
-		ImmutableTagsRules: serializeImmutableTagsRules(plan),
+		Description:     plan.Description.ValueString(),
+		FullDescription: plan.FullDescription.ValueString(),
+	}
+
+	// Only send immutable tags settings when they are configured on this
+	// resource. When the block is omitted, any cached value can be stale
+	// within an apply: for example, when docker_hub_repository_immutable_tags
+	// is destroyed in the same run, it disables immutable tags before this
+	// update executes. Sending the cached value would re-enable them, so omit
+	// the fields and take the result from the PATCH response.
+	var configSettings types.Object
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("immutable_tags_settings"), &configSettings)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !configSettings.IsNull() {
+		planSettings, diags := immutableTagsSettingsFromObject(ctx, plan.ImmutableTagsSettings)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		enabled := serializeImmutableTagsEnabled(planSettings)
+		updateReq.ImmutableTags = &enabled
+		updateReq.ImmutableTagsRules = serializeImmutableTagsRules(planSettings)
 	}
 
 	updateResp, err := r.client.UpdateRepository(ctx, plan.ID.ValueString(), updateReq)
@@ -384,7 +434,7 @@ func (r *RepositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	state.Description = stringNullIfEmpty(updateResp.Description)
 	state.FullDescription = stringNullIfEmpty(updateResp.FullDescription)
-	state.ImmutableTagsSettings = deserializeImmutableTagsSettings(
+	state.ImmutableTagsSettings = immutableTagsSettingsObject(
 		updateResp.ImmutableTagsSettings.Enabled,
 		updateResp.ImmutableTagsSettings.Rules)
 
@@ -417,17 +467,42 @@ func stringNullIfEmpty(s string) types.String {
 	return types.StringValue(s)
 }
 
-func serializeImmutableTagsEnabled(plan RepositoryResourceModel) bool {
-	return plan.ImmutableTagsSettings.Enabled.ValueBool()
+// immutableTagsSettingsFromObject converts the immutable_tags_settings object
+// into its struct form. It returns nil when the object is null or unknown.
+func immutableTagsSettingsFromObject(ctx context.Context, obj types.Object) (*ImmutableTagsSettings, diag.Diagnostics) {
+	if obj.IsNull() || obj.IsUnknown() {
+		return nil, nil
+	}
+	var settings ImmutableTagsSettings
+	diags := obj.As(ctx, &settings, basetypes.ObjectAsOptions{})
+	if diags.HasError() {
+		return nil, diags
+	}
+	return &settings, diags
 }
 
-func serializeImmutableTagsRules(plan RepositoryResourceModel) string {
-	enabled := serializeImmutableTagsEnabled(plan)
+func immutableTagsSettingsObject(enabled bool, rules []string) types.Object {
+	settings := deserializeImmutableTagsSettings(enabled, rules)
+	return types.ObjectValueMust(immutableTagsSettingsAttrTypes, map[string]attr.Value{
+		"enabled": settings.Enabled,
+		"rules":   settings.Rules,
+	})
+}
+
+func serializeImmutableTagsEnabled(settings *ImmutableTagsSettings) bool {
+	if settings == nil {
+		return false
+	}
+	return settings.Enabled.ValueBool()
+}
+
+func serializeImmutableTagsRules(settings *ImmutableTagsSettings) string {
+	enabled := serializeImmutableTagsEnabled(settings)
 	if !enabled {
 		return "" // If immutable tags are disabled, return an empty string.
 	}
-	rules := plan.ImmutableTagsSettings.Rules
-	if len(rules.Elements()) == 0 {
+	rules := settings.Rules
+	if rules.IsNull() || rules.IsUnknown() || len(rules.Elements()) == 0 {
 		return ".*" // Default to all tags immutable.
 	}
 	return strings.Join(
@@ -485,6 +560,6 @@ func (r *RepositoryResource) ImportState(ctx context.Context, req resource.Impor
 		Name:      types.StringValue(name),
 
 		// Set a default value to avoid type conversion problems.
-		ImmutableTagsSettings: deserializeImmutableTagsSettings(false, nil),
+		ImmutableTagsSettings: immutableTagsSettingsObject(false, nil),
 	})...)
 }

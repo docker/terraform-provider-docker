@@ -51,6 +51,17 @@ func TestAccRepositoryImmutableTags(t *testing.T) {
 				ResourceName:  "docker_hub_repository_immutable_tags.test",
 			},
 			{
+				// update the repository itself: docker_hub_repository does not
+				// configure immutable_tags_settings, so it must not reset them
+				Config: testAccRepositoryImmutableTagsWithDescription(orgName, repoName, "updated", true, []string{"latest", "v[0-9]+.*"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "description", "updated"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.enabled", "true"),
+					resource.TestCheckResourceAttr("docker_hub_repository_immutable_tags.test", "enabled", "true"),
+					resource.TestCheckResourceAttr("docker_hub_repository_immutable_tags.test", "rules.#", "2"),
+				),
+			},
+			{
 				// update: change rules
 				Config: testAccRepositoryImmutableTags(orgName, repoName, true, []string{".*"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -75,6 +86,14 @@ func TestAccRepositoryImmutableTags(t *testing.T) {
 }
 
 func testAccRepositoryImmutableTags(orgName, repoName string, enabled bool, rules []string) string {
+	return testAccRepositoryImmutableTagsWithDescription(orgName, repoName, "", enabled, rules)
+}
+
+func testAccRepositoryImmutableTagsWithDescription(orgName, repoName, description string, enabled bool, rules []string) string {
+	descriptionHCL := ""
+	if description != "" {
+		descriptionHCL = fmt.Sprintf("\n  description = %q", description)
+	}
 	rulesHCL := ""
 	if rules != nil {
 		quoted := make([]string, len(rules))
@@ -87,7 +106,7 @@ func testAccRepositoryImmutableTags(orgName, repoName string, enabled bool, rule
 resource "docker_hub_repository" "test" {
   namespace = %q
   name      = %q
-  private   = true
+  private   = true%s
 }
 
 resource "docker_hub_repository_immutable_tags" "test" {
@@ -95,7 +114,7 @@ resource "docker_hub_repository_immutable_tags" "test" {
   name      = docker_hub_repository.test.name
   enabled   = %t%s
 }
-`, orgName, repoName, enabled, rulesHCL)
+`, orgName, repoName, descriptionHCL, enabled, rulesHCL)
 }
 
 func testAccRepositoryImmutableTagsRepoOnly(orgName, repoName string) string {

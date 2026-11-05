@@ -83,7 +83,7 @@ terraform import docker_hub_repository.docker-repo docker-namespace/docker-repo
 
 - `description` (String) Repository description
 - `full_description` (String) Repository full description
-- `immutable_tags_settings` (Attributes) Immutable tags settings for the repository. When omitted, the repository's immutable tags settings are not managed by this resource and are only read from Docker Hub, which allows managing them with `docker_hub_repository_immutable_tags` instead. Do not set both on the same repository. (see [below for nested schema](#nestedatt--immutable_tags_settings))
+- `immutable_tags_settings` (Attributes) Immutable tags settings for the repository. When omitted, the repository's immutable tags settings are not managed by this resource and are only read from Docker Hub, which allows managing them with `docker_hub_repository_immutable_tags` instead. Removing this block does not disable immutable tags; set `enabled = false` to do that. Do not set both on the same repository. (see [below for nested schema](#nestedatt--immutable_tags_settings))
 - `private` (Boolean) Is the repository private
 
 ### Read-Only

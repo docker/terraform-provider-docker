@@ -79,21 +79,33 @@ var immutableTagsSettingsAttrTypes = map[string]attr.Type{
 	"rules":   types.ListType{ElemType: types.StringType},
 }
 
+// repositoryImmutableTagsSettingsSchema is the immutable_tags_settings schema
+// for the docker_hub_repository resource. It extends the shared schema with
+// resource-only behavior and wording.
+func repositoryImmutableTagsSettingsSchema() schema.SingleNestedAttribute {
+	s := immutableTagsSettingsSchema()
+	s.MarkdownDescription = "Immutable tags settings for the repository. When omitted, the repository's " +
+		"immutable tags settings are not managed by this resource and are only read from Docker Hub, " +
+		"which allows managing them with `docker_hub_repository_immutable_tags` instead. " +
+		"Removing this block does not disable immutable tags; set `enabled = false` to do that. " +
+		"Do not set both on the same repository."
+	// No Default: a static default would make this resource reset settings
+	// managed by docker_hub_repository_immutable_tags. When unconfigured,
+	// keep whatever was last read from the API.
+	s.PlanModifiers = []planmodifier.Object{
+		objectplanmodifier.UseStateForUnknown(),
+	}
+	return s
+}
+
+// immutableTagsSettingsSchema is shared with the docker_hub_repository data
+// source.
 func immutableTagsSettingsSchema() schema.SingleNestedAttribute {
 	return schema.SingleNestedAttribute{
-		MarkdownDescription: "Immutable tags settings for the repository. When omitted, the repository's " +
-			"immutable tags settings are not managed by this resource and are only read from Docker Hub, " +
-			"which allows managing them with `docker_hub_repository_immutable_tags` instead. " +
-			"Do not set both on the same repository.",
-		Required: false,
-		Optional: true,
-		Computed: true,
-		// No Default: a static default would make this resource reset settings
-		// managed by docker_hub_repository_immutable_tags. When unconfigured,
-		// keep whatever was last read from the API.
-		PlanModifiers: []planmodifier.Object{
-			objectplanmodifier.UseStateForUnknown(),
-		},
+		MarkdownDescription: "Immutable tags settings for the repository",
+		Required:            false,
+		Optional:            true,
+		Computed:            true,
 		Attributes: map[string]schema.Attribute{
 			"enabled": schema.BoolAttribute{
 				MarkdownDescription: "Whether immutable tags are enabled for the repository",
@@ -364,7 +376,7 @@ terraform import docker_hub_repository.docker-repo docker-namespace/docker-repo
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
-			"immutable_tags_settings": immutableTagsSettingsSchema(),
+			"immutable_tags_settings": repositoryImmutableTagsSettingsSchema(),
 		},
 	}
 }

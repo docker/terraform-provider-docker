@@ -57,8 +57,9 @@ func TestAccRepositoryImmutableTags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("docker_hub_repository.test", "description", "updated"),
 					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.enabled", "true"),
-					resource.TestCheckResourceAttr("docker_hub_repository_immutable_tags.test", "enabled", "true"),
-					resource.TestCheckResourceAttr("docker_hub_repository_immutable_tags.test", "rules.#", "2"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.#", "2"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.0", "latest"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.1", "v[0-9]+.*"),
 				),
 			},
 			{

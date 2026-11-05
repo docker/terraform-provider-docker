@@ -71,6 +71,16 @@ func TestAccRepositoryImmutableTags(t *testing.T) {
 				),
 			},
 			{
+				// remove the immutable tags resource (which disables immutable
+				// tags) and update the repository in the same apply: the
+				// repository update must not re-enable them from cached state
+				Config: testAccRepositoryImmutableTagsRepoOnlyWithDescription(orgName, repoName, "removed"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "description", "removed"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.enabled", "false"),
+				),
+			},
+			{
 				// update: disable
 				Config: testAccRepositoryImmutableTags(orgName, repoName, false, nil),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -118,13 +128,21 @@ resource "docker_hub_repository_immutable_tags" "test" {
 }
 
 func testAccRepositoryImmutableTagsRepoOnly(orgName, repoName string) string {
+	return testAccRepositoryImmutableTagsRepoOnlyWithDescription(orgName, repoName, "")
+}
+
+func testAccRepositoryImmutableTagsRepoOnlyWithDescription(orgName, repoName, description string) string {
+	descriptionHCL := ""
+	if description != "" {
+		descriptionHCL = fmt.Sprintf("\n  description = %q", description)
+	}
 	return fmt.Sprintf(`
 resource "docker_hub_repository" "test" {
   namespace = %q
   name      = %q
-  private   = true
+  private   = true%s
 }
-`, orgName, repoName)
+`, orgName, repoName, descriptionHCL)
 }
 
 func join(strs []string, sep string) string {

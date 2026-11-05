@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -192,7 +193,7 @@ func (r *RepositoryResource) Create(ctx context.Context, req resource.CreateRequ
 		immutableTagsReq := hubclient.UpdateRepositoryRequest{
 			Description:        plan.Description.ValueString(),
 			FullDescription:    plan.FullDescription.ValueString(),
-			ImmutableTags:      immutableTagsEnabled,
+			ImmutableTags:      &immutableTagsEnabled,
 			ImmutableTagsRules: serializeImmutableTagsRules(planSettings),
 		}
 		id := repositoryutils.NewID(createResp.Namespace, createResp.Name)
@@ -384,27 +385,31 @@ func (r *RepositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	// When immutable_tags_settings is not configured, the plan carries the
-	// last-read state (UseStateForUnknown), so the current settings are sent
-	// back unchanged. Fall back to state if the plan is still unknown.
-	planSettings, diags := immutableTagsSettingsFromObject(ctx, plan.ImmutableTagsSettings)
-	resp.Diagnostics.Append(diags...)
+	updateReq := hubclient.UpdateRepositoryRequest{
+		Description:     plan.Description.ValueString(),
+		FullDescription: plan.FullDescription.ValueString(),
+	}
+
+	// Only send immutable tags settings when they are configured on this
+	// resource. When the block is omitted, the plan holds the last-read state
+	// (UseStateForUnknown), which can be stale within an apply: for example,
+	// when docker_hub_repository_immutable_tags is destroyed in the same run,
+	// it disables immutable tags before this update executes. Sending the
+	// cached value would re-enable them, so omit the fields instead.
+	var configSettings types.Object
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("immutable_tags_settings"), &configSettings)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if planSettings == nil {
-		planSettings, diags = immutableTagsSettingsFromObject(ctx, state.ImmutableTagsSettings)
+	if !configSettings.IsNull() {
+		planSettings, diags := immutableTagsSettingsFromObject(ctx, plan.ImmutableTagsSettings)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-	}
-
-	updateReq := hubclient.UpdateRepositoryRequest{
-		Description:        plan.Description.ValueString(),
-		FullDescription:    plan.FullDescription.ValueString(),
-		ImmutableTags:      serializeImmutableTagsEnabled(planSettings),
-		ImmutableTagsRules: serializeImmutableTagsRules(planSettings),
+		enabled := serializeImmutableTagsEnabled(planSettings)
+		updateReq.ImmutableTags = &enabled
+		updateReq.ImmutableTagsRules = serializeImmutableTagsRules(planSettings)
 	}
 
 	updateResp, err := r.client.UpdateRepository(ctx, plan.ID.ValueString(), updateReq)

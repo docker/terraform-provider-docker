@@ -143,9 +143,11 @@ func (c *Client) CreateRepository(ctx context.Context, namespace string, req Cre
 }
 
 type UpdateRepositoryRequest struct {
-	Description        string `json:"description"`
-	FullDescription    string `json:"full_description"`
-	ImmutableTags      bool   `json:"immutable_tags"`
+	Description     string `json:"description"`
+	FullDescription string `json:"full_description"`
+	// ImmutableTags is a pointer so that a nil value omits the field from the
+	// PATCH body, leaving the repository's immutable tags settings untouched.
+	ImmutableTags      *bool  `json:"immutable_tags,omitempty"`
 	ImmutableTagsRules string `json:"immutable_tags_rules,omitempty"`
 }
 

@@ -34,7 +34,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -90,11 +89,14 @@ func repositoryImmutableTagsSettingsSchema() schema.SingleNestedAttribute {
 		"Removing this block does not disable immutable tags; set `enabled = false` to do that. " +
 		"Do not set both on the same repository."
 	// No Default: a static default would make this resource reset settings
-	// managed by docker_hub_repository_immutable_tags. When unconfigured,
-	// keep whatever was last read from the API.
-	s.PlanModifiers = []planmodifier.Object{
-		objectplanmodifier.UseStateForUnknown(),
-	}
+	// managed by docker_hub_repository_immutable_tags.
+	//
+	// No UseStateForUnknown either: when unconfigured, the plan keeps the
+	// prior state if the repository has no other changes (so no diff), and
+	// becomes unknown when it is updated. The cached value can be stale
+	// within an apply (e.g. docker_hub_repository_immutable_tags is destroyed
+	// first and disables immutable tags), and promising it in the plan would
+	// make the PATCH response an inconsistent result.
 	return s
 }
 
@@ -403,11 +405,11 @@ func (r *RepositoryResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Only send immutable tags settings when they are configured on this
-	// resource. When the block is omitted, the plan holds the last-read state
-	// (UseStateForUnknown), which can be stale within an apply: for example,
-	// when docker_hub_repository_immutable_tags is destroyed in the same run,
-	// it disables immutable tags before this update executes. Sending the
-	// cached value would re-enable them, so omit the fields instead.
+	// resource. When the block is omitted, any cached value can be stale
+	// within an apply: for example, when docker_hub_repository_immutable_tags
+	// is destroyed in the same run, it disables immutable tags before this
+	// update executes. Sending the cached value would re-enable them, so omit
+	// the fields and take the result from the PATCH response.
 	var configSettings types.Object
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("immutable_tags_settings"), &configSettings)...)
 	if resp.Diagnostics.HasError() {

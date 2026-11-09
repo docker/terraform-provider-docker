@@ -144,6 +144,27 @@ func TestAccRepositoryResourceImmutableTags(t *testing.T) {
 				),
 			},
 			{
+				// removing the block while updating the repository: the
+				// PATCH must leave the immutable tags settings untouched
+				Config: testRepositoryResourceConfigImmutableTagsOmittedWithDescription(namespace, name, "Updated while unmanaged"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "description", "Updated while unmanaged"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.enabled", "true"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.#", "1"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.0", "prod-*"),
+				),
+			},
+			{
+				// removing the block stops managing the settings: it must not
+				// disable immutable tags or produce a diff
+				Config: testRepositoryResourceConfigImmutableTagsOmitted(namespace, name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.enabled", "true"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.#", "1"),
+					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.rules.0", "prod-*"),
+				),
+			},
+			{
 				Config: testRepositoryResourceConfigImmutableTagsDisabled(namespace, name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("docker_hub_repository.test", "immutable_tags_settings.enabled", "false"),
@@ -180,6 +201,26 @@ resource "docker_hub_repository" "test" {
     enabled = true
     rules   = ["prod-*"]
   }
+}`, namespace, name)
+}
+
+func testRepositoryResourceConfigImmutableTagsOmittedWithDescription(namespace, name, description string) string {
+	return fmt.Sprintf(`
+resource "docker_hub_repository" "test" {
+  name        = "%[2]s"
+  namespace   = "%[1]s"
+  description = "%[3]s"
+  private     = false
+}`, namespace, name, description)
+}
+
+func testRepositoryResourceConfigImmutableTagsOmitted(namespace, name string) string {
+	return fmt.Sprintf(`
+resource "docker_hub_repository" "test" {
+  name            = "%[2]s"
+  namespace       = "%[1]s"
+  description     = "Repository with immutable tags"
+  private         = false
 }`, namespace, name)
 }
 

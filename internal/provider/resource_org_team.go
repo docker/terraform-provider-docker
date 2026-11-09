@@ -208,8 +208,9 @@ func (r *OrgTeamResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
+	// Keep the planned name: Docker Hub can return the previous name in the
+	// PATCH response right after a rename.
 	data.ID = types.Int64Value(orgTeam.ID)
-	data.TeamName = types.StringValue(orgTeam.Name)
 	if len(orgTeam.Description) > 0 {
 		data.TeamDesc = types.StringValue(orgTeam.Description)
 	} else {
